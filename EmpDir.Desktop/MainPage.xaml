@@ -2,12 +2,12 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:EmpDir.Desktop"
-             xmlns:components="clr-namespace:EmpDir.UI;assembly=EmpDir.UI"
+             xmlns:components="clr-namespace:EmpDir.Desktop;assembly=EmpDir.Desktop"
              x:Class="EmpDir.Desktop.MainPage">
 
     <BlazorWebView x:Name="blazorWebView" HostPage="wwwroot/index.html">
         <BlazorWebView.RootComponents>
-            <RootComponent Selector="#app" ComponentType="{x:Type components:Routes}" />
+            <RootComponent Selector="#app" ComponentType="{x:Type local:Routes}" />
         </BlazorWebView.RootComponents>
     </BlazorWebView>
 

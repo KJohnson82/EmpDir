@@ -1,7 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using EmpDir.Core.Services;
-using EmpDir.Core.Models;
+﻿using EmpDir.Core.Models;
 using EmpDir.Desktop.Data;
+using Microsoft.EntityFrameworkCore;
 using Location = EmpDir.Core.Models.Location;
 
 namespace EmpDir.Desktop.Services;

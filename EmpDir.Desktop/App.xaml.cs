@@ -1,6 +1,4 @@
-﻿using System;
-using EmpDir.Core;
-using EmpDir.Core.Services;
+﻿using EmpDir.Core.Services;
 
 namespace EmpDir.Desktop
 {
@@ -54,10 +52,10 @@ namespace EmpDir.Desktop
 
             return appWindow;
         }
-    
 
-    // ===== ADD THIS METHOD - SYNC ON APP LAUNCH =====
-    protected override void OnStart()
+
+        // ===== ADD THIS METHOD - SYNC ON APP LAUNCH =====
+        protected override void OnStart()
         {
             base.OnStart();
 

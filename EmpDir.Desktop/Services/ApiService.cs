@@ -1,11 +1,8 @@
 ﻿using EmpDir.Core.DTOs;
 using EmpDir.Core.Services;
 using Microsoft.Extensions.Logging;
-using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Windows.Services.Maps;
-using EmpDir.Core.Services;
 
 namespace EmpDir.Desktop.Services;
 

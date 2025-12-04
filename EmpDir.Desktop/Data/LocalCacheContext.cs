@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿using EmpDir.Core.Models;
 using Microsoft.EntityFrameworkCore;
-using EmpDir.Core.Models;
 using Location = EmpDir.Core.Models.Location;
 
 namespace EmpDir.Desktop.Data;

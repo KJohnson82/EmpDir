@@ -1,5 +1,5 @@
-﻿using EmpDir.Core.Services;
-using EmpDir.Core.Models;
+﻿using EmpDir.Core.Models;
+using EmpDir.Core.Services;
 using EmpDir.Desktop.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

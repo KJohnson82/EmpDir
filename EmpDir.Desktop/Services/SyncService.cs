@@ -1,7 +1,5 @@
 ﻿using EmpDir.Core.Extensions;
 using EmpDir.Core.Services;
-using EmpDir.Core.Models;
-using EmpDir.Core.DTOs;
 using Microsoft.Extensions.Logging;
 
 namespace EmpDir.Desktop.Services;

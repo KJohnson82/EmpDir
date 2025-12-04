@@ -73,7 +73,24 @@ public static class MauiProgram
         });
 
         // ===== LOCAL CACHE DATABASE =====
-        var localDbPath = Path.Combine(FileSystem.AppDataDirectory, "empdir_cache.db");
+        // Use fallback for unpackaged Windows development
+        string localDbPath;
+        try
+        {
+            localDbPath = Path.Combine(FileSystem.AppDataDirectory, "empdir_cache.db");
+        }
+        catch (InvalidOperationException)
+        {
+            // Fallback for unpackaged Windows app during development
+            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var appFolder = Path.Combine(localAppData, "EmpDir");
+            Directory.CreateDirectory(appFolder); // Ensure folder exists
+            localDbPath = Path.Combine(appFolder, "empdir_cache.db");
+
+#if DEBUG
+            Console.WriteLine($"⚠️ Using fallback AppData path (unpackaged): {localDbPath}");
+#endif
+        }
 
         builder.Services.AddDbContext<LocalCacheContext>(options =>
         {
@@ -120,8 +137,9 @@ public static class MauiProgram
         var configBuilder = new ConfigurationBuilder();
         var assembly = typeof(MauiProgram).Assembly;
 
+        var stream = assembly.GetManifestResourceStream("EmpDir.Desktop.appsettings.json");
         // Load base settings
-        using (var stream = assembly.GetManifestResourceStream("EmpDir.Desktop.appsettings.json"))
+        //using (var stream = assembly.GetManifestResourceStream("EmpDir.Desktop.appsettings.json"))
         {
             if (stream != null)
             {

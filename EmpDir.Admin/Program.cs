@@ -3,7 +3,7 @@ using EmpDir.Admin.Components;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddTelerikBlazor();
-builder.Services.AddScoped<EmpDir.UI.Services.MainLayout>();
+builder.Services.AddScoped<EmpDir.Admin.Components.Layout.MainLayout>();
 
 
 // Add services to the container.

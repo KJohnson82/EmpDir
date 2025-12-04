@@ -23,5 +23,10 @@
   <ItemGroup>
     <ProjectReference Include="..\EmpDir.Core\EmpDir.Core.csproj" />
   </ItemGroup>
+	
+
+  <ItemGroup>
+    <Folder Include="Services\" />
+  </ItemGroup>
 
 </Project>

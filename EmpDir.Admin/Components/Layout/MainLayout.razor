@@ -1,90 +1,258 @@
-﻿@inherits LayoutComponentBase
+﻿@* Main layout component that serves as the base template for all pages *@
+@inherits LayoutComponentBase
 
+@* Import necessary Telerik Blazor components and custom project namespaces *@
+@using EmpDir.Core.Services
+@using Telerik.Blazor.Components
+@using Telerik.Blazor
+@using Telerik.SvgIcons
+
+@* Inject services for navigation and data export functionality *@
+@inject NavigationManager NavManager
+@inject ExportData ExportData
+
+@* Implement IDisposable for proper cleanup of event handlers *@
 @implements IDisposable
 
-@inject NavigationManager NavManager
-
+@* Root Telerik component that wraps the entire application UI *@
 <TelerikRootComponent>
+    <div class="app-layout-wrapper">
+        @* ===================================================================== *@
+        @* TOP APP BAR - Header with logo, title, and export functionality *@
+        @* ===================================================================== *@
+        <TelerikAppBar ThemeColor="@ThemeConstants.AppBar.ThemeColor.Primary"
+                       Class="appbar-top">
+            @* Left spacing for visual balance *@
+            <AppBarSpacer Size="2em"></AppBarSpacer>
 
-    <TelerikAppBar ThemeColor="@ThemeConstants.AppBar.ThemeColor.Base"
-                   Class="appbar-top">
-        <AppBarSection>
-            <TelerikButton Icon="@SvgIcon.Menu"
-                           FillMode="@ThemeConstants.Button.FillMode.Clear"
-                           OnClick="@( () => DrawerExpanded = !DrawerExpanded )" />
-        </AppBarSection>
-        <AppBarSection>
-            <div id="app-title">
-                <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.2477 14.5932C17.2477 14.7922 17.1047 15.0366 16.926 15.1344L12.4541 17.6552V7.92806L3.83203 3.06798L8.30392 0.547161C8.47908 0.445909 8.76863 0.445909 8.94736 0.547161L17.2477 5.22918V14.5932ZM10.5381 9.0139L4.63275 5.67957C4.45759 5.58181 4.16805 5.58181 3.98931 5.67957L0 7.93155L6.22705 11.4439V18.4687L10.2164 16.2167C10.3915 16.1155 10.5381 15.8711 10.5381 15.6721V9.0104V9.0139ZM0 14.9563L4.30746 17.3864V12.5228L0 14.9563Z" fill="#96CA4F" />
-                </svg>
-                <NavLink href="/"><strong>Progress</strong><sup>&reg;</sup> Telerik<sup>&reg;</sup> UI for Blazor</NavLink>
-            </div>
-        </AppBarSection>
-        <AppBarSpacer />
-        <AppBarSection>
-            <a href="https://www.telerik.com/blazor-ui" target="_blank" id="product-page-link"
-               title="Go to Telerik UI for Blazor Product Page">Telerik UI for Blazor Product Page</a>
-        </AppBarSection>
-    </TelerikAppBar>
+            @* App logo/icon section *@
+            <AppBarSection>
+                <TelerikSvgIcon Icon="@CustomIcons.Waving_Hand"
+                                Flip="@IconFlip.Horizontal"
+                                Size="@ThemeConstants.SvgIcon.Size.ExtraLarge"></TelerikSvgIcon>
+            </AppBarSection>
 
-    <TelerikDrawer Data="@DrawerData"
-                   Expanded="@DrawerExpanded"
-                   ExpandedChanged="@DrawerExpandedChanged"
-                   @bind-SelectedItem="@DrawerSelectedItem"
-                   Mode="@DrawerMode.Push"
-                   MiniMode="true"
-                   Class="mainlayout-drawer">
-        <DrawerContent>
-            <main>
-                @Body
-            </main>
-            @if (DrawerExpanded)
-            {
-                <AICodingAssistant />
-            }
-        </DrawerContent>
-    </TelerikDrawer>
+            @* Application title section *@
+            <AppBarSection>
+                <div class="nav-title">
+                    <NavLink href="">McElroy Phone Directory</NavLink>
+                </div>
+            </AppBarSection>
 
-    <TelerikAppBar ThemeColor="@ThemeConstants.AppBar.ThemeColor.Base"
-                   Class="appbar-bottom">
-        <AppBarSpacer />
-        <AppBarSection>
-            <div id="copyright">Copyright &copy; @DateTime.Today.Year Progress Software. All rights reserved.</div>
-        </AppBarSection>
-        <AppBarSpacer />
-    </TelerikAppBar>
+            @* Flexible spacers to push export button to the right *@
+            <AppBarSpacer />
+            <AppBarSpacer />
 
-    <TelerikMediaQuery Media="(min-width: 641px)" OnChange="@OnMediaQueryChange" />
+            @* Export functionality section *@
+            <AppBarSection>
+                @* TODO: Export functionality not fully implemented yet *@
+                <TelerikButton Icon="@SvgIcon.FileBac"
+                               OnClick="ExportJson"
+                               FillMode="@Telerik.Blazor.ThemeConstants.Button.FillMode.Outline">
+                    Export Data
+                </TelerikButton>
+            </AppBarSection>
+        </TelerikAppBar>
 
+        @* Tooltip component (currently commented out) *@
+        @* <TelerikTooltip TargetSelector=".nav-item" Position="@TooltipPosition.Right" ShowOn="@TooltipShowEvent.Hover"   /> *@
+
+        @* ===================================================================== *@
+        @* NAVIGATION DRAWER - Side navigation menu *@
+        @* ===================================================================== *@
+        <TelerikDrawer Data="@DrawerData"
+                       Expanded="false"
+                       @bind-SelectedItem="@DrawerSelectedItem"
+                       Mode="@DrawerMode.Push"
+                       MiniMode="true"
+                       Class="mainlayout-drawer nav-item">
+
+            <DrawerContent>
+                @* Main content area where page content is rendered *@
+                <main>
+                    @Body
+                </main>
+            </DrawerContent>
+
+        </TelerikDrawer>
+
+        @* ===================================================================== *@
+        @* BOTTOM APP BAR - Footer with copyright information *@
+        @* ===================================================================== *@
+        <TelerikAppBar ThemeColor="@ThemeConstants.AppBar.ThemeColor.Base"
+                       Class="appbar-bottom">
+            <AppBarSpacer />
+            <AppBarSection>
+                <div id="copyright">
+                    Copyright &copy; @DateTime.Today.Year McElroy Metal Inc. All rights reserved.
+                </div>
+            </AppBarSection>
+            <AppBarSpacer />
+        </TelerikAppBar>
+
+        @* Media query component for responsive design - triggers on screen size changes *@
+        <TelerikMediaQuery Media="(min-width: 641px)" OnChange="@OnMediaQueryChange" />
+    </div>
 </TelerikRootComponent>
 
-<div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
-    <a class="dismiss">🗙</a>
-</div>
+@* ===================================================================== *@
+@* CUSTOM STYLES - Application-specific CSS *@
+@* ===================================================================== *@
+<style>
+    /* Replace the CSS in your MainLayout.razor style section with this: */
+
+    /* Ensure full viewport height usage */
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+
+    /* Main application wrapper - creates the flex layout */
+    .app-layout-wrapper {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Top app bar - fixed height at top */
+    .appbar-top {
+        flex-shrink: 0;
+        z-index: 1000;
+    }
+
+    /* Main drawer container - fills remaining space between app bars */
+    .mainlayout-drawer {
+        flex: 1;
+        min-height: 0; /* Important for flex child */
+    }
+
+        /* Ensure drawer content fills the available space */
+        .mainlayout-drawer .k-drawer-content {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Main content area within drawer */
+        .mainlayout-drawer main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            min-height: 0; /* Important for flex child */
+            display: flex;
+            flex-direction: column;
+        }
+
+    /* Bottom app bar - fixed height at bottom */
+    .appbar-bottom {
+        flex-shrink: 0;
+        z-index: 1000;
+    }
+
+    /* Navigation title styling (keep your existing styles) */
+    .nav-title a, .nav-title a:hover {
+        display: flex;
+        gap: .2em;
+        align-items: start;
+        margin: 0;
+        padding: 0;
+        font-size: 1.75em;
+        font-weight: 600;
+        text-decoration: none;
+        color: inherit;
+        padding: 0 20px 0 10px;
+        font-family: Montserrat;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Responsive adjustments */
+    @@media (max-width: 640px) {
+        .mainlayout-drawer main {
+            padding: 0.5rem;
+        }
+
+        .nav-title a, .nav-title a:hover {
+            font-size: 1.4em;
+        }
+    }
+</style>
 
 @code {
+    // =====================================================================
+    // NAVIGATION DATA - Define navigation menu items
+    // =====================================================================
+
+    /// <summary>
+    /// Navigation menu items for the drawer sidebar
+    /// Each item contains: display text, icon, URL, and tooltip
+    /// </summary>
     private IEnumerable<NavItem> DrawerData { get; set; } = new List<NavItem>()
     {
-        new NavItem("Home", SvgIcon.Home, "/"),
-        new NavItem("Counter", SvgIcon.CustomFormat, "/counter"),
-        new NavItem("Weather", SvgIcon.Globe, "/weather"),
-        new NavItem("About", SvgIcon.InfoCircle, "/about")
+        new NavItem("Home", CustomIcons.Home, "/Home", "HOME"),
+        new NavItem("Employees", CustomIcons.Face, "/Employees", "EMPLOYEES"),
+        new NavItem("Departments", CustomIcons.Domain, "/Departments", "DEPARTMENTS"),
+        new NavItem("Locations", CustomIcons.Factory, "/Locations", "LOCATIONS")
     };
 
+    // =====================================================================
+    // EVENT HANDLERS - User interaction methods
+    // =====================================================================
+
+    /// <summary>
+    /// Handles the export data button click - exports directory data to JSON
+    /// </summary>
+    private async Task ExportJson()
+    {
+        await ExportData.ExportJsonToFileAsync();
+    }
+
+    // =====================================================================
+    // UI STATE PROPERTIES - Component state management
+    // =====================================================================
+
+    /// <summary>
+    /// Controls whether the navigation drawer is expanded or collapsed
+    /// </summary>
     private bool DrawerExpanded { get; set; } = true;
 
+    /// <summary>
+    /// Tracks which navigation item is currently selected
+    /// </summary>
     private NavItem? DrawerSelectedItem { get; set; }
 
+    /// <summary>
+    /// Indicates if the current screen size is considered "large" (>= 641px)
+    /// </summary>
     private bool LargeScreen { get; set; } = true;
 
+    /// <summary>
+    /// Tooltip position setting (currently unused)
+    /// </summary>
+    TooltipPosition position { get; set; } = TooltipPosition.Right;
+
+    // =====================================================================
+    // RESPONSIVE DESIGN METHODS - Handle screen size changes
+    // =====================================================================
+
+    /// <summary>
+    /// Responds to media query changes for responsive design
+    /// Updates drawer state based on screen size
+    /// </summary>
+    /// <param name="mediaQueryMatched">True if screen width >= 641px</param>
     private void OnMediaQueryChange(bool mediaQueryMatched)
     {
         LargeScreen = DrawerExpanded = mediaQueryMatched;
     }
 
+    /// <summary>
+    /// Handles drawer expand/collapse state changes
+    /// Ensures proper behavior on small screens
+    /// </summary>
+    /// <param name="newExpanded">New expanded state</param>
     private void DrawerExpandedChanged(bool newExpanded)
     {
         if (!LargeScreen && !newExpanded)
@@ -93,31 +261,58 @@
         }
     }
 
+    // =====================================================================
+    // NAVIGATION METHODS - Handle URL changes and menu selection
+    // =====================================================================
+
+    /// <summary>
+    /// Sets the selected drawer item based on current URL
+    /// Called during component initialization
+    /// </summary>
     private void SelectDrawerItem()
     {
-        var url = NavManager.Uri.Replace(NavManager.BaseUri, "/").ToLowerInvariant();
-
+        var url = NavManager.Uri.Replace(NavManager.BaseUri, "/Home").ToLowerInvariant();
         DrawerSelectedItem = DrawerData.FirstOrDefault(x => x.Url.ToLowerInvariant() == url);
     }
 
+    /// <summary>
+    /// Event handler for navigation changes
+    /// Updates selected menu item when user navigates to different pages
+    /// </summary>
+    /// <param name="sender">Event sender</param>
+    /// <param name="args">Location change event arguments</param>
     private void NavManagerLocationChanged(object? sender, LocationChangedEventArgs args)
     {
-        var url = args.Location.Replace(NavManager.BaseUri, "/").ToLowerInvariant();
-
+        var url = args.Location.Replace(NavManager.BaseUri, "/Home").ToLowerInvariant();
         DrawerSelectedItem = DrawerData.FirstOrDefault(x => x.Url.ToLowerInvariant() == url);
 
+        // Trigger UI refresh to show updated selection
         InvokeAsync(StateHasChanged);
     }
 
+    // =====================================================================
+    // COMPONENT LIFECYCLE METHODS - Initialization and cleanup
+    // =====================================================================
+
+    /// <summary>
+    /// Component initialization
+    /// Sets up navigation tracking and event handlers
+    /// </summary>
     protected override void OnInitialized()
     {
+        // Set initial selected menu item based on current URL
         SelectDrawerItem();
 
+        // Subscribe to navigation changes
         NavManager.LocationChanged += NavManagerLocationChanged;
 
         base.OnInitialized();
     }
 
+    /// <summary>
+    /// Component cleanup - implements IDisposable
+    /// Unsubscribes from navigation events to prevent memory leaks
+    /// </summary>
     public void Dispose()
     {
         if (NavManager != null)
@@ -126,17 +321,41 @@
         }
     }
 
+    // =====================================================================
+    // DATA MODELS - Supporting classes
+    // =====================================================================
+
+    /// <summary>
+    /// Represents a navigation menu item
+    /// Contains all properties needed for drawer navigation
+    /// </summary>
     public class NavItem
     {
+        /// <summary>Display text for the navigation item</summary>
         public string Text { get; set; }
-        public object? Icon { get; set; }
+
+        /// <summary>Icon to display with the navigation item</summary>
+        public ISvgIcon Icon { get; set; }
+
+        /// <summary>URL to navigate to when item is clicked</summary>
         public string Url { get; set; } = string.Empty;
 
-        public NavItem(string text, object? icon, string url)
+        /// <summary>Tooltip text for the navigation item</summary>
+        public string Tooltip { get; set; }
+
+        /// <summary>
+        /// Constructor to create a new navigation item
+        /// </summary>
+        /// <param name="text">Display text</param>
+        /// <param name="icon">Menu icon</param>
+        /// <param name="url">Navigation URL</param>
+        /// <param name="tooltip">Tooltip text</param>
+        public NavItem(string text, ISvgIcon icon, string url, string tooltip)
         {
             Text = text;
             Icon = icon;
             Url = url;
+            Tooltip = tooltip;
         }
     }
 }
