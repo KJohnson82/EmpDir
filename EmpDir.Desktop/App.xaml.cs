@@ -1,11 +1,19 @@
-﻿namespace EmpDir.Desktop
+﻿using System;
+using EmpDir.Core;
+using EmpDir.Core.Services;
+
+namespace EmpDir.Desktop
 {
     public partial class App : Application
     {
-        public App()
+        private readonly ISyncService _syncService;
+
+        public App(ISyncService syncService)
         {
             InitializeComponent();
+            _syncService = syncService;
         }
+
 
         protected override Window CreateWindow(IActivationState? activationState)
         {
@@ -45,6 +53,50 @@
 
 
             return appWindow;
+        }
+    
+
+    // ===== ADD THIS METHOD - SYNC ON APP LAUNCH =====
+    protected override void OnStart()
+        {
+            base.OnStart();
+
+            // Perform sync in background on app launch
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var result = await _syncService.SyncOnLaunchAsync();
+
+                    // Log the result
+                    if (result.Success)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"✓ Sync successful: {result.Message}");
+
+                        if (result.ApiWasAvailable)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"  - Employees: {result.EmployeesUpdated}");
+                            System.Diagnostics.Debug.WriteLine($"  - Departments: {result.DepartmentsUpdated}");
+                            System.Diagnostics.Debug.WriteLine($"  - Locations: {result.LocationsUpdated}");
+                        }
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"✗ Sync failed: {result.Message}");
+                    }
+
+                    // Optionally show a toast notification to the user
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        // You can add UI notification here if desired
+                        // For example, update a status bar or show a brief toast
+                    });
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"✗ Sync error: {ex.Message}");
+                }
+            });
         }
     }
 
@@ -86,8 +138,8 @@
             // Set default constraints first
             window.MinimumWidth = DefaultMinWidth;
             window.MinimumHeight = DefaultMinHeight;
-            //window.MaximumWidth = DefaultMaxWidth;
-            //window.MaximumHeight = DefaultMaxHeight;
+            window.MaximumWidth = DefaultMaxWidth;
+            window.MaximumHeight = DefaultMaxHeight;
 
             // Apply saved dimensions or defaults
             window.Width = Width ?? DefaultWidth;
