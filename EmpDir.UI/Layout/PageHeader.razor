@@ -1,0 +1,159 @@
+﻿@* ===================================================================== *@
+@* REUSABLE PAGE HEADER COMPONENT                                        *@
+@* Creates a consistent header card with title and icon for all pages    *@
+@* ===================================================================== *@
+
+@* Import Telerik UI components and styling *@
+@using Telerik.SvgIcons
+@using Telerik.Blazor
+@using Telerik.Blazor.Components
+
+@* ===================================================================== *@
+@* HEADER CARD LAYOUT                                                    *@
+@* ===================================================================== *@
+<div>
+    @* Main header card with horizontal layout and primary theme color *@
+    <TelerikCard Orientation="CardOrientation.Horizontal"
+                 Height="125px"
+                 ThemeColor="@ThemeConstants.Card.ThemeColor.Tertiary"
+                 Class="page-header">
+
+        @* Card body containing title and icon with flex layout *@
+        <CardBody Class="title-body">
+            @* Page title - passed in as parameter *@
+            <h1 class="card-title">@PageTitle</h1>
+
+            @* Page icon - passed in as parameter *@
+            <TelerikSvgIcon Icon="@CardIcon" Class="card-icon"></TelerikSvgIcon>
+        </CardBody>
+    </TelerikCard>
+</div>
+
+@* ===================================================================== *@
+@* RESPONSIVE DESIGN SUPPORT                                             *@
+@* ===================================================================== *@
+@* Media query for responsive behavior (matches main layout breakpoint) *@
+<TelerikMediaQuery Media="(min-width: 641px)" OnChange="@OnMediaQueryChange" />
+
+@code {
+    // =====================================================================
+    // RESPONSIVE STATE PROPERTIES
+    // =====================================================================
+
+    /// <summary>
+    /// Tracks if current screen size is considered large (>= 641px)
+    /// Used for responsive design adjustments
+    /// </summary>
+    private bool LargeScreen { get; set; } = true;
+
+    /// <summary>
+    /// Controls drawer expansion state for responsive navigation
+    /// Synced with main layout drawer behavior
+    /// </summary>
+    private bool DrawerExpanded { get; set; } = true;
+
+    // =====================================================================
+    // COMPONENT PARAMETERS - Input properties from parent components
+    // =====================================================================
+
+    /// <summary>
+    /// The title text to display in the header
+    /// Required parameter - must be provided by parent component
+    /// </summary>
+    [Parameter]
+    public required string PageTitle { get; set; }
+
+    /// <summary>
+    /// The SVG icon to display alongside the title
+    /// Optional parameter - uses Telerik SVG icon system
+    /// </summary>
+    [Parameter]
+    public ISvgIcon CardIcon { get; set; }
+
+    // =====================================================================
+    // RESPONSIVE EVENT HANDLERS
+    // =====================================================================
+
+    /// <summary>
+    /// Handles screen size changes for responsive design
+    /// Updates component state when screen crosses 641px breakpoint
+    /// </summary>
+    /// <param name="mediaQueryMatched">True when screen width >= 641px</param>
+    private void OnMediaQueryChange(bool mediaQueryMatched)
+    {
+        LargeScreen = DrawerExpanded = mediaQueryMatched;
+    }
+
+    /// <summary>
+    /// Manages drawer expansion behavior on smaller screens
+    /// Ensures proper UI behavior when drawer state changes
+    /// </summary>
+    /// <param name="newExpanded">New drawer expansion state</param>
+    private void DrawerExpandedChanged(bool newExpanded)
+    {
+        // Only collapse drawer on small screens when requested
+        if (!LargeScreen && !newExpanded)
+        {
+            DrawerExpanded = newExpanded;
+        }
+    }
+}
+
+@* ===================================================================== *@
+@* COMPONENT STYLES - Custom CSS for header appearance                   *@
+@* ===================================================================== *@
+<style>
+    /* Main header card styling */
+    .page-header {
+        opacity: 100%; /* Fully opaque */
+        background: none; /* Remove default background */
+        background-color: var(--kendo-color-primary); /* Use Telerik primary color */
+        margin: 0.5% 0 0.5% 0; /* Vertical spacing around header */
+        display: flex; /* Flexbox layout */
+        align-items: center; /* Center content vertically */
+    }
+
+    /* Card body container for title and icon */
+    .title-body {
+        display: flex; /* Flexbox for horizontal layout */
+        align-items: center; /* Center items vertically */
+        padding: 0; /* Remove default padding */
+        margin: 0; /* Remove default margin */
+        flex-grow: 1; /* Take available space */
+        gap: 20px; /* Space between title and icon */
+    }
+
+    /* Main page title styling */
+    .card-title {
+        color: white; /* White text for contrast */
+        text-transform: uppercase; /* All caps for emphasis */
+        text-align: start; /* Left-aligned text */
+        font-family: Montserrat; /* Consistent brand font */
+        font-weight: 600; /* Semi-bold weight */
+        font-size: 3.5em; /* Large, prominent size */
+        padding: 5px 0 5px 5%; /* Padding with left offset */
+        margin: 5px 0; /* Vertical margin */
+        letter-spacing: 1px; /* Slight letter spacing */
+        display: flex; /* Flex for alignment */
+        align-items: center; /* Center vertically */
+    }
+
+    /* Icon body container (currently unused) */
+    .icon-body {
+        margin: 10px 0; /* Vertical spacing */
+        display: flex; /* Flexbox layout */
+        align-items: center; /* Center alignment */
+        padding: 0; /* No padding */
+        align-content: start; /* Start alignment */
+        background-color: aqua; /* Debug/placeholder color */
+    }
+
+    /* Page icon styling */
+    .card-icon {
+        color: white; /* White icon for contrast */
+        align-self: start; /* Top alignment */
+        height: 65px; /* Fixed icon height */
+        width: 65px; /* Fixed icon width */
+        /* margin: 10px 0; */ /* Commented out margin */
+    }
+</style>

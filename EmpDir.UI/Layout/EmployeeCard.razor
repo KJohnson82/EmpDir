@@ -1,0 +1,292 @@
+﻿@* ===================================================================== *@
+@* EMPLOYEE DETAILS MODAL COMPONENT                                      *@
+@* Displays comprehensive employee information in a popup window         *@
+@* ===================================================================== *@
+
+@* Import necessary namespaces for data models, Entity Framework, and Telerik components *@
+@using EmpDir.Core.Data
+@using EmpDir.Core.Models
+@using EmpDir.Core.Data.Context
+@using Microsoft.EntityFrameworkCore
+@using Telerik.Blazor
+@using Telerik.Blazor.Components
+@using Telerik.Blazor.Data
+@using Telerik.Blazor.Extensions
+@using Telerik.Blazor.Services
+@using Telerik.SvgIcons
+@using Telerik.DataSource
+@using Telerik.DataSource.Extensions
+
+@* Inject database context for data access *@
+@inject AppDbContext dbContext
+
+@* ===================================================================== *@
+@* MODAL WINDOW CONTAINER                                                *@
+@* ===================================================================== *@
+<TelerikWindow @ref="EmpInfoWindow"
+               Modal="true"
+               @bind-Visible="@WindowVisible"
+               Width="auto"
+               Height="auto"
+               Resizable="false"
+               Draggable="false"
+               Class="user-card"
+               CloseOnOverlayClick="true">
+
+    @* ===================================================================== *@
+    @* WINDOW HEADER - Employee name as dynamic title                       *@
+    @* ===================================================================== *@
+    <WindowTitle>
+        @if (SelectedEmployee != null)
+        {
+            @* Display employee's full name in the window title *@
+            <h3>@SelectedEmployee.FirstName @SelectedEmployee.LastName</h3>
+        }
+    </WindowTitle>
+
+    @* Window control buttons (close button) *@
+    <WindowActions>
+        <WindowAction Name="Close" />
+    </WindowActions>
+
+    @* ===================================================================== *@
+    @* WINDOW CONTENT - Employee information display                        *@
+    @* ===================================================================== *@
+    <WindowContent>
+        @if (SelectedEmployee != null)
+        {
+            <section>
+                <div>
+                    @* Note: First/Last name display is commented out since it's in the title *@
+                    @* <div class="card-row">
+                        <label>First Name:</label>
+                        <span>@SelectedEmployee.FirstName</span>
+                    </div>
+                    <div class="card-row">
+                        <label>Last Name:</label>
+                        <span>@SelectedEmployee.LastName</span>
+                    </div> *@
+
+                    @* Job and role information section *@
+                    <div class="card-row">
+                        <label>Job Title:</label>
+                        <span>@SelectedEmployee.JobTitle</span>
+                    </div>
+                    <div class="card-row">
+                        <label>Is Manager:</label>
+                        <span>@(SelectedEmployee.IsManager == true ? "Yes" : "No")</span>
+                    </div>
+
+                    @* Contact information section *@
+                    <div class="card-row">
+                        <label>Phone Number:</label>
+                        <span>@SelectedEmployee.PhoneNumber</span>
+                    </div>
+                    <div class="card-row">
+                        <label>Alt. Number:</label>
+                        <span>@SelectedEmployee.CellNumber</span>
+                    </div>
+                    <div class="card-row">
+                        <label>Extension:</label>
+                        <span>@SelectedEmployee.Extension</span>
+                    </div>
+                    <div class="card-row">
+                        <label>Email:</label>
+                        <span>@SelectedEmployee.Email</span>
+                    </div>
+
+                    @* System and organizational information section *@
+                    <div class="card-row">
+                        <label>Network ID:</label>
+                        <span>@SelectedEmployee.NetworkId</span>
+                    </div>
+
+                    @* Department lookup - finds department name from ID *@
+                    <div class="card-row">
+                        <label>Department:</label>
+                        <span>@Departments.FirstOrDefault(d => d.Id == SelectedEmployee.Department)?.DeptName</span>
+                    </div>
+
+                    @* Location lookup - finds location name from ID *@
+                    <div class="card-row">
+                        <label>Location:</label>
+                        <span>@Locations.FirstOrDefault(l => l.Id == SelectedEmployee.Location)?.LocName</span>
+                    </div>
+
+                    @* Record metadata *@
+                    <div class="card-row">
+                        <label>Employee Added:</label>
+                        <span>@SelectedEmployee.RecordAdd?.ToString("MM/dd/yyy")</span>
+                    </div>
+                </div>
+            </section>
+        }
+    </WindowContent>
+
+    @* ===================================================================== *@
+    @* WINDOW FOOTER - Action buttons                                        *@
+    @* ===================================================================== *@
+    <WindowFooter>
+        <TelerikButton OnClick="() => WindowVisible = false"
+                       ThemeColor="primary">
+            Close
+        </TelerikButton>
+    </WindowFooter>
+
+</TelerikWindow>
+
+@* ===================================================================== *@
+@* COMPONENT STYLES - Custom CSS for employee details display            *@
+@* ===================================================================== *@
+<style>
+    /* Label styling for data field names */
+    label {
+        padding: 8px 6px 6px 8px; /* Internal spacing */
+        margin-bottom: 15px; /* Space below labels */
+        font-weight: 500; /* Medium font weight */
+        font-size: 0.9em; /* Slightly smaller text */
+        text-transform: uppercase; /* All caps for consistency */
+        background-color: var(--kendo-color-primary); /* Primary theme color */
+        color: white; /* White text for contrast */
+    }
+
+    section {
+        padding: 4px;
+    }
+
+    /* Main container styling */
+    .user-card {
+        /* padding: 5px; */ /* Commented out padding */
+        /* border-radius: 16px 16px 16px 16px; */ /* Commented out rounded corners */
+        /* border: 0px solid; */ /* Commented out border */
+    }
+
+    .user-card {
+        width: auto;
+        height: auto;
+        margin: 10px;
+    }
+
+        /* Data value styling */
+        .user-card span {
+            font-weight: 600; /* Semi-bold for emphasis */
+            padding: 3px 5px; /* Internal padding */
+            font-size: 1em; /* Standard font size */
+            /* background-color: var(--kendo-color-light); */ /* Commented out background */
+        }
+
+        /* Window title bar action buttons styling */
+        .user-card .k-window-titlebar-actions {
+            background-color: var(--kendo-color-primary-emphasis); 
+        }
+
+
+        .k-actions {
+            background: var(--kendo-color-primary);
+        }
+
+    /* Individual data row styling */
+    .card-row {
+        
+        /* justify-content: space-evenly; */
+        padding: 6px 0; 
+        /* margin-bottom: 2px;
+        margin-top: 2px; */
+        margin: 2px;
+        /* border-top: thick 1px; */
+        /* border-bottom: solid 1px; */
+        border: solid 1px;
+        /* border-left: 0.25px; 
+        border-right: 0.25px;  */
+        border-color: var(--kendo-color-primary); /* Primary color borders */
+        /* border: solid; */ /* Commented out solid border */
+        /* border-top: dashed 1px; */ /* Commented out top border */
+        /* background: inherit; */ /* Commented out background */
+        /* background-color: var(--kendo-color-); */ /* Commented out background color */
+    }
+</style>
+
+@code {
+    // =====================================================================
+    // COMPONENT STATE PROPERTIES
+    // =====================================================================
+
+    /// <summary>
+    /// Controls the visibility of the employee details modal window
+    /// </summary>
+    private bool WindowVisible { get; set; }
+
+    /// <summary>
+    /// The currently selected employee to display details for
+    /// </summary>
+    private Employee? SelectedEmployee { get; set; }
+
+    /// <summary>
+    /// List of employees (currently unused but available for future expansion)
+    /// </summary>
+    private List<Employee> employees { get; set; } = new List<Employee>();
+
+    /// <summary>
+    /// Reference to the Telerik Window component for programmatic control
+    /// </summary>
+    private TelerikWindow? EmpInfoWindow { get; set; }
+
+    // =====================================================================
+    // COMPONENT PARAMETERS - Input properties from parent components
+    // =====================================================================
+
+    /// <summary>
+    /// List of locations passed from parent component
+    /// Used for looking up location names from employee location IDs
+    /// </summary>
+    [Parameter]
+    public List<Location> Locations { get; set; } = new();
+
+    /// <summary>
+    /// List of departments passed from parent component
+    /// Used for looking up department names from employee department IDs
+    /// </summary>
+    [Parameter]
+    public List<Department> Departments { get; set; } = new();
+
+    // =====================================================================
+    // PUBLIC METHODS - Called by parent components
+    // =====================================================================
+
+    /// <summary>
+    /// Opens the employee details modal for the specified employee
+    /// This method is called by parent components to show employee details
+    /// </summary>
+    /// <param name="employee">The employee object to display details for</param>
+    public void ShowEmployeeInfo(Employee employee)
+    {
+        SelectedEmployee = employee;
+        WindowVisible = true;
+        StateHasChanged(); // Trigger UI refresh to show modal
+    }
+
+    // =====================================================================
+    // PRIVATE UTILITY METHODS
+    // =====================================================================
+
+    /// <summary>
+    /// Generates a dynamic window title based on the selected employee
+    /// Includes employee's full name for clear identification
+    /// </summary>
+    /// <returns>Formatted title string</returns>
+    private string GetWindowTitle()
+    {
+        return SelectedEmployee != null
+            ? $"{SelectedEmployee.FirstName} {SelectedEmployee.LastName} - Details"
+            : "Employee Information"; // Fallback title for null employee
+    }
+
+    /// <summary>
+    /// Simple method to open the modal window
+    /// Alternative to direct property setting
+    /// </summary>
+    private void OpenWindow()
+    {
+        WindowVisible = true;
+    }
+}

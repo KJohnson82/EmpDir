@@ -1,0 +1,255 @@
+﻿@* ===================================================================== *@
+@* DEPARTMENT DETAILS MODAL COMPONENT                                    *@
+@* Displays comprehensive department information in a popup window       *@
+@* ===================================================================== *@
+
+@* Import necessary namespaces for Entity Framework, Telerik components, and data models *@
+@using Microsoft.EntityFrameworkCore
+@using Telerik.Blazor
+@using Telerik.Blazor.Components
+@using Telerik.Blazor.Data
+@using Telerik.Blazor.Extensions
+@using Telerik.Blazor.Services
+@using Telerik.SvgIcons
+@using Telerik.DataSource
+@using Telerik.DataSource.Extensions
+@using EmpDir.Core.Data
+@using EmpDir.Core.Models
+@using EmpDir.Core.Data.Context
+
+@* Inject database context for data access *@
+@inject AppDbContext dbContext
+
+@* ===================================================================== *@
+@* MODAL WINDOW CONTAINER                                                *@
+@* ===================================================================== *@
+<TelerikWindow @ref="DeptInfoWindow"
+               Modal="true"
+               @bind-Visible="@WindowVisible"
+               Width="auto"
+               Height="auto"
+               Resizable="false"
+               Draggable="false"
+               Class="user-card"
+               CloseOnOverlayClick="true">
+
+    @* ===================================================================== *@
+    @* WINDOW HEADER - Department name as dynamic title                     *@
+    @* ===================================================================== *@
+    <WindowTitle>
+        @if (SelectedDepartment != null)
+        {
+            <h3>@SelectedDepartment.DeptName</h3>
+        }
+    </WindowTitle>
+
+    @* Window control buttons (close button) *@
+    <WindowActions>
+        <WindowAction Name="Close" />
+    </WindowActions>
+
+    @* ===================================================================== *@
+    @* WINDOW CONTENT - Department information display                      *@
+    @* ===================================================================== *@
+    <WindowContent>
+        @if (SelectedDepartment != null)
+        {
+            <section>
+                <div>
+                    @* Location information - uses Entity Framework navigation property *@
+                    <div class="card-row">
+                        <label>Department Location:</label>
+                        <span>@SelectedDepartment.DeptLocation?.LocName</span>
+                    </div>
+
+                    @* Management information section *@
+                    <div class="card-row">
+                        <label>Department Manager:</label>
+                        <span>@SelectedDepartment.DeptManager</span>
+                    </div>
+
+                    @* Contact information section *@
+                    <div class="card-row">
+                        <label>Phone Number:</label>
+                        <span>@SelectedDepartment.DeptPhone</span>
+                    </div>
+                    <div class="card-row">
+                        <label>Department Fax:</label>
+                        <span>@SelectedDepartment.DeptFax</span>
+                    </div>
+                    <div class="card-row">
+                        <label>Department Email:</label>
+                        <span>@SelectedDepartment.DeptEmail</span>
+                    </div>
+
+                    @* Record metadata - previous version commented out *@
+                    @* <div class="card-row">
+                        <label>Record Added:</label>
+                        <span>@SelectedDepartment.RecordAdd</span>
+                    </div> *@
+                    <div class="card-row">
+                        <label>Department Added:</label>
+                        <span>@SelectedDepartment.RecordAdd?.ToString("MM/dd/yyy")</span>
+                    </div>
+                </div>
+            </section>
+        }
+    </WindowContent>
+
+    @* ===================================================================== *@
+    @* WINDOW FOOTER - Action buttons                                        *@
+    @* ===================================================================== *@
+    <WindowFooter>
+        <TelerikButton OnClick="() => WindowVisible = false"
+                       ThemeColor="primary">
+            Close
+        </TelerikButton>
+    </WindowFooter>
+
+</TelerikWindow>
+
+@* ===================================================================== *@
+@* COMPONENT STYLES - Custom CSS for department details display           *@
+@* ===================================================================== *@
+<style>
+    /* Label styling for data field names */
+    label {
+        padding: 8px 6px 6px 8px; /* Internal spacing */
+        margin-bottom: 15px; /* Space below labels */
+        font-weight: 500; /* Medium font weight */
+        font-size: 0.9em; /* Slightly smaller text */
+        text-transform: uppercase; /* All caps for consistency */
+        background-color: var(--kendo-color-primary); /* Primary theme color */
+        color: white; /* White text for contrast */
+    }
+
+    section {
+        padding: 4px;
+    }
+
+    /* Main container styling */
+    .user-card {
+        /* padding: 5px; */ /* Commented out padding */
+        /* border-radius: 16px 16px 16px 16px; */ /* Commented out rounded corners */
+        /* border: 0px solid; */ /* Commented out border */
+        width: auto;
+        height: auto;
+        margin: 10px;
+    }
+
+        /* Data value styling */
+        .user-card span {
+            font-weight: 600; /* Semi-bold for emphasis */
+            padding: 3px 5px; /* Internal padding */
+            font-size: 1em; /* Standard font size */
+            /* background-color: var(--kendo-color-light); */ /* Commented out background */
+        }
+
+        /* Window title bar action buttons styling */
+        .user-card .k-window-titlebar-actions {
+            background-color: var(--kendo-color-primary-emphasis); /* Emphasized primary color */
+        }
+
+        .k-actions {
+            background: var(--kendo-color-primary);
+        }
+
+    /* Individual data row styling */
+    .card-row {
+        padding: 6px 0; /* Vertical padding */
+        margin: 2px;
+        /* border-bottom: dashed 1px; 
+        border-left: 0.25px; 
+        border-right: 0.25px;  */
+        border: solid 1px;
+        border-color: var(--kendo-color-primary); 
+        /* border: solid; */ /* Commented out solid border */
+        /* border-top: dashed 1px; */ /* Commented out top border */
+        /* background: inherit; */ /* Commented out background */
+        /* background-color: var(--kendo-color-); */ /* Commented out background color */
+    }
+</style>
+
+@code {
+    // =====================================================================
+    // COMPONENT STATE PROPERTIES
+    // =====================================================================
+
+    /// <summary>
+    /// Controls the visibility of the department details modal window
+    /// </summary>
+    private bool WindowVisible { get; set; }
+
+    /// <summary>
+    /// The currently selected department to display details for
+    /// </summary>
+    private Department? SelectedDepartment { get; set; }
+
+    /// <summary>
+    /// List of locations (currently unused but available for future expansion)
+    /// </summary>
+    private List<Location> locations { get; set; } = new List<Location>();
+
+    /// <summary>
+    /// List of departments (currently unused but available for future expansion)
+    /// </summary>
+    private List<Department> departments { get; set; } = new List<Department>();
+
+    /// <summary>
+    /// Reference to the Telerik Window component for programmatic control
+    /// </summary>
+    private TelerikWindow? DeptInfoWindow { get; set; }
+
+    // =====================================================================
+    // COMPONENT PARAMETERS - Input properties from parent components
+    // =====================================================================
+
+    /// <summary>
+    /// List of locations passed from parent component
+    /// Note: Currently not actively used since department location is accessed
+    /// via Entity Framework navigation property (DeptLocation?.LocName)
+    /// </summary>
+    [Parameter]
+    public List<Location> Locations { get; set; } = new();
+
+    // =====================================================================
+    // PUBLIC METHODS - Called by parent components
+    // =====================================================================
+
+    /// <summary>
+    /// Opens the department details modal for the specified department
+    /// This method is called by parent components to show department details
+    /// </summary>
+    /// <param name="department">The department object to display details for</param>
+    public void ShowDepartmentInfo(Department department)
+    {
+        SelectedDepartment = department;
+        WindowVisible = true;
+        StateHasChanged(); // Trigger UI refresh to show modal
+    }
+
+    // =====================================================================
+    // PRIVATE UTILITY METHODS
+    // =====================================================================
+
+    /// <summary>
+    /// Generates a dynamic window title based on the selected department
+    /// Includes department name for clear identification
+    /// </summary>
+    /// <returns>Formatted title string</returns>
+    private string GetWindowTitle()
+    {
+        return SelectedDepartment != null
+            ? $"{SelectedDepartment.DeptName} - Details"
+            : "Department Information"; 
+    }
+
+    /// <summary>
+    /// Simple method to open the modal window
+    /// Alternative to direct property setting
+    /// </summary>
+    private void OpenWindow()
+    {
+        WindowVisible = true;
+    }
+}

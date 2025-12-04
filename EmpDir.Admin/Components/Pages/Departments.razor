@@ -1,0 +1,573 @@
+@* ===================================================================== *@
+@* DEPARTMENTS PAGE - DEPARTMENT MANAGEMENT COMPONENT                    *@
+@* Full CRUD interface for managing McElroy Metal departments           *@
+@* Route: /Departments (accessible from navigation)                      *@
+@* ===================================================================== *@
+
+@* Define the route for this page component *@
+@page "/Departments"
+
+@* Import necessary namespaces for Entity Framework, Telerik components, and data models *@
+@using Microsoft.EntityFrameworkCore
+@using Telerik.Blazor
+@using Telerik.Blazor.Components
+@using Telerik.SvgIcons
+@using EmpDir
+@using EmpDir.Core.Models
+@using EmpDir.Core.Data.Context
+@using EmpDir.UI.Components
+@using EmpDir.UI.Layout
+
+@* Inject database context for data operations *@
+@inject AppDbContext dbContext
+
+<RequireAuth>
+
+@* ===================================================================== *@
+@* PAGE HEADER - Consistent header with departments icon                 *@
+@* ===================================================================== *@
+<PageHeader PageTitle="Departments" CardIcon="@CustomIcons.Domain" />
+
+@* ===================================================================== *@
+@* MAIN DATA GRID - Telerik Grid with full CRUD capabilities            *@
+@* ===================================================================== *@
+@* Configure Telerik Grid with pagination and CRUD capabilities *@
+<TelerikGrid Data="@departments"
+             Pageable="true"
+             PageSize="15"
+             Sortable="true"
+             SortMode="@SortMode.Single"
+             Size="@ThemeConstants.Grid.Size.Small"
+             Resizable="true"
+             Groupable="true"
+             SelectionMode="GridSelectionMode.Single"
+             AutoGenerateColumns="false"
+             Class="grid-text"
+             EditMode="@GridEditMode.Popup"
+             OnUpdate="@Update"
+             OnCreate="@Add"
+             OnDelete="@Delete"
+             OnRowRender="@OnDepartmentRowRender"
+             ConfirmDelete="true"
+             >
+    @* Delete event handler *@
+
+    @* ================================================================= *@
+    @* GRID CONFIGURATION - Popup edit settings                         *@
+    @* ================================================================= *@
+    <GridSettings>
+        <GridPopupEditSettings MaxHeight="700px"
+                               MaxWidth="700px"
+                               Title="Edit Department"></GridPopupEditSettings> 
+        <GridPopupEditFormSettings Columns="2" 
+                                   ColumnSpacing="15px" 
+                                   Orientation="@FormOrientation.Horizontal" 
+                                   ButtonsLayout="FormButtonsLayout.End">
+            @* Buttons aligned to end *@
+        </GridPopupEditFormSettings>
+    </GridSettings>
+
+    @* ================================================================= *@
+    @* GRID TOOLBAR - Search and add functionality                      *@
+    @* ================================================================= *@
+    <GridToolBarTemplate>
+        @* Global search box with debounced input *@
+        <GridSearchBox Placeholder="Search..."
+                       DebounceDelay="300"
+                       Fields="@SearchableFields"></GridSearchBox>
+        @* Add new department button *@
+        <GridCommandButton Command="Add" Icon="SvgIcon.Plus">Add</GridCommandButton>
+    </GridToolBarTemplate>
+
+    @* ================================================================= *@
+    @* GRID COLUMNS - Department data fields and custom templates       *@
+    @* ================================================================= *@
+    <GridColumns>
+        @* Basic department information *@
+        <GridColumn Field="DeptName" Title="Department Name" Sortable="true" />
+
+        @* Department location assignment with dropdown editor *@
+        <GridColumn Field="@nameof(Department.Location)" Title="Department Location">
+            <Template>
+                @{
+                    var department = (Department)context;
+                    // Look up location name from ID using locations list
+                    var locationName = locations.FirstOrDefault(l => l.Id == department.Location)?.LocName;
+                }
+                @locationName
+            </Template>
+            <EditorTemplate>
+                @{
+                    var department = (Department)context;
+                }
+                @* Dropdown for selecting department location *@
+                <TelerikDropDownList Data="@locations"
+                                     @bind-Value="@department.Location"
+                                     ValueField="Id" 
+                                     TextField="LocName" 
+                                     AdaptiveMode="AdaptiveMode.Auto" /> 
+            </EditorTemplate>
+        </GridColumn>
+
+        @* Department management and contact information *@
+        <GridColumn Field="DeptManager" Title="Department Manager" Sortable="false" />
+        <GridColumn Field="DeptPhone" Title="Phone#" Sortable="false" />
+        <GridColumn Field="DeptEmail" Title="Email" Sortable="false" />
+        <GridColumn Field="DeptFax" Title="Fax" Sortable="false" Visible="false" />  
+
+        @* Add this column before the RecordAdd column in Departments.razor *@
+        <GridColumn Field="@nameof(Department.Active)" Title="Status" Width="100px" Sortable="true"  TextAlign="@ColumnTextAlign.Center">
+            <Template>
+                @{
+                    var department = (Department)context;
+                    var isActive = department.Active ?? true;
+                }
+                <span class="status-badge @(isActive ? "status-active" : "status-inactive")">
+                    @(isActive ? "Active" : "Inactive")
+                </span>
+            </Template>
+            <EditorTemplate>
+                @{
+                    var department = (Department)context;
+                }
+                <div class="active-toggle-container">
+                    <label class="toggle-label">Department Status:</label>
+                    <TelerikSwitch @bind-Value="department.Active"
+                                   OnLabel="Active"
+                                   OffLabel="Inactive"
+                                   Width="100px" />
+                </div>
+            </EditorTemplate>
+        </GridColumn>
+
+        @* Legacy/system columns (commented out or hidden) *@
+        @* <GridColumn Field="LocationId" Sortable="false" Visible="false" Editable="false" /> *@
+        <GridColumn Field="RecordAdd" Sortable="false" Visible="false" Editable="false" />    @* Creation timestamp *@
+        @* <GridColumn Field="Active" Sortable="true" Visible="false" Editable="false" />   *@       
+
+        @* ============================================================= *@
+        @* COMMAND COLUMN - Action buttons for each department row      *@
+        @* ============================================================= *@
+        <GridCommandColumn Width="300px" Title="Department Admin">
+            @* Custom info button to show department details modal *@
+            <GridCommandButton Command="Info"
+                               OnClick="() => ShowDepartmentInfo((Department)context)"
+                               Icon="@CustomIcons.Domain">Info</GridCommandButton>
+            @* Standard CRUD operation buttons *@
+            <GridCommandButton Command="Edit" Icon="SvgIcon.Pencil">Edit</GridCommandButton>
+            <GridCommandButton Command="Save" Icon="SvgIcon.Save" ShowInEdit="true">Save</GridCommandButton>
+            <GridCommandButton Command="Cancel" Icon="SvgIcon.Cancel" ShowInEdit="true">Cancel</GridCommandButton>
+            <GridCommandButton Command="Delete" Icon="SvgIcon.Trash">Delete</GridCommandButton>
+        </GridCommandColumn>
+    </GridColumns>
+</TelerikGrid>
+
+</RequireAuth>
+
+@* ===================================================================== *@
+@* DEPARTMENT DETAILS MODAL - Reference to department details component  *@
+@* ===================================================================== *@
+<DepartmentCard @ref="DepartmentCardRef" Locations="@locations" />
+
+@* ===================================================================== *@
+@* LOADING INDICATOR - Show while data is being loaded                   *@
+@* ===================================================================== *@
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+
+@* ===================================================================== *@
+@* COMPONENT STYLES - Grid and window styling                            *@
+@* ===================================================================== *@
+<style>
+    /* Main grid text styling */
+    .grid-text {
+        font-family: Roboto; /* Consistent font family */
+        overflow: hidden; /* Hide overflow */
+        text-overflow: ellipsis; /* Show "..." for long text */
+        white-space: nowrap; /* Prevent text wrapping */
+    }
+
+    /* Employee table styling (legacy/unused) */
+    .employee-table {
+        display: grid; /* Grid layout */
+        border-collapse: collapse; /* Collapsed table borders */
+        margin: 25px 0; /* Vertical margins */
+        font-size: 0.9em; /* Slightly smaller font */
+        min-width: 400px; /* Minimum table width */
+    }
+
+    /* Modal window title bar styling */
+    .k-window-titlebar {
+        background-color: var(--kendo-color-primary); /* Primary color background */
+        color: white; /* White text */
+        font-weight: 700; /* Bold font */
+        font-size: 2em; /* Large font size */
+        padding: 10px; /* Internal padding */
+        text-align: center; /* Center text */
+        text-transform: uppercase; /* All caps */
+        letter-spacing: 1px; /* Letter spacing */
+    }
+
+    /* Employee table header styling (legacy/unused) */
+    .employee-table thead tr {
+        background-color: var(--kendo-color-primary); /* Primary color background */
+        display: flex; /* Flexbox layout */
+    }
+
+    /* Add this CSS to the style section of each grid page */
+
+    /* Status badge styling */
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-active {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .status-inactive {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    /* Active toggle container in edit mode */
+    .active-toggle-container {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .toggle-label {
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: var(--kendo-color-primary);
+        background: transparent !important;
+        padding: 0 !important;
+        text-transform: none !important;
+        font-size: 0.9em;
+    }
+
+    .k-popup-edit-form label,
+    .k-edit-form-container label {
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+        text-transform: none !important;
+        max-width: 100%;
+        display: inline-block;
+        padding: 4px 6px !important;
+        margin-bottom: 8px !important;
+        font-size: 0.85em !important;
+        line-height: 1.4;
+    }
+
+    /* Toggle label specific styling */
+    .toggle-label {
+        white-space: nowrap;
+        padding: 4px 8px !important;
+        background-color: transparent !important;
+        color: inherit !important;
+        text-transform: none !important;
+        font-weight: 500;
+    }
+
+    /* Active toggle container */
+    .active-toggle-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 0;
+    }
+
+    /* Status badge styling */
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.85em;
+        font-weight: 500;
+        display: inline-block;
+    }
+
+    .status-active {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .status-inactive {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    /* Ensure form fields don't overflow */
+    .k-popup-edit-form .k-form-field,
+    .k-edit-form-container .k-form-field {
+        overflow: visible;
+        margin-bottom: 12px;
+    }
+
+    /* Make dropdowns fit properly */
+    .k-popup-edit-form .k-dropdown,
+    .k-edit-form-container .k-dropdown {
+        width: 100%;
+    }
+
+    .k-checkbox {
+        border-color: var(--kendo-color-secondary);
+    }
+
+    /* Inactive row styling - gray out entire row */
+    .k-grid tr.inactive-row {
+        opacity: 0.5;
+        background-color: #f8f9fa !important;
+    }
+
+        .k-grid tr.inactive-row:hover {
+            background-color: #e9ecef !important;
+        }
+
+        .k-grid tr.inactive-row td {
+            color: #6c757d !important;
+        }
+
+    /* Alternative styling for stricter graying out */
+    .k-grid tr.inactive-row {
+        filter: grayscale(60%);
+        opacity: 0.6;
+    }
+
+        .k-grid tr.inactive-row:hover {
+            filter: grayscale(40%);
+            opacity: 0.8;
+        }
+</style>
+
+@code {
+    // =====================================================================
+    // COMPONENT STATE PROPERTIES
+    // =====================================================================
+
+    /// <summary>
+    /// List of departments to display in the grid
+    /// Populated from database with location relationships and sorting
+    /// </summary>
+    private List<Department> departments { get; set; } = new List<Department>();
+
+    /// <summary>
+    /// Loading state indicator for UI feedback
+    /// </summary>
+    private bool isLoading = true;
+
+    /// <summary>
+    /// List of locations for dropdown selections and lookups
+    /// Loaded once during component initialization
+    /// </summary>
+    public List<Location> locations { get; set; } = new List<Location>();
+
+    /// <summary>
+    /// Reference to department info window (currently unused)
+    /// </summary>
+    private TelerikWindow? DeptInfoWindow { get; set; }
+
+    /// <summary>
+    /// Currently selected department for details display
+    /// </summary>
+    private Department? SelectedDepartment { get; set; }
+
+    /// <summary>
+    /// Controls visibility of department details window
+    /// </summary>
+    private bool WindowVisible { get; set; }
+
+    /// <summary>
+    /// Reference to the DepartmentCard component for showing department details
+    /// </summary>
+    private DepartmentCard DepartmentCardRef { get; set; }
+
+    /// <summary>
+    /// Applies conditional CSS classes to grid rows based on department active status
+    /// </summary>
+    private void OnDepartmentRowRender(GridRowRenderEventArgs args)
+    {
+        var department = (Department)args.Item;
+        var isActive = department.Active ?? true;
+
+        if (!isActive)
+        {
+            args.Class = "inactive-row";
+        }
+    }
+
+    // =====================================================================
+    // USER INTERACTION METHODS
+    // =====================================================================
+
+    /// <summary>
+    /// Opens the department details window
+    /// </summary>
+    private void OpenWindow()
+    {
+        WindowVisible = true;
+    }
+
+    /// <summary>
+    /// Generates dynamic window title for department details
+    /// </summary>
+    /// <returns>Formatted title string</returns>
+    private string GetWindowTitle()
+    {
+        return SelectedDepartment != null
+            ? $"{SelectedDepartment.DeptName} - Details"
+            : "Department Information";
+    }
+
+    /// <summary>
+    /// Shows department details modal for the specified department
+    /// Delegates to DepartmentCard component
+    /// </summary>
+    /// <param name="department">Department to display details for</param>
+    public void ShowDepartmentInfo(Department department)
+    {
+        DepartmentCardRef.ShowDepartmentInfo(department);
+    }
+
+    // =====================================================================
+    // COMPONENT LIFECYCLE METHODS
+    // =====================================================================
+
+    /// <summary>
+    /// Component initialization - loads department and location data from database
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+        await base.OnInitializedAsync();
+    }
+
+    /// <summary>
+    /// Loads department data with location relationships and complex sorting
+    /// Also loads reference data for locations dropdown
+    /// </summary>
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            isLoading = true;
+
+            // Load reference data for location dropdown
+            locations = await dbContext.Locations!.ToListAsync();
+
+            // Load departments with complex Entity Framework query
+            departments = await dbContext.Departments!
+                /* .Where(d => d.Active == true)  */          // Only active departments
+                .Include(d => d.DeptLocation)           // Include location navigation property
+                .OrderBy(d => d.DeptLocation!.LocName)  // Sort by location name first
+                .ThenBy(d => d.DeptName)                // Then by department name
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            // Log error and handle gracefully
+            Console.Error.WriteLine($"An error occurred while loading data: {ex.Message}");
+            // Could set error message for UI display here
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    // =====================================================================
+    // CRUD OPERATION METHODS
+    // =====================================================================
+
+    /// <summary>
+    /// Updates an existing department in the database
+    /// Uses Entity Framework change tracking for efficient updates
+    /// </summary>
+    /// <param name="args">Grid command event arguments containing the updated department</param>
+    async Task Update(GridCommandEventArgs args)
+    {
+        // Alternative approach (commented out):
+        // var index = departments.FindIndex(item => item.Id.Equals(((Department)args.Item).Id));
+        // departments[index] = (Department)args.Item;
+
+        var department = (Department)args.Item;
+        var existingDepartment = await dbContext.Departments.FindAsync(department.Id);
+
+        if (existingDepartment != null)
+        {
+            // Use Entity Framework to copy values from updated department to existing entity
+            dbContext.Entry(existingDepartment).CurrentValues.SetValues(department);
+            await dbContext.SaveChangesAsync();
+        }
+    }
+
+    /// <summary>
+    /// Adds a new department to the database and local collection
+    /// Sets the record creation timestamp
+    /// </summary>
+    /// <param name="args">Grid command event arguments containing the new department</param>
+    async Task Add(GridCommandEventArgs args)
+    {
+        // Alternative approach (commented out):
+        // ((Department)args.Item).Id = departments.Any() ? departments.Max(item => item.Id) + 1 : 1;
+        // departments.Add((Department)args.Item);
+
+        var department = (Department)args.Item;
+        department.RecordAdd = DateTime.UtcNow;         // Set creation timestamp
+        await dbContext.Departments.AddAsync(department); // Add to database
+        await dbContext.SaveChangesAsync();               // Save changes
+        departments.Add(department);                      // Add to local collection
+    }
+
+    /// <summary>
+    /// Deletes a department from the database and local collection
+    /// </summary>
+    /// <param name="args">Grid command event arguments containing the department to delete</param>
+    async Task Delete(GridCommandEventArgs args)
+    {
+        // Alternative approach (commented out):
+        // departments.RemoveAll(item => item.Id.Equals(((Department)args.Item).Id));
+
+        var department = (Department)args.Item;
+        var existingDepartment = await dbContext.Departments.FindAsync(department.Id);
+
+        if (existingDepartment != null)
+        {
+            dbContext.Departments.Remove(existingDepartment); // Remove from database
+            await dbContext.SaveChangesAsync();               // Save changes
+            departments.Remove(department);                   // Remove from local collection
+        }
+    }
+
+    // =====================================================================
+    // SEARCH CONFIGURATION
+    // =====================================================================
+
+    /// <summary>
+    /// Fields that are searchable through the global search box
+    /// Includes key department identification and contact fields
+    /// Note: Employee.Extension seems incorrect here - should probably be department-specific field
+    /// </summary>
+    private List<string> SearchableFields = new List<string>
+    {
+        nameof(Department.DeptName),     // Department name
+        nameof(Department.DeptManager),  // Department manager
+        nameof(Department.DeptEmail)    // Department email
+        /* nameof(Employee.Extension) */       // Note: This seems like it should be a department field instead
+    };
+}

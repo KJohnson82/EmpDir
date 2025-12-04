@@ -1,0 +1,178 @@
+﻿@* 
+Bottom navigation component that provides persistent navigation across the application.
+Creates a fixed bottom app bar with icon-based navigation buttons.
+Commonly used for mobile-first designs and primary navigation actions.
+*@
+
+@* Required using statements for Blazor components and Telerik UI *@
+@using Microsoft.AspNetCore.Components
+@using Telerik.Blazor
+@using Telerik.Blazor.Components
+@using Telerik.SvgIcons
+
+@* 
+Telerik AppBar component configured as a fixed bottom navigation bar.
+Uses dark theme with full width and automatic height adjustment.
+Flexbox classes ensure buttons are evenly distributed across the width.
+*@
+<TelerikAppBar Position="AppBarPosition.Bottom" 
+               PositionMode="AppBarPositionMode.Fixed" 
+               ThemeColor="@ThemeConstants.AppBar.ThemeColor.Dark"
+               Width="100%" 
+               Class="k-d-flex k-align k-justify-content-evenly k-text-white k-h-auto k-w-full ">
+
+    @* 
+    Dynamic navigation button generation from Items collection.
+    Each FooterItem creates a section with an icon and label button.
+    *@
+    @foreach (var item in Items)
+    {
+        @* Individual section container for each navigation item *@
+        <AppBarSection Class="k-d-flex k-flex-row k-border-none">
+            @* 
+            Navigation button with primary outline styling.
+            Combines icon and text in a vertical stack layout.
+            OnClick handler navigates to the specified URL.
+            *@
+            <TelerikButton ThemeColor="@ThemeConstants.Button.ThemeColor.Primary" 
+                           FillMode="@ThemeConstants.Button.FillMode.Outline" 
+                           Class="button-setup k-align-items-center" 
+                           OnClick="() => NavigateTo(item.Url)">
+                @* Navigation event handler *@
+
+                @* 
+                Vertical stack container for icon and label.
+                Creates centered, stacked layout typical of bottom navigation.
+                *@
+                <div class="vstack k-gap-1 k-align-items-center">
+                    @* Navigation icon from FooterItem *@
+                    <TelerikSvgIcon Icon="@item.Icon" Size="@ThemeConstants.SvgIcon.Size.Large" />
+                    @* Navigation label text (uppercase for consistency) *@
+                    <span class="k-text-uppercase button-text">@item.Label</span>
+                </div>
+            </TelerikButton>
+        </AppBarSection>
+    }
+</TelerikAppBar>
+
+@* ===== COMPONENT STYLING ===== *@
+<style>
+    /* ===== BUTTON CUSTOMIZATION ===== */
+    /* Remove default button borders for cleaner appearance */
+    .button-setup {
+        border: none; /* Remove button border for minimal look */
+    }
+
+    /* ===== TEXT STYLING ===== */
+    /* Small text size for button labels to fit more content */
+    .button-text {
+        font-size: x-small; /* Very small font for compact navigation */
+    }
+
+    /* ===== LAYOUT UTILITIES ===== */
+    /* Vertical stack layout utility class */
+    .vstack {
+        display: flex; /* Enable flexbox */
+        flex: 1 1 auto; /* Flexible sizing */
+        flex-direction: column; /* Stack children vertically */
+        align-self: stretch; /* Stretch to fill parent height */
+    }
+</style>
+
+@code {
+    #region Dependency Injection
+
+    /// <summary>
+    /// Navigation manager for handling route changes and URL navigation.
+    /// Injected automatically by Blazor's dependency injection system.
+    /// </summary>
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    #endregion
+
+    #region Parameters
+
+    /// <summary>
+    /// Collection of navigation items to display in the bottom bar.
+    /// Each item contains an icon, label, and destination URL.
+    /// Defaults to empty list to prevent null reference exceptions.
+    /// </summary>
+    [Parameter]
+    public List<FooterItem> Items { get; set; } = new();
+
+    #endregion
+
+    #region Event Handlers
+
+    /// <summary>
+    /// Handles navigation when a footer button is clicked.
+    /// Uses Blazor's NavigationManager to perform client-side routing.
+    /// </summary>
+    /// <param name="url">The destination URL to navigate to</param>
+    private void NavigateTo(string url)
+    {
+        Navigation.NavigateTo(url);
+    }
+
+    #endregion
+
+    #region Data Models
+
+    /// <summary>
+    /// Data model representing a single navigation item in the footer.
+    /// Contains all necessary information to render and handle navigation.
+    /// Immutable after construction to ensure data integrity.
+    /// </summary>
+    public class FooterItem
+    {
+        #region Properties
+
+        /// <summary>
+        /// SVG icon to display for this navigation item.
+        /// Uses Telerik's icon system for consistent styling and scaling.
+        /// </summary>
+        public ISvgIcon Icon { get; set; }
+
+        /// <summary>
+        /// Display text shown below the icon.
+        /// Typically short (1-2 words) to fit in bottom navigation space.
+        /// Automatically converted to uppercase in the UI.
+        /// </summary>
+        public string Label { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Destination URL for navigation when this item is selected.
+        /// Can be relative (e.g., "/home") or absolute URLs.
+        /// </summary>
+        public string Url { get; set; } = string.Empty;
+
+        #endregion
+
+        #region Constructors
+
+        /// <summary>
+        /// Default constructor for FooterItem.
+        /// Properties can be set individually after construction.
+        /// </summary>
+        // public FooterItem() { } // Commented out - parameterless constructor available by default
+
+        /// <summary>
+        /// Convenience constructor for creating fully-initialized FooterItem instances.
+        /// Ensures all required properties are set during object creation.
+        /// </summary>
+        /// <param name="icon">The SVG icon for this navigation item</param>
+        /// <param name="label">The display label for this navigation item</param>
+        /// <param name="url">The destination URL for navigation</param>
+        public FooterItem(ISvgIcon icon, string label, string url)
+        {
+            Icon = icon;
+            Label = label;
+            Url = url;
+        }
+
+        #endregion
+    }
+
+    #endregion
+}

@@ -1,0 +1,500 @@
+﻿@using Telerik.Blazor.Components
+@using Telerik.Blazor
+@using EmpDir.Core.Models
+@using EmpDir.Core.Data.Context
+@using EmpDir
+@using EmpDir.UI.Components
+
+@inject NavigationManager NavManager
+
+@if (Info is not null)
+{
+    <div class="header-wrapper">
+        <TelerikGridLayout RowSpacing="1" ColumnSpacing="0" Class="header-grid-layout">
+            <GridLayoutColumns>
+                <GridLayoutColumn Width="1fr" />
+            </GridLayoutColumns>
+            <GridLayoutRows>
+                <GridLayoutRow Height="@GetTitleHeight()" />
+                <GridLayoutRow Height="2px" />
+                <GridLayoutRow Height="@GetContentHeight()" />
+                <GridLayoutRow Height="50px" />
+            </GridLayoutRows>
+            <GridLayoutItems>
+                <!-- Title Section -->
+                <GridLayoutItem Row="1" Column="1" Class="header-title-item">
+                    <div class="header-title">
+                        <span class="title-text" style="font-size: @GetOptimalFontSize()">
+                            @Info.Title
+                        </span>
+                    </div>
+                </GridLayoutItem>
+
+                <!-- Divider -->
+                <GridLayoutItem Row="2" Column="1">
+                    <div class="divider"></div>
+                    @* <div style="border-bottom: solid 2px var(--kendo-color-primary-subtle)"></div> *@
+                </GridLayoutItem>
+
+                <!-- Content Section - No Scrolling -->
+                <GridLayoutItem Row="3" Column="1" Class="header-content-item">
+                    @if (ShowTerritoryTable)
+                    {
+                        <!-- Compact Territory Table -->
+                        <div class="content-container">
+                            @if (!string.IsNullOrWhiteSpace(Info.Address))
+                            {
+                                <div class="info-item address-item compact">
+                                    @Info.Address, @Info.City, @Info.State @Info.Zip
+                                </div>
+                            }
+                            <div class="territory-table compact">
+                                <div class="territory-header">
+                                    <div class="territory-header-cell">TERRITORY</div>
+                                    <div class="territory-header-cell">MANAGER</div>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(Info.TManager1) && !string.IsNullOrWhiteSpace(Info.Subtitle1))
+                                {
+                                    <div class="territory-row">
+                                        <div class="territory-cell" style="text-align: right">@Info.Subtitle1</div>
+                                        <div class="territory-cell" style="text-align: left">@Info.TManager1</div>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Info.TManager2) && !string.IsNullOrWhiteSpace(Info.Subtitle2))
+                                {
+                                    <div class="territory-row">
+                                        <div class="territory-cell" style="text-align: right">@Info.Subtitle2</div>
+                                        <div class="territory-cell" style="text-align: left">@Info.TManager2</div>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Info.TManager3) && !string.IsNullOrWhiteSpace(Info.Subtitle3))
+                                {
+                                    <div class="territory-row">
+                                        <div class="territory-cell" style="text-align: right">@Info.Subtitle3</div>
+                                        <div class="territory-cell" style="text-align: left">@Info.TManager3</div>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Info.TManager4) && !string.IsNullOrWhiteSpace(Info.Subtitle4))
+                                {
+                                    <div class="territory-row">
+                                        <div class="territory-cell" style="text-align: right">@Info.Subtitle4</div>
+                                        <div class="territory-cell" style="text-align: left">@Info.TManager4</div>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Info.TManager5) && !string.IsNullOrWhiteSpace(Info.Subtitle5))
+                                {
+                                    <div class="territory-row">
+                                        <div class="territory-cell" style="text-align: right">@Info.Subtitle5</div>
+                                        <div class="territory-cell" style="text-align: left">@Info.TManager5</div>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Info.TManager6) && !string.IsNullOrWhiteSpace(Info.Subtitle6))
+                                {
+                                    <div class="territory-row">
+                                        <div class="territory-cell" style="text-align: right">@Info.Subtitle6</div>
+                                        <div class="territory-cell" style="text-align: left">@Info.TManager6</div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Compact Regular Info Layout -->
+                        <div class="content-container">
+                            @if (!string.IsNullOrWhiteSpace(Info.Address))
+                            {
+                                <div class="info-item address-item">
+                                    @Info.Address, @Info.City, @Info.State @Info.Zip
+                                    <div class="divider"></div>
+                                </div>
+                            }
+                            <!-- Divider -->
+                            @* <div class="divider"></div> *@
+                            @* <div style="border-bottom: solid 2px var(--kendo-color-primary-subtle)"></div> *@
+
+
+                            <div class="info-grid">
+                                @if (!string.IsNullOrWhiteSpace(Info.Subtitle1) && !string.IsNullOrWhiteSpace(Info.Phone))
+                                {
+                                    <div class="info-item">
+                                        <span class="info-label">@Info.Subtitle1:</span>
+                                        <span class="info-value">@Info.Phone</span>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Info.Subtitle2) && !string.IsNullOrWhiteSpace(Info.Email))
+                                {
+                                    <div class="info-item">
+                                        <span class="info-label">@Info.Subtitle2:</span>
+                                        <span class="info-value email-value">@Info.Email</span>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Info.Subtitle3) && !string.IsNullOrWhiteSpace(Info.Phone2))
+                                {
+                                    <div class="info-item">
+                                        <span class="info-label">@Info.Subtitle3:</span>
+                                        <span class="info-value">@Info.Phone2</span>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Info.Phone3))
+                                {
+                                    <div class="info-item">
+                                        <span class="info-label">Phone 3:</span>
+                                        <span class="info-value">@Info.Phone3</span>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Info.StoreManager))
+                                {
+                                    <div class="info-item">
+                                        <span class="info-label">@Info.Subtitle1</span>
+                                        <span class="info-value">@Info.StoreManager</span>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Info.AreaManager))
+                                {
+                                    <div class="info-item">
+                                        <span class="info-label">@Info.Subtitle2</span>
+                                        <span class="info-value">@Info.AreaManager</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </GridLayoutItem>
+
+                <!-- Search Section -->
+                @* <GridLayoutItem Row="4" Column="1" RowSpan="2" Class="search-section-item"> *@
+                <GridLayoutItem Row="4" Column="1" RowSpan="2" Class="search-section-item">
+                    @* <SearchBar ShowBackButton="!IsHomePage" /> *@
+                    <SearchBar />
+                </GridLayoutItem>
+            </GridLayoutItems>
+        </TelerikGridLayout>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public HeaderCardModels.HeadInfoCardModel? Info { get; set; }
+
+    private bool ShowTerritoryTable => !string.IsNullOrWhiteSpace(Info?.TManager1) ||
+                                      !string.IsNullOrWhiteSpace(Info?.TManager2) ||
+                                      !string.IsNullOrWhiteSpace(Info?.TManager3) ||
+                                      !string.IsNullOrWhiteSpace(Info?.TManager4) ||
+                                      !string.IsNullOrWhiteSpace(Info?.TManager5) ||
+                                      !string.IsNullOrWhiteSpace(Info?.TManager6);
+
+    private bool IsHomePage
+    {
+        get
+        {
+            var relativePath = NavManager.ToBaseRelativePath(NavManager.Uri);
+            return relativePath == "" || relativePath.Equals("home", StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    private string GetTitleHeight()
+    {
+        // Adjust title area height based on title length
+        if (Info?.Title?.Length > 20)
+            return "55px";
+        return "50px";
+    }
+
+    private string GetContentHeight()
+    {
+        // Calculate remaining height for content
+        // Total: 250px - Title (50-55px) - Divider (2px) - Search (45px) = ~148-153px
+        if (Info?.Title?.Length > 20)
+            return "148px";
+        return "153px";
+    }
+
+    private string GetOptimalFontSize()
+    {
+        if (Info?.Title == null) return "28px";
+
+        int titleLength = Info.Title.Length;
+
+        // Optimized for ~400px window width
+        return titleLength switch
+        {
+            > 30 => "19px",
+            > 25 => "20px",
+            > 20 => "23px",
+            > 15 => "26px",
+            > 10 => "30px",
+            _ => "34px"
+        };
+    }
+}
+
+<style>
+    /* CSS Variables */
+    :root {
+        --header-bg: #FF6666;
+        --header-text: white;
+        --divider-color: rgba(255, 255, 255, 0.3);
+        --hover-bg: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Main Container */
+    .header-wrapper {
+        width: 100%;
+        @* height: 290px; *@
+        background-color: var(--kendo-color-primary);
+        color: var(--header-text);
+        position: relative;
+    }
+
+    .header-grid-layout {
+        height: 100%;
+        background-color: var(--kendo-color-primary);
+    }
+
+    /* Title Section */
+    .header-title-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 10px;
+        background-color: var(--kendo-color-primary);
+        height: 100%;
+    }
+
+    .header-title {
+        width: 100%;
+        text-align: center;
+    }
+
+    .title-text {
+        font-weight: bold;
+        text-transform: uppercase;
+        color: var(--header-text);
+        line-height: 1.1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        padding: 0 8px;
+        display: inline-block;
+        letter-spacing: 0.02em;
+    }
+
+    /* Divider */
+    .divider {
+        width: 100%;
+        height: 2px;
+        @* background: linear-gradient(to right, transparent 5%, var(--divider-color) 20%, var(--divider-color) 80%, transparent 95%); *@
+        border-bottom: solid 2px var(--kendo-color-primary-subtle);
+        opacity: 25%;
+    }
+
+    /* Content Section */
+    .header-content-item {
+        padding: 4px 0;
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        align-items: flex-start;
+    }
+
+    .content-container {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        width: 100%;
+    }
+
+    .info-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding-left: 40px;
+    }
+
+    .info-item {
+        color: var(--header-text);
+        font-size: 12px;
+        line-height: 1.8;
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+    }
+
+    .info-label {
+        font-weight: normal;
+        white-space: nowrap;
+        min-width: fit-content;
+        font-size: medium;
+        letter-spacing: 0.25px;
+    }
+
+    .info-value {
+        word-break: break-word;
+        flex: 1;
+        font-size: medium;
+    }
+
+    .email-value {
+        font-size: medium;
+    }
+
+    .section {
+        position: relative;
+        margin-bottom: 15px;
+    }
+
+    .section-right {
+        padding-right: 2rem !important;
+    }
+
+    .section-left {
+        padding-left: 2rem !important;
+    }
+
+    .section-content {
+        font-size: clamp(0.9rem, 2vw + 0.75rem, 1.25rem);
+        line-height: 1;
+        letter-spacing: 1.25px;
+    }
+
+    .address-item {
+        font-size: medium;
+        font-weight: normal;
+        text-align: center;
+        @* margin-bottom: 4px;
+        padding-bottom: 4px; *@
+        @* border-bottom: 1px solid var(--divider-color); *@
+        padding: 4px 0;
+        line-height: 1.2;
+        display: block;
+    }
+
+        .address-item.compact {
+            margin-bottom: 2px;
+            padding-bottom: 2px;
+            font-size: 12px;
+        }
+
+    .left-divider {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        font-size: 1.125rem;
+        color: #d4af37;
+        font-weight: 600;
+        letter-spacing: 1.25px;
+    }
+
+        .left-divider::after {
+            content: '';
+            flex: 1;
+            border-top: 3px solid #4a9eff;
+            margin-left: 1rem;
+        }
+
+    .right-divider {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        font-size: 1.125rem;
+        color: #d4af37;
+        font-weight: 600;
+        letter-spacing: 1.25px;
+    }
+
+        .right-divider::before {
+            content: '';
+            flex: 1;
+            border-top: 3px solid #4a9eff;
+            margin-right: 1rem;
+        }
+
+    /* Territory Table */
+    .territory-table {
+        width: 100%;
+        background-color: rgba(0, 0, 0, 0.05);
+        border-radius: 3px;
+        overflow: hidden;
+        border: 1px solid var(--divider-color);
+    }
+
+    .territory-header {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        background-color: rgba(0, 0, 0, 0.1);
+        border-bottom: 1px solid var(--divider-color);
+    }
+
+    .territory-header-cell {
+        padding: 4px 8px;
+        font-weight: bold;
+        text-align: center;
+        color: var(--header-text);
+        font-size: 11px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    .territory-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        transition: background-color 0.2s;
+        letter-spacing: 1.5px;
+    }
+
+        .territory-row:hover {
+            background-color: var(--hover-bg);
+        }
+
+        .territory-row:last-child {
+            border-bottom: none;
+        }
+
+    .territory-cell {
+        padding: 3px 8px;
+        color: var(--header-text);
+        font-size: 11px;
+        line-height: 1.1;
+        word-break: break-word;
+    }
+
+        .territory-cell:first-child {
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+        }
+
+    /* Compact Territory Table Modifiers */
+    @* .territory-table.compact .territory-header-cell {
+        padding: 3px 6px;
+        font-size: 10px;
+    }
+
+    .territory-table.compact .territory-cell {
+        padding: 2px 6px;
+        font-size: 10px;
+        line-height: 1.2;
+    } *@
+    /* Search Section */
+    @* .search-section-item {
+        
+        background-color: rgba(0, 0, 0, 0.08);
+        border-top: 1px solid var(--divider-color);
+        height: 100%;
+        
+        align-items: center;
+    } *@
+
+    .search-section-item {
+        background-color: rgba(0, 0, 0, 0.08);
+        border-top: 1px solid var(--divider-color);
+        height: 100%;
+        align-items: center;
+        @* display: flex; *@
+        justify-content: center;
+    }
+</style>

@@ -1,0 +1,176 @@
+﻿@* Plant department detail page component.
+Displays a scrollable list of all employees within a specific department.
+Features department-specific information in the header, including manager and contact details.
+Serves as a navigation hub to individual employee detail pages.
+*@
+
+@* Route definition for a specific plant department, accepting location and department IDs *@
+@page "/plant/{locationID:int}/{departmentID:int}"
+
+@* Required using statements for data models and UI components *@
+@using EmpDir.Core.Models
+@using EmpDir.Core.Data.Context
+@using EmpDir
+@using EmpDir.UI.Components
+@using EmpDir.UI.Layout
+@using Telerik.Blazor
+@using Telerik.Blazor.Components
+@using Telerik.SvgIcons
+
+@* Required dependency injections for page functionality *@
+@inject IDirectoryService DirectoryService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject EmpDir.UI.Services.LayoutState LayoutState
+
+@* Page title for browser tab/window *@
+<PageTitle>Plant Department</PageTitle>
+
+@* ===== LOADING/NO DATA STATE ===== *@
+@* Display message if department data is not available or hasn't loaded *@
+@if (Department == null)
+{
+    <p>No Data Available</p>
+}
+else
+{
+    @* ===== MAIN CONTENT CONTAINER ===== *@
+    @* Full-height container with a scrollable list of employees.
+    Uses a flexible layout to fill the available space.
+    *@
+    <div class="button-page-container">
+        <div class="scrollable-wrapper">
+
+            @* Telerik ListView component for displaying department employees.
+            Renders each employee as a clickable navigation item.
+            EnableLoaderContainer provides a built-in loading indicator.
+            *@
+            <TelerikListView Data="@Department.Employees" EnableLoaderContainer="true" Class="button-list-container" Pageable="false">
+                <Template Context="emp">
+                    @* Navigation link for each employee.
+                    Routes to the individual employee detail page using location, department, and employee IDs.
+                    *@
+                    <NavLink href="@($"/plant/{locationID}/{departmentID}/{emp.Id}")" class="text-decoration-none k-text-uppercase">
+                        @* Employee button with custom styling.
+                        Displays employee's full name, job title, and a star icon for managers.
+                        Uses Telerik CSS utility classes for consistent appearance.
+                        *@
+                        <div class="menu-item py-3 px-4 my-2 rounded-3 k-text-white tracking-wider k-font-size-lg" style="font-size: medium; font-weight: bold; letter-spacing: 2px;">
+                            <div class="k-align-items-center">
+                                @emp.FirstName @emp.LastName
+                                @* Conditionally display a star icon if the employee is a manager *@
+                                @if (emp.IsManager == true)
+                                {
+                                    <span class="k-color-warning ps-1 "><TelerikSvgIcon Icon="@SvgIcon.Star" Size="@ThemeConstants.SvgIcon.Size.Large" /></span>
+                                }
+                            </div>
+                            <div class="k-color-dark k-font-bold k-font-size-sm ">@emp.JobTitle</div>
+                        </div>
+                    </NavLink>
+                </Template>
+            </TelerikListView>
+        </div>
+    </div>
+}
+
+@code {
+    #region Route Parameters
+
+    /// <summary>
+    /// The unique identifier for the plant location, passed via the URL route.
+    /// Used to maintain context when navigating to employee detail pages.
+    /// </summary>
+    [Parameter]
+    public int locationID { get; set; }
+
+    /// <summary>
+    /// The unique identifier for the department, passed via the URL route.
+    /// Used to fetch the specific department and its associated employees.
+    /// </summary>
+    [Parameter]
+    public int departmentID { get; set; }
+
+    #endregion
+
+    #region Private Properties
+
+    /// <summary>
+    /// The department object, including a list of its employees.
+    /// Loaded from the database based on the departmentID route parameter.
+    /// </summary>
+    private Department? Department;
+
+    /// <summary>
+    /// Header card model configured for the department display.
+    /// Generated using the HeaderCardModels.ForDepartment() factory method.
+    /// Contains department name, manager, and contact information.
+    /// </summary>
+    private HeaderCardModels.HeadInfoCardModel? DepartmentInfo;
+
+    /// <summary>
+    /// Footer navigation items configuration for the Plant section.
+    /// Provides global navigation to other main sections of the application.
+    /// </summary>
+    private List<FooterNav.FooterItem> FooterNavItems = new()
+    {
+        new FooterNav.FooterItem(CustomIcons.Home, "Home", "/"),
+        new FooterNav.FooterItem(CustomIcons.Corporate, "Corporate", "/corporate"),
+        new FooterNav.FooterItem(CustomIcons.MetalMart, "Metal Mart", "/metalmart"),
+        new FooterNav.FooterItem(CustomIcons.ServiceCenter, "Service Center", "/servicecenter")
+    };
+
+    #endregion
+
+    #region Lifecycle Methods
+
+    /// <summary>
+    /// Component lifecycle method called when parameters are set.
+    /// Fetches the department and its employees based on the departmentID from the URL.
+    /// Sorts employees alphabetically and configures the header card model.
+    /// </summary>
+    protected override async Task OnParametersSetAsync()
+    {
+        // Load the department with its associated employees from the database
+        Department = await DirectoryService.GetDepartmentWithEmployeesAsync(departmentID);
+
+        // Ensure employees are loaded before attempting to sort
+        if (Department?.Employees != null)
+        {
+            // Sort employees alphabetically by last name, then first name for consistent ordering
+            Department.Employees = Department.Employees
+                .OrderBy(e => e.LastName)
+                .ThenBy(e => e.FirstName)
+                .ToList();
+        }
+
+        // Create the header card model if the department was successfully loaded
+        if (Department != null)
+        {
+            DepartmentInfo = HeaderCardModels.ForDepartment(
+                title: Department.DeptName ?? "Department", // Department name for the header title
+                phone: Department.DeptPhone,               // Department phone number
+                email: Department.DeptEmail,               // Department email address
+                manager: Department.DeptManager            // Department manager's name
+            );
+        }
+    }
+
+    /// <summary>
+    /// Post-render lifecycle method for configuring the shared layout state.
+    /// Sets up the department-specific header and the global footer navigation.
+    /// Executes only on the first render to prevent unnecessary updates.
+    /// </summary>
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender && DepartmentInfo != null)
+        {
+            // Configure the header with department-specific information
+            LayoutState.SetHeader(DepartmentInfo);
+
+            // Set the global footer navigation
+            LayoutState.SetFooter(FooterNavItems);
+        }
+    }
+
+    #endregion
+}

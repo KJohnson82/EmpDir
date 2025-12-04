@@ -1,0 +1,208 @@
+﻿@* Define the route - this page is accessible at /login *@
+@page "/login"
+
+@* Import the authentication service namespace *@
+@using EmpDir.Admin.Services
+
+
+@* CRITICAL: Makes this component interactive (enables button clicks, form submission, etc.) *@
+@* Without this, the page is static and buttons won't work *@
+@rendermode InteractiveServer
+
+@* Inject the authentication service - allows us to call login methods *@
+@inject IAuthService AuthService
+
+@* Inject navigation manager - allows us to redirect users after login *@
+@inject NavigationManager Navigation
+
+@* Main container - centers the login box on the screen *@
+<div class="login-container">
+    <div class="login-box">
+        <h2>McElroy Directory Login</h2>
+
+        @* Display error message if login fails *@
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger">
+                @errorMessage
+            </div>
+        }
+
+        @* Blazor form component - handles validation and submission *@
+        @* Model: The data object to bind to (loginModel) *@
+        @* OnValidSubmit: Method to call when form is submitted AND valid *@
+        <EditForm Model="@loginModel" OnValidSubmit="@HandleLogin">
+            @* Enables validation based on data annotations in LoginModel *@
+            <DataAnnotationsValidator />
+
+            <div class="form-group">
+                <label for="password">Password</label>
+
+                @* Blazor input component - binds to loginModel.Password *@
+                @* Two-way binding: updates the property as user types *@
+                <InputText type="password"
+                           @bind-Value="loginModel.Password"
+                           class="form-control"
+                           id="password"
+                           placeholder="Enter password" />
+
+                @* Displays validation error messages for the Password field *@
+                <ValidationMessage For="@(() => loginModel.Password)" />
+            </div>
+
+            @* Submit button - triggers OnValidSubmit when clicked *@
+            @* Disabled while logging in to prevent multiple submissions *@
+            <button type="submit" class="btn btn-primary w-100" disabled="@isLoggingIn">
+                @* Change button text based on login state *@
+                @if (isLoggingIn)
+                {
+                    <span>Logging in...</span>
+                }
+                else
+                {
+                    <span>Login</span>
+                }
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+<style>
+    /* Outer container - full screen with gradient background */
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        /* background: linear-gradient(135deg, #d45349 0%, #ff6358 100%); */
+        background: #ff9d97;
+        border-radius: 10px;
+    }
+
+    /* White box containing the login form */
+    .login-box {
+        /* background: white; */
+        background: #ff6358;
+        padding: 4rem;
+        border-radius: 10px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 400px;
+    }
+
+        .login-box h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: white;
+        }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+        align-self: center;
+    }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+    .btn-primary {
+        margin-top: 1rem;
+
+    }
+
+    .alert {
+        margin-bottom: 1rem;
+    }
+</style>
+
+@code {
+    // ===================================================================
+    // COMPONENT STATE - Variables that hold data for this component
+    // ===================================================================
+
+    // The model that holds the password input value
+    private LoginModel loginModel = new();
+
+    // Stores error messages to display to the user
+    private string errorMessage = string.Empty;
+
+    // Tracks whether we're currently processing a login attempt
+    private bool isLoggingIn = false;
+
+    // ===================================================================
+    // LIFECYCLE METHOD - Runs when component first loads
+    // ===================================================================
+    protected override async Task OnInitializedAsync()
+    {
+        // Check if the user is already logged in
+        try
+        {
+            var isAuthenticated = await AuthService.IsAuthenticatedAsync();
+            if (isAuthenticated)
+            {
+                // User is already authenticated, send them to the home page
+                Navigation.NavigateTo("/Home");
+            }
+        }
+        catch
+        {
+            // Session storage might not be available during prerendering
+            // This is normal, just ignore and show the login form
+        }
+    }
+
+    // ===================================================================
+    // LOGIN HANDLER - Called when user submits the form
+    // ===================================================================
+    private async Task HandleLogin()
+    {
+        // Set loading state to disable button and show "Logging in..." text
+        isLoggingIn = true;
+
+        // Clear any previous error messages
+        errorMessage = string.Empty;
+
+        try
+        {
+            // Call the authentication service to verify the password
+            // This hashes the entered password and compares it to the stored hash
+            var success = await AuthService.LoginAsync(loginModel.Password);
+
+            if (success)
+            {
+                // Password was correct - redirect to home page
+                Navigation.NavigateTo("/Home");
+            }
+            else
+            {
+                // Password was incorrect - show error message
+                errorMessage = "Invalid password. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            // Something went wrong during login - show the error
+            errorMessage = $"Login error: {ex.Message}";
+        }
+        finally
+        {
+            // Always reset the loading state when done
+            // This re-enables the button
+            isLoggingIn = false;
+        }
+    }
+
+    // ===================================================================
+    // DATA MODEL - Defines the structure of the login form data
+    // ===================================================================
+    private class LoginModel
+    {
+        // The password field with validation rules
+        // [Required] means this field cannot be empty
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Password is required")]
+        public string Password { get; set; } = string.Empty;
+    }
+}

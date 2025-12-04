@@ -1,0 +1,16 @@
+﻿@using EmpDir.Admin.Services
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<button class="btn btn-outline-danger" @onclick="HandleLogout">
+    Logout
+</button>
+
+@code {
+    private async Task HandleLogout()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/login", true);
+    }
+}

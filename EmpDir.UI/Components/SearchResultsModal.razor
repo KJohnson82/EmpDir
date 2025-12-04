@@ -1,0 +1,663 @@
+﻿@* 
+Search results modal component that displays comprehensive search results in a tabbed interface.
+Shows results for Employees, Locations, and Departments with detailed information and navigation.
+Features loading states, no results handling, and intelligent navigation based on result types.
+Uses Telerik Window component for modal display with draggable functionality.
+*@
+
+@* Required using statements for data models, services, and Telerik UI components *@
+@using EmpDir
+@using EmpDir.Core.Models
+@using EmpDir.Core.Services
+@using EmpDir.UI.Services
+@using Telerik.Blazor
+@using Telerik.Blazor.Components
+@using Telerik.SvgIcons
+
+@* Inject services for search functionality and navigation *@
+@inject EmpDir.Core.Services.SearchService SearchService
+@inject NavigationManager Navigation
+
+@* 
+Telerik Window component configured as a modal dialog for search results.
+Features drag functionality, fixed dimensions, and modal overlay behavior.
+*@
+<TelerikWindow Class="search-modal"
+               Width="350px"
+               Height="500px"
+               Draggable="true"
+               Modal="true"
+               Visible="@IsVisible"
+               VisibleChanged="@OnVisibleChanged">
+
+    @* ===== WINDOW TITLE ===== *@
+    @* Dynamic title showing "Search Results" with the current search term *@
+    <WindowTitle>
+        <strong>Search Results</strong>
+        @if (!string.IsNullOrEmpty(SearchResults?.SearchTerm))
+        {
+            <span class="search-term">for "@SearchResults.SearchTerm"</span>
+        }
+    </WindowTitle>
+
+    @* ===== WINDOW CONTENT ===== *@
+    <WindowContent>
+        <div class="search-results-container">
+            @* ===== LOADING STATE ===== *@
+            @* Display loading spinner and message while search is in progress *@
+            @if (IsSearching)
+            {
+                <div class="text-center p-4">
+                    <TelerikLoader Visible="true" Size="@ThemeConstants.Loader.Size.Medium" />
+                    <p>Searching...</p>
+                </div>
+            }
+            @* ===== RESULTS STATE ===== *@
+            @* Display tabbed results when search has returned data *@
+            else if (SearchResults?.HasResults == true)
+            {
+                @* 
+                Tabbed interface for organizing different types of search results.
+                Each tab shows count and only appears if results exist for that category.
+                *@
+                <TelerikTabStrip Width="325px" TabAlignment="TabStripTabAlignment.Stretched">
+
+                    @* ===== EMPLOYEES TAB ===== *@
+                    @* Display employee search results with contact and organizational information *@
+                    @if (SearchResults.Employees.Any())
+                    {
+                        <TabStripTab Title="@($"Employees ({SearchResults.Employees.Count})")">
+                            <div class="results-section">
+                                @foreach (var employee in SearchResults.Employees)
+                                {
+                                    @* 
+                                    Individual employee result item with click navigation.
+                                    Shows name, job title, contact info, location, and department.
+                                    *@
+                                    <div class="result-item employee-item" @onclick="() => NavigateToEmployee(employee.Id)">
+                                        <div class="result-header">
+                                            <strong>@employee.FirstName @employee.LastName</strong>
+                                            <span class="job-title">@employee.JobTitle</span>
+                                        </div>
+                                        <div class="result-details">
+                                            @* Primary phone number *@
+                                            <div><TelerikSvgIcon Icon="@SvgIcon.ExclamationCircle" /> @employee.PhoneNumber</div>
+                                            @* Cell phone number (if available) *@
+                                            @if (!string.IsNullOrEmpty(employee.CellNumber))
+                                            {
+                                                <div><TelerikSvgIcon Icon="@SvgIcon.ExclamationCircle" /> @employee.CellNumber</div>
+                                            }
+                                            @* Email address *@
+                                            <div><TelerikSvgIcon Icon="@SvgIcon.ExclamationCircle" /> @employee.Email</div>
+                                            @* Employee location (if assigned) *@
+                                            @if (employee.EmpLocation != null)
+                                            {
+                                                <div><TelerikSvgIcon Icon="@SvgIcon.MapMarker" /> @employee.EmpLocation.LocName</div>
+                                            }
+                                            @* Employee department (if assigned) *@
+                                            @if (employee.EmpDepartment != null)
+                                            {
+                                                <div><TelerikSvgIcon Icon="@SvgIcon.Group" /> @employee.EmpDepartment.DeptName</div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </TabStripTab>
+                    }
+
+                    @* ===== LOCATIONS TAB ===== *@
+                    @* Display location search results with address and management information *@
+                    @if (SearchResults.Locations.Any())
+                    {
+                        <TabStripTab Title="@($"Locations ({SearchResults.Locations.Count})")">
+                            <div class="results-section">
+                                @foreach (var location in SearchResults.Locations)
+                                {
+                                    @* 
+                                    Individual location result item with click navigation.
+                                    Shows location name, number, address, contact info, and management.
+                                    *@
+                                    <div class="result-item location-item" @onclick="() => NavigateToLocation(location.Id)">
+                                        <div class="result-header">
+                                            <strong>@location.LocName</strong>
+                                            <span class="location-number">Location #@location.LocNum</span>
+                                        </div>
+                                        <div class="result-details">
+                                            @* Full address information *@
+                                            <div><TelerikSvgIcon Icon="@SvgIcon.MapMarker" /> @location.Address, @location.City, @location.State @location.Zipcode</div>
+                                            @* Location phone number (if available) *@
+                                            @if (!string.IsNullOrEmpty(location.PhoneNumber))
+                                            {
+                                                <div><TelerikSvgIcon Icon="@SvgIcon.ExclamationCircle" /> @location.PhoneNumber</div>
+                                            }
+                                            @* Location email (if available) *@
+                                            @if (!string.IsNullOrEmpty(location.Email))
+                                            {
+                                                <div><TelerikSvgIcon Icon="@SvgIcon.ExclamationCircle" /> @location.Email</div>
+                                            }
+                                            @* Store manager information (if available) *@
+                                            @if (!string.IsNullOrEmpty(location.StoreManager))
+                                            {
+                                                <div><TelerikSvgIcon Icon="@SvgIcon.User" /> Manager: @location.StoreManager</div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </TabStripTab>
+                    }
+
+                    @* ===== DEPARTMENTS TAB ===== *@
+                    @* Display department search results with management and contact information *@
+                    @if (SearchResults.Departments.Any())
+                    {
+                        <TabStripTab Title="@($"Departments ({SearchResults.Departments.Count})")">
+                            <div class="results-section">
+                                @foreach (var department in SearchResults.Departments)
+                                {
+                                    @* 
+                                    Individual department result item with click navigation.
+                                    Shows department name, manager, contact info, and location.
+                                    *@
+                                    <div class="result-item department-item" @onclick="() => NavigateToDepartment(department.Id)">
+                                        <div class="result-header">
+                                            <strong>@department.DeptName</strong>
+                                        </div>
+                                        <div class="result-details">
+                                            @* Department manager (if assigned) *@
+                                            @if (!string.IsNullOrEmpty(department.DeptManager))
+                                            {
+                                                <div><TelerikSvgIcon Icon="@SvgIcon.User" /> Manager: @department.DeptManager</div>
+                                            }
+                                            @* Department phone number (if available) *@
+                                            @if (!string.IsNullOrEmpty(department.DeptPhone))
+                                            {
+                                                <div><TelerikSvgIcon Icon="@SvgIcon.ExclamationCircle" /> @department.DeptPhone</div>
+                                            }
+                                            @* Department email (if available) *@
+                                            @if (!string.IsNullOrEmpty(department.DeptEmail))
+                                            {
+                                                <div><TelerikSvgIcon Icon="@SvgIcon.ExclamationCircle" /> @department.DeptEmail</div>
+                                            }
+                                            @* Department location (if assigned) *@
+                                            @if (department.DeptLocation != null)
+                                            {
+                                                <div><TelerikSvgIcon Icon="@SvgIcon.MapMarker" /> @department.DeptLocation.LocName</div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </TabStripTab>
+                    }
+                </TelerikTabStrip>
+            }
+            @* ===== NO RESULTS STATE ===== *@
+            @* Display helpful message and search suggestions when no results are found *@
+            else if (!IsSearching && !string.IsNullOrEmpty(SearchResults?.SearchTerm))
+            {
+                <div class="no-results text-center p-4">
+                    <TelerikSvgIcon Icon="@SvgIcon.Search" Size="@ThemeConstants.SvgIcon.Size.ExtraLarge" />
+                    <h4>No results found</h4>
+                    <p>Try searching for:</p>
+                    @* Helpful search suggestions to guide users *@
+                    <ul class="search-suggestions">
+                        <li>Employee names (first or last)</li>
+                        <li>Job titles</li>
+                        <li>Phone numbers</li>
+                        <li>Location names or numbers</li>
+                        <li>Department names</li>
+                        <li>Addresses or cities</li>
+                    </ul>
+                </div>
+            }
+        </div>
+    </WindowContent>
+
+    @* ===== WINDOW ACTIONS ===== *@
+    @* Standard close button in window title bar *@
+    <WindowActions>
+        <WindowAction Name="Close" OnClick="@CloseModal" />
+    </WindowActions>
+</TelerikWindow>
+
+@code {
+    #region Parameters
+
+    /// <summary>
+    /// Controls whether the search modal is visible or hidden.
+    /// Bound to parent component's visibility state.
+    /// </summary>
+    [Parameter] public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// Event callback fired when modal visibility changes.
+    /// Allows parent component to respond to modal open/close events.
+    /// </summary>
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+
+    /// <summary>
+    /// The search term to execute when modal becomes visible.
+    /// Triggers automatic search when changed and modal is visible.
+    /// </summary>
+    [Parameter] public string SearchTerm { get; set; } = "";
+
+    #endregion
+
+    #region Private Properties
+
+    /// <summary>
+    /// Stores the current search results returned from the SearchService.
+    /// Contains collections of matching employees, locations, and departments.
+    /// </summary>
+    private SearchResults? SearchResults { get; set; }
+
+    /// <summary>
+    /// Indicates whether a search operation is currently in progress.
+    /// Used to show loading state and prevent multiple simultaneous searches.
+    /// </summary>
+    private bool IsSearching { get; set; }
+
+    #endregion
+
+    #region Lifecycle Methods
+
+    /// <summary>
+    /// Called when component parameters are updated.
+    /// Automatically triggers search when modal becomes visible with a new search term.
+    /// Prevents duplicate searches for the same term.
+    /// </summary>
+    protected override async Task OnParametersSetAsync()
+    {
+        // Only perform search if modal is visible, search term exists, and it's different from current results
+        if (IsVisible && !string.IsNullOrWhiteSpace(SearchTerm) &&
+            (SearchResults?.SearchTerm != SearchTerm))
+        {
+            await PerformSearch();
+        }
+    }
+
+    #endregion
+
+    #region Search Methods
+
+    /// <summary>
+    /// Executes search operation using the SearchService.
+    /// Manages loading state, error handling, and UI updates.
+    /// Searches across employees, locations, and departments simultaneously.
+    /// </summary>
+    private async Task PerformSearch()
+    {
+        IsSearching = true;
+        StateHasChanged(); // Show loading state immediately
+
+        try
+        {
+            // Call the comprehensive search service
+            SearchResults = await SearchService.SearchAllAsync(SearchTerm);
+        }
+        catch (Exception ex)
+        {
+            // Handle search errors gracefully - log error and show empty results
+            Console.WriteLine($"Search error: {ex.Message}");
+            SearchResults = new EmpDir.Core.Services.SearchResults { SearchTerm = SearchTerm };
+        }
+        finally
+        {
+            IsSearching = false;
+            StateHasChanged(); // Update UI with results or error state
+        }
+    }
+
+    #endregion
+
+    #region Modal Event Handlers
+
+    /// <summary>
+    /// Handles visibility changes initiated by the Telerik Window component.
+    /// Propagates visibility changes back to parent component.
+    /// </summary>
+    /// <param name="isVisible">New visibility state of the modal</param>
+    private async Task OnVisibleChanged(bool isVisible)
+    {
+        await IsVisibleChanged.InvokeAsync(isVisible);
+    }
+
+    /// <summary>
+    /// Explicitly closes the modal and notifies parent component.
+    /// Called by close button and navigation methods.
+    /// </summary>
+    private async Task CloseModal()
+    {
+        await IsVisibleChanged.InvokeAsync(false);
+    }
+
+    #endregion
+
+    #region Navigation Methods
+
+    /// <summary>
+    /// Navigates to an employee's detail page based on their department context.
+    /// Determines appropriate URL structure based on employee's department information.
+    /// Closes modal before navigation to prevent UI conflicts.
+    /// </summary>
+    /// <param name="employeeId">Unique identifier for the employee</param>
+    private void NavigateToEmployee(int employeeId)
+    {
+        CloseModal();
+
+        // Find the employee in search results to get department context
+        var employee = SearchResults?.Employees.FirstOrDefault(e => e.Id == employeeId);
+
+        if (employee?.Department != null)
+        {
+            // Navigate to employee within their department context
+            Navigation.NavigateTo($"/corporate/{employee.Department}/{employeeId}");
+        }
+        else
+        {
+            // Default fallback to corporate section if no department info available
+            Navigation.NavigateTo($"/corporate");
+        }
+    }
+
+    /// <summary>
+    /// Navigates to a location's detail page based on location type.
+    /// Determines appropriate URL structure based on LocationType (Metal Mart, Service Center, Plant).
+    /// Provides intelligent routing to the correct section of the application.
+    /// </summary>
+    /// <param name="locationId">Unique identifier for the location</param>
+    private void NavigateToLocation(int locationId)
+    {
+        CloseModal();
+
+        // Find the location in search results to get type context
+        var location = SearchResults?.Locations.FirstOrDefault(l => l.Id == locationId);
+
+        // Route based on location type for appropriate page structure
+        if (location?.LocationType?.LoctypeName?.ToLower() == "metal mart")
+        {
+            Navigation.NavigateTo($"/metalmart/{locationId}");
+        }
+        else if (location?.LocationType?.LoctypeName?.ToLower() == "service center")
+        {
+            Navigation.NavigateTo($"/servicecenter/{locationId}");
+        }
+        else if (location?.LocationType?.LoctypeName?.ToLower() == "plant")
+        {
+            Navigation.NavigateTo($"/plant/{locationId}");
+        }
+        else
+        {
+            // Default fallback to home page if location type is unknown
+            Navigation.NavigateTo($"/");
+        }
+    }
+
+    /// <summary>
+    /// Navigates to a department's detail page based on department location context.
+    /// Determines appropriate URL structure based on whether department is corporate or plant-based.
+    /// Uses location ID to differentiate between corporate (location 1) and plant departments.
+    /// </summary>
+    /// <param name="departmentId">Unique identifier for the department</param>
+    private void NavigateToDepartment(int departmentId)
+    {
+        CloseModal();
+
+        // Find the department in search results to get location context
+        var department = SearchResults?.Departments.FirstOrDefault(d => d.Id == departmentId);
+
+        if (department?.Location != null)
+        {
+            // Location ID 1 indicates corporate headquarters
+            if (department.Location == 1)
+            {
+                Navigation.NavigateTo($"/corporate/{departmentId}");
+            }
+            else
+            {
+                // Other location IDs indicate plant-based departments
+                Navigation.NavigateTo($"/plant/{department.Location}/{departmentId}");
+            }
+        }
+        else
+        {
+            // Default fallback to corporate section if no location info available
+            Navigation.NavigateTo($"/corporate/{departmentId}");
+        }
+    }
+
+    #endregion
+}
+
+@* ===== SEARCH MODAL STYLING ===== *@
+<style>
+    /* ===== MODAL CONTAINER STYLING ===== */
+    .search-modal {
+        padding: 0;
+        align-self: center; /* Center modal vertically */
+        z-index: 999; /* High z-index for modal overlay */
+        border-radius: 8px; /* Rounded corners for modern appearance */
+        background-color: var(--kendo-color-base-active);
+    }
+
+    /* Ensure modal content has consistent background */
+    .k-window-content {
+        background-color: var(--kendo-color-base-active);
+        border-radius: 8px;
+    }
+
+    /* Responsive modal sizing with minimum constraints */
+    .k-window {
+        width: 90vw; /* Responsive width (90% of viewport) */
+        height: 75vh; /* Responsive height (75% of viewport) */
+        min-height: 200px; /* Minimum height for usability */
+        min-width: 120px; /* Minimum width for content visibility */
+        z-index: 10003; /* Very high z-index for modal priority */
+        border-radius: 8px;
+    }
+
+    /* ===== TAB STRIP STYLING ===== */
+    /* Commented out alternative tab styling approaches */
+    /*
+        .k-tabstrip-item {
+            background-color: var(--kendo-color-base-emphasis);
+        }
+
+        .k-item:active .k-link:active .k-tabstrip-item:active {
+            background-color: var(--kendo-color-base-on-subtle);
+        } */
+
+    /* .k-tabstrip .k-tabstrip-items-wrapper .k-item {
+            background-color: var(--kendo-color-base-emphasis);
+        } */
+
+    /* Active tab styling with primary color theme */
+    .k-tabstrip .k-tabstrip-items-wrapper .k-item .k-active,
+    .k-tabstrip .k-tabstrip-items-wrapper .k-item .k-link .k-active,
+    .k-tabstrip .k-tabstrip-items-wrapper .k-item.k-selected {
+        background-color: var(--kendo-color-primary) !important;
+        color: var(--kendo-color-on-primary) !important;
+        padding-bottom: 5px;
+        width: -webkit-fit-content;
+        height: -webkit-fit-content;
+        position: relative;
+    }
+
+    /* Ensure active tab item has consistent styling */
+    .k-tabstrip .k-tabstrip-items-wrapper .k-item.k-tabstrip-item.k-active {
+        background-color: var(--kendo-color-primary) !important;
+        color: var(--kendo-color-on-primary) !important;
+    }
+
+    /* Tab hover effects */
+    .k-tabstrip .k-tabstrip-items-wrapper .k-item:hover {
+        background-color: var(--kendo-color-primary-hover);
+        color: var(--kendo-color-on-primary);
+    }
+
+    /* Tab content area styling */
+    .k-tabstrip .k-tabstrip-content {
+        background-color: var(--kendo-color-base-active);
+        padding-bottom: 5px;
+        width: -webkit-fit-content;
+        height: -webkit-fit-content;
+        position: relative;
+    }
+
+    /* Additional tab content styling */
+    .k-tabstrip-content {
+        background-color: var(--kendo-color-base-active);
+        padding-bottom: 5px;
+    }
+
+        .k-tabstrip-content:active {
+            background-color: var(--kendo-color-base-active);
+            padding-bottom: 5px;
+        }
+
+    /* ===== SEARCH TERM DISPLAY ===== */
+    .search-term {
+        color: #666; /* Muted color for search term */
+        font-weight: normal; /* Normal weight to distinguish from title */
+        font-style: italic; /* Italic to indicate it's dynamic content */
+        padding: 0 5px; /* Small padding for spacing */
+    }
+
+    /* ===== CONTENT CONTAINER ===== */
+    .search-results-container {
+        height: 100%; /* Fill available height */
+        overflow: hidden; /* Prevent container overflow */
+    }
+
+    /* ===== WINDOW TITLE BAR ===== */
+    .k-window-titlebar {
+        border-radius: 8px 8px 0 0; /* Rounded top corners only */
+        background-color: var(--kendo-color-primary-emphasis);
+        color: var(--kendo-color-on-app-surface);
+    }
+
+    /* ===== RESULTS SECTIONS ===== */
+    .results-section {
+        max-height: 350px; /* Limit height to prevent modal overflow */
+        /* overflow-y: auto; */ /* Commented out - handled differently */
+        padding: 5px; /* Small padding for content spacing */
+    }
+
+    /* ===== INDIVIDUAL RESULT ITEMS ===== */
+    .result-item {
+        border: 1px solid #e0e0e0; /* Light border for definition */
+        border-radius: 10px; /* Rounded corners for modern look */
+        padding: 12px; /* Generous padding for touch targets */
+        margin-bottom: 8px; /* Spacing between items */
+        cursor: pointer; /* Indicate clickable item */
+        transition: all 0.2s ease; /* Smooth hover transitions */
+        word-break: break-all; /* Handle long text gracefully */
+        background-color: var(--kendo-color-primary-emphasis);
+    }
+
+        /* Result item hover effects with elevation */
+        .result-item:hover {
+            background-color: var(--kendo-color-primary-hover);
+            border-color: #007acc; /* Accent border on hover */
+            transform: translateY(-1px); /* Subtle lift effect */
+            box-shadow: 0 2px 8px rgba(0, 122, 204, 0.15); /* Soft shadow */
+        }
+
+    /* ===== RESULT ITEM HEADERS ===== */
+    .result-header {
+        display: flex;
+        justify-content: space-between; /* Spread content across width */
+        align-items: center; /* Vertically center content */
+        margin-bottom: 8px; /* Spacing before details */
+    }
+
+        .result-header strong {
+            color: #333; /* Dark color for primary text */
+            font-size: 16px; /* Larger font for prominence */
+            word-break: auto-phrase; /* Better text wrapping */
+        }
+
+    /* ===== SECONDARY INFO STYLING ===== */
+    .job-title, .location-number {
+        color: #1976d2; /* Blue accent color */
+        padding: 2px 0 8px 0; /* Vertical padding */
+        font-size: 13px; /* Smaller secondary text */
+        font-weight: 400; /* Normal weight for contrast */
+        word-break: auto-phrase; /* Better text wrapping */
+        text-align: end; /* Right-align secondary info */
+    }
+
+    /* ===== RESULT DETAILS SECTION ===== */
+    .result-details {
+        display: flex;
+        flex-direction: column; /* Stack details vertically */
+        gap: 4px; /* Consistent spacing between details */
+        font-weight: bold; /* Bold text for readability */
+    }
+
+        .result-details div {
+            display: flex;
+            align-items: center; /* Vertically center icon and text */
+            gap: 6px; /* Space between icon and text */
+            font-size: 14px; /* Readable detail text size */
+            color: #666; /* Muted color for details */
+        }
+
+        /* Icon styling within result details */
+        .result-details .k-svg-icon {
+            width: 16px; /* Consistent icon size */
+            height: 16px;
+            color: #007acc; /* Accent color for icons */
+        }
+
+    /* ===== TYPE-SPECIFIC HOVER EFFECTS ===== */
+    /* Employee result hover styling */
+    .employee-item:hover {
+        border-color: #4caf50; /* Green border for employees */
+    }
+
+        .employee-item:hover .job-title {
+            background-color: #e8f5e8; /* Light green background */
+            color: #2e7d32; /* Dark green text */
+        }
+
+    /* Location result hover styling */
+    .location-item:hover {
+        border-color: #ff9800; /* Orange border for locations */
+    }
+
+        .location-item:hover .location-number {
+            background-color: #fff3e0; /* Light orange background */
+            color: #f57c00; /* Dark orange text */
+        }
+
+    /* Department result hover styling */
+    .department-item:hover {
+        border-color: #9c27b0; /* Purple border for departments */
+    }
+
+    /* ===== NO RESULTS STYLING ===== */
+    .no-results {
+        color: #666; /* Muted color for no results message */
+    }
+
+        .no-results .k-svg-icon {
+            color: #ccc; /* Light gray for large search icon */
+            margin-bottom: 16px; /* Space below icon */
+        }
+
+    /* ===== SEARCH SUGGESTIONS ===== */
+    .search-suggestions {
+        text-align: left; /* Left-align suggestion list */
+        display: inline-block; /* Inline block for centering */
+        margin: 0; /* Remove default margins */
+        padding-left: 20px; /* Indent for bullet points */
+    }
+
+        .search-suggestions li {
+            margin-bottom: 4px; /* Spacing between suggestions */
+            color: #888; /* Muted color for suggestions */
+        }
+</style>

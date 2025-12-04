@@ -1,0 +1,323 @@
+﻿@* ===================================================================== *@
+@* LOCATION DETAILS MODAL COMPONENT                                      *@
+@* Displays comprehensive location information in a popup window         *@
+@* ===================================================================== *@
+
+@* Import necessary namespaces for Entity Framework, Telerik components, and data models *@
+@using Microsoft.EntityFrameworkCore
+@using Telerik.Blazor
+@using Telerik.Blazor.Components
+@using Telerik.Blazor.Data
+@using Telerik.Blazor.Extensions
+@using Telerik.Blazor.Services
+@using Telerik.SvgIcons
+@using Telerik.DataSource
+@using Telerik.DataSource.Extensions
+@using EmpDir.Core.Data
+@using EmpDir.Core.Models
+@using EmpDir.Core.Data.Context
+
+@* Inject database context for data access *@
+@inject AppDbContext dbContext
+
+@* ===================================================================== *@
+@* MODAL WINDOW CONTAINER                                                *@
+@* ===================================================================== *@
+<TelerikWindow @ref="LocInfoWindow"
+               Modal="true"
+               @bind-Visible="@WindowVisible"
+               Width="auto"
+               Height="auto"
+               Resizable="false"
+               Draggable="false"
+               Class="user-card"
+               CloseOnOverlayClick="true">
+
+    @* ===================================================================== *@
+    @* WINDOW HEADER - Dynamic title based on selected location             *@
+    @* ===================================================================== *@
+    <WindowTitle>
+        @if (SelectedLocation != null)
+        {
+            <h3>@SelectedLocation.LocName</h3>
+        }
+    </WindowTitle>
+
+    @* Window control buttons (close button) *@
+    <WindowActions>
+        <WindowAction Name="Close" />
+    </WindowActions>
+
+    @* ===================================================================== *@
+    @* WINDOW CONTENT - Location information display                        *@
+    @* ===================================================================== *@
+    <WindowContent>
+        @if (SelectedLocation != null)
+        {
+            <section>
+                <div>
+                    @* Basic location identification *@
+                    <div class="card-row">
+                        <label>Location Number:</label>
+                        <span>@SelectedLocation.LocNum</span>
+                    </div>
+
+                    @* Address information section *@
+                    <div class="card-row">
+                        <label>Street Address:</label>
+                        <span>@SelectedLocation.Address</span>
+                    </div>
+                    <div class="card-row">
+                        <label>City:</label>
+                        <span>@SelectedLocation.City</span>
+                    </div>
+                    <div class="card-row">
+                        <label>State:</label>
+                        <span>@SelectedLocation.State</span>
+                    </div>
+                    <div class="card-row">
+                        <label>Zipcode:</label>
+                        <span>@SelectedLocation.Zipcode</span>
+                    </div>
+
+                    @* Contact information section *@
+                    <div class="card-row">
+                        <label>Phone Number:</label>
+                        <span>@SelectedLocation.PhoneNumber</span>
+                    </div>
+                    <div class="card-row">
+                        <label>Fax or Alt. Number:</label>
+                        <span>@SelectedLocation.FaxNumber</span>
+                    </div>
+                    <div class="card-row">
+                        <label>Email:</label>
+                        <span>@SelectedLocation.Email</span>
+                    </div>
+
+                    @* Operating information section *@
+                    <div class="card-row">
+                        <label>Hours:</label>
+                        <span>@SelectedLocation.Hours</span>
+                    </div>
+
+                    @* Location type with lookup from predefined types *@
+                    <div class="card-row">
+                        <label>Location Type:</label>
+                        <span>
+                            @{
+                                // Look up location type name from LocationTypes list
+                                var locTypeName = LocationTypes.FirstOrDefault(lt => lt.Key == SelectedLocation.Loctype).Value ?? "Unknown";
+                            }
+                            @locTypeName
+                        </span>
+                    </div>
+
+                    @* Management information section *@
+                    <div class="card-row">
+                        <label>Location Manager:</label>
+                        <span>@SelectedLocation.StoreManager</span>
+                    </div>
+                    <div class="card-row">
+                        <label>Area Manager:</label>
+                        <span>@SelectedLocation.AreaManager</span>
+                    </div>
+
+                    @* Record metadata *@
+                    <div class="card-row">
+                        <label>Location Added:</label>
+                        <span>@SelectedLocation.RecordAdd?.ToString("MM/dd/yyy")</span>
+                    </div>
+                </div>
+            </section>
+        }
+    </WindowContent>
+
+    @* ===================================================================== *@
+    @* WINDOW FOOTER - Action buttons                                        *@
+    @* ===================================================================== *@
+    <WindowFooter>
+        <TelerikButton OnClick="() => WindowVisible = false"
+                       ThemeColor="primary">
+            Close
+        </TelerikButton>
+    </WindowFooter>
+
+</TelerikWindow>
+
+@* ===================================================================== *@
+@* COMPONENT STYLES - Custom CSS for location details display            *@
+@* ===================================================================== *@
+<style>
+    /* Label styling for data field names */
+    label {
+        padding: 8px 6px 6px 8px; /* Internal spacing */
+        margin-bottom: 15px; /* Space below labels */
+        font-weight: 500; /* Medium font weight */
+        font-size: 0.9em; /* Slightly smaller text */
+        text-transform: uppercase; /* All caps for consistency */
+        background-color: var(--kendo-color-primary); /* Primary theme color */
+        color: white; /* White text for contrast */
+    }
+
+    section {
+        padding: 4px;
+    }
+
+    /* Main container styling */
+    .user-card {
+        /* padding: 5px; */ /* Commented out padding */
+        /* border-radius: 16px 16px 16px 16px; */ /* Commented out rounded corners */
+        /* border: 0px solid; */ /* Commented out border */
+        width: auto;
+        height: auto;
+        margin: 10px;
+    }
+
+        /* Data value styling */
+        .user-card span {
+            font-weight: 600; /* Semi-bold for emphasis */
+            padding: 3px 5px; /* Internal padding */
+            font-size: 1em; /* Standard font size */
+            /* background-color: transparent;  */
+        }
+
+        /* Window title bar action buttons styling */
+        .user-card .k-window-titlebar-actions {
+            background-color: var(--kendo-color-primary-emphasis); /* Emphasized primary color */
+        }
+
+    .k-actions {
+        background: var(--kendo-color-primary);
+    }
+
+    /* Individual data row styling */
+    .card-row {
+        padding: 6px 0; /* Vertical padding */
+        margin: 2px;
+        border: solid 1px;
+        /* border-bottom: dashed 1px; 
+        border-left: 0.25px; 
+        border-right: 0.25px;  */
+        border-color: var(--kendo-color-primary); 
+        /* border: solid; */ /* Commented out solid border */
+        /* border-top: dashed 1px; */ /* Commented out top border */
+        /* background: inherit; */ /* Commented out background */
+        /* background-color: var(--kendo-color-); */ /* Commented out background color */
+    }
+</style>
+
+@code {
+    // =====================================================================
+    // COMPONENT STATE PROPERTIES
+    // =====================================================================
+
+    /// <summary>
+    /// Controls the visibility of the location details modal window
+    /// </summary>
+    private bool WindowVisible { get; set; }
+
+    /// <summary>
+    /// The currently selected location to display details for
+    /// </summary>
+    private Location? SelectedLocation { get; set; }
+
+    /// <summary>
+    /// List of locations (currently unused but available for future expansion)
+    /// </summary>
+    private List<Location> locations { get; set; } = new List<Location>();
+
+    /// <summary>
+    /// Reference to the Telerik Window component for programmatic control
+    /// </summary>
+    private TelerikWindow? LocInfoWindow { get; set; }
+
+    // =====================================================================
+    // COMPONENT PARAMETERS - Input properties from parent components
+    // =====================================================================
+
+    /// <summary>
+    /// List of departments passed from parent component
+    /// Currently used for potential department-location relationships
+    /// </summary>
+    [Parameter]
+    public List<Department> Departments { get; set; } = new();
+
+    /// <summary>
+    /// Stores the selected location type value for processing
+    /// </summary>
+    private int LocTypeValue { get; set; }
+
+    // =====================================================================
+    // PUBLIC METHODS - Called by parent components
+    // =====================================================================
+
+    /// <summary>
+    /// Opens the location details modal for the specified location
+    /// This method is called by parent components to show location details
+    /// </summary>
+    /// <param name="location">The location object to display details for</param>
+    public void ShowLocationInfo(Location location)
+    {
+        SelectedLocation = location;
+        WindowVisible = true;
+        StateHasChanged(); // Trigger UI refresh to show modal
+    }
+
+    // =====================================================================
+    // PRIVATE UTILITY METHODS
+    // =====================================================================
+
+    /// <summary>
+    /// Generates a dynamic window title based on the selected location
+    /// Includes location name and number for clear identification
+    /// </summary>
+    /// <returns>Formatted title string</returns>
+    private string GetWindowTitle()
+    {
+        return SelectedLocation != null
+            ? $"{SelectedLocation.LocName} {SelectedLocation.LocNum} - Details"
+            : "Employee Information"; // Fallback title (note: should probably be "Location Information")
+    }
+
+    /// <summary>
+    /// Simple method to open the modal window
+    /// Alternative to direct property setting
+    /// </summary>
+    private void OpenWindow()
+    {
+        WindowVisible = true;
+    }
+
+    // =====================================================================
+    // LOCATION TYPE DEFINITIONS - Static data for location categorization
+    // =====================================================================
+
+    /// <summary>
+    /// Predefined location types for McElroy Metal locations
+    /// Maps integer IDs to human-readable location type names
+    /// </summary>
+    private List<KeyValuePair<int, string>> LocationTypes = new List<KeyValuePair<int, string>>()
+    {
+        new KeyValuePair<int, string>(1, "Corporate"),      // Corporate headquarters/offices
+        new KeyValuePair<int, string>(2, "Metal Mart"),     // Retail metal sales locations
+        new KeyValuePair<int, string>(3, "Service Center"), // Service and support centers
+        new KeyValuePair<int, string>(4, "Plant")           // Manufacturing plants
+    };
+
+    /// <summary>
+    /// Static utility method to convert location type ID to readable name
+    /// Uses switch expression for efficient type lookup
+    /// </summary>
+    /// <param name="location">Location object containing type ID</param>
+    /// <returns>Human-readable location type name</returns>
+    public static string locTypeList(Location location)
+    {
+        return location.Loctype switch
+        {
+            1 => "Corporate",
+            2 => "Metal Mart",
+            3 => "Service Center",
+            _ => "Plant",          // Default case for any other values
+        };
+    }
+}

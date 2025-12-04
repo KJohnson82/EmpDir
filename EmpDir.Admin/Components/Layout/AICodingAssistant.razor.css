@@ -1,0 +1,57 @@
+﻿/* AI Assistant Box */
+
+#ai-assistant {
+    position: absolute;
+    bottom: 64px;
+    left: 9px;
+    width: 188px;
+    border: 1px solid transparent;
+    border-radius: 11px;
+    padding: 5px 16px;
+    background: linear-gradient(var(--kendo-color-surface), var(--kendo-color-surface)) padding-box, linear-gradient(114deg, #4b5ffa 0%, #c158e4 93%) border-box;
+}
+
+    #ai-assistant::before {
+        content: "";
+        position: absolute;
+        z-index: 0;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: .18;
+        background: url(ai-circle.png) center center no-repeat;
+        background-size: cover;
+    }
+
+    #ai-assistant h4,
+    #ai-assistant > p,
+    #ai-assistant > a {
+        position: relative;
+        padding-left: 41px;
+        z-index: 2;
+    }
+
+    #ai-assistant h4 {
+        position: relative;
+        margin: 0 0 .3em;
+        font-size: 20px;
+        line-height: 1.4;
+        font-weight: 500;
+    }
+
+    #ai-assistant .k-icon {
+        position: absolute;
+        left: 0;
+        top: 0;
+        color: #4b5ffa;
+    }
+
+    #ai-assistant > a {
+        color: #a75ae9;
+        text-decoration: none;
+    }
+
+        #ai-assistant > a:hover {
+            text-decoration: underline;
+        }

@@ -1,0 +1,360 @@
+﻿@* Plant employee detail page component.
+Displays detailed contact information for a single employee.
+Features the employee's department name in the header.
+Provides a focused view of an individual's contact details like phone, email, and network ID.
+*@
+
+@* Route definition for a specific employee, accepting location, department, and employee IDs *@
+@page "/plant/{locationID:int}/{departmentID:int}/{employeeID:int}"
+
+@* Required using statements for data models and UI components *@
+@using EmpDir.Core.Models
+@using EmpDir.Core.Data.Context
+@using EmpDir
+@using EmpDir.UI.Components
+@using EmpDir.UI.Layout
+@using Telerik.Blazor
+@using Telerik.Blazor.Components
+@using Telerik.SvgIcons
+
+@* Required dependency injections for page functionality *@
+@inject IDirectoryService DirectoryService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject EmpDir.UI.Services.LayoutState LayoutState
+
+@* Page title for browser tab/window *@
+<PageTitle>Plant Employee</PageTitle>
+
+@* ===== LOADING STATE ===== *@
+@* Display loading message while employee data is being fetched *@
+@if (Employee == null)
+{
+    <p>Loading employee...</p>
+}
+else
+{
+    @* ===== MAIN CONTENT CONTAINER ===== *@
+    @* Full-height container with specific border styling for visual separation. *@
+    <div class="button-page-container k-border-top-2 k-border-bottom-8 k-border-x-0 k-border-solid k-border-dark-subtle ">
+
+        @* Scrollable wrapper to ensure content fits on various screen sizes *@
+        <div class="scrollable-wrapper">
+
+            @* Main container for all employee details *@
+            <div class="employee-details">
+                @* Section for displaying the employee's name and job title *@
+                <div class="employee-name-section k-mb-2">
+                    <h1 class="employee-name">
+                        @Employee.FirstName?.ToUpper() @Employee.LastName?.ToUpper()
+                        @* Conditionally display a star icon if the employee is a manager *@
+                        @if (Employee.IsManager == true)
+                        {
+                            <span class="manager-star">★</span>
+                        }
+                    </h1>
+                    <p class="job-title">@Employee.JobTitle</p>
+                </div>
+
+                @* Container for all contact information fields *@
+                <div class="contact-details">
+                    @* Conditionally render phone number and extension if available *@
+                    @if (!string.IsNullOrWhiteSpace(Employee.PhoneNumber) || !string.IsNullOrWhiteSpace(Employee.Extension))
+                    {
+                        <div class="contact-section section-left">
+                            <div class="left-divider">PHONE</div>
+                            <div class="contact-value">
+                                @Employee.PhoneNumber
+                                @if (!string.IsNullOrWhiteSpace(Employee.Extension))
+                                {
+                                    <span> | EXT: @Employee.Extension</span>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @* Conditionally render email address if available *@
+                    @if (!string.IsNullOrWhiteSpace(Employee.Email))
+                    {
+                        <div class="contact-section section-right">
+                            <div class="right-divider">EMAIL</div>
+                            <div class="contact-value" style="text-align: end;">@Employee.Email</div>
+                        </div>
+                    }
+
+                    @* Conditionally render cell number if available *@
+                    @if (!string.IsNullOrWhiteSpace(Employee.CellNumber))
+                    {
+                        <div class="contact-section section-left">
+                            <div class="left-divider">CELL</div>
+                            <div class="contact-value">@Employee.CellNumber</div>
+                        </div>
+                    }
+
+                    @* Conditionally render network ID if available *@
+                    @if (!string.IsNullOrWhiteSpace(Employee.NetworkId))
+                    {
+                        <div class="contact-section section-right">
+                            <div class="right-divider">NETWORK ID</div>
+                            <div class="contact-value" style="text-align: end;">@Employee.NetworkId</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Component-specific styling for the employee details layout *@
+    <style>
+        .employee-details {
+            background-color: var(--kendo-color-dark);
+            padding: 0;
+        }
+
+        .employee-name-section {
+            padding: 20px 20px;
+            text-align: center;
+            border-bottom: 2px solid var(--kendo-color-primary);
+        }
+
+        .employee-name {
+            color: var(--kendo-color-on-dark);
+            font-size: xx-large;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+            letter-spacing: 2px;
+        }
+
+        .manager-star {
+            color: #ffd700;
+            margin-left: 8px;
+        }
+
+        .job-title {
+            color: #ff6358;
+            font-size: large;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .contact-details {
+            background-color: var(--kendo-color-dark);
+            padding: 2px;
+        }
+
+        .contact-section {
+            padding: 10px 0;
+            position: relative;
+        }
+
+            .contact-section:last-child {
+                border-bottom: none;
+            }
+
+        .contact-label {
+            color: var(--kendo-color-warning);
+            font-size: medium;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            border-bottom: 2px solid var(--kendo-color-tertiary-on-surface);
+        }
+
+        .contact-value {
+            color: white;
+            font-size: clamp(0.9rem, 2vw + 0.75rem, 1.25rem);
+            line-height: 1;
+            letter-spacing: 0.5px;
+        }
+
+        .button-page-container {
+            height: calc(100% - 60px);
+            display: flex;
+            flex-direction: column;
+            background-color: var(--kendo-color-dark);
+            padding-bottom: 10px;
+            padding-top: 10px;
+        }
+
+        .scrollable-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+            .scrollable-wrapper::-webkit-scrollbar {
+                display: none;
+            }
+
+        .footer {
+            border-top: 6px solid red;
+        }
+
+        .left-divider {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            font-size: 1.125rem;
+            color: #d4af37;
+            font-weight: 600;
+            letter-spacing: 1.25px;
+        }
+
+            .left-divider::after {
+                content: '';
+                flex: 1;
+                border-top: 3px solid #4a9eff;
+                margin-left: 1rem;
+            }
+
+        .right-divider {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            font-size: 1.125rem;
+            color: #d4af37;
+            font-weight: 600;
+            letter-spacing: 1.25px;
+        }
+
+            .right-divider::before {
+                content: '';
+                flex: 1;
+                border-top: 3px solid #4a9eff;
+                margin-right: 1rem;
+            }
+
+        .divider-vertical {
+            width: 2.5px;
+            height: 3rem;
+            background-color: #4a9eff;
+            margin: 0 20px;
+        }
+
+        .section {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .section-right {
+            padding-right: 2rem !important;
+        }
+
+        .section-left {
+            padding-left: 2rem !important;
+        }
+    </style>
+}
+
+@code {
+    #region Route Parameters
+
+    /// <summary>
+    /// The unique identifier for the plant location, passed via the URL route.
+    /// Included to maintain navigational context, though not directly used on this page.
+    /// </summary>
+    [Parameter]
+    public int locationID { get; set; }
+
+    /// <summary>
+    /// The unique identifier for the department, passed via the URL route.
+    /// Used to fetch department details for the header display.
+    /// </summary>
+    [Parameter]
+    public int departmentID { get; set; }
+
+    /// <summary>
+    /// The unique identifier for the employee, passed via the URL route.
+    /// Used to fetch the specific employee's details for display.
+    /// </summary>
+    [Parameter]
+    public int employeeID { get; set; }
+
+    #endregion
+
+    #region Private Properties
+
+    /// <summary>
+    /// The department object for the current employee.
+    /// Loaded from the database to display the department name in the header.
+    /// </summary>
+    private Department? Department;
+
+    /// <summary>
+    /// The employee object containing all details to be displayed on the page.
+    /// Loaded from the database based on the employeeID route parameter.
+    /// </summary>
+    private Employee? Employee;
+
+    /// <summary>
+    /// Header card model configured for the employee detail display.
+    /// Generated using the HeaderCardModels.Employee() factory method.
+    /// Contains the employee's department name as the header title.
+    /// </summary>
+    private HeaderCardModels.HeadInfoCardModel? EmployeeInfo;
+
+    /// <summary>
+    /// Footer navigation items configuration for the Plant section.
+    /// Provides global navigation to other main sections of the application.
+    /// </summary>
+    private List<FooterNav.FooterItem> FooterNavItems = new()
+    {
+        new FooterNav.FooterItem(CustomIcons.Home, "Home", "/"),
+        new FooterNav.FooterItem(CustomIcons.Corporate, "Corporate", "/corporate"),
+        new FooterNav.FooterItem(CustomIcons.MetalMart, "Metal Mart", "/metalmart"),
+        new FooterNav.FooterItem(CustomIcons.ServiceCenter, "Service Center", "/servicecenter")
+    };
+
+    #endregion
+
+    #region Lifecycle Methods
+
+    /// <summary>
+    /// Component lifecycle method called when parameters are set.
+    /// Fetches the employee's details and their department information from the database.
+    /// Configures the header card model with the department name.
+    /// </summary>
+    protected override async Task OnParametersSetAsync()
+    {
+        // Load the specific employee's details using the ID from the route
+        Employee = await DirectoryService.GetEmployeeByIdAsync(employeeID);
+
+        // Proceed only if the employee was successfully loaded
+        if (Employee != null)
+        {
+            // Fetch the department information to use for the header title
+            Department = await DirectoryService.GetDepartmentWithEmployeesAsync(departmentID);
+
+            // Create the header card using the Employee factory method
+            EmployeeInfo = HeaderCardModels.Employee(
+                // Use department name for the title, with fallbacks for safety
+                title: Department?.DeptName ?? Employee.EmpDepartment?.DeptName ?? "Plant Employee"
+            );
+        }
+    }
+
+    /// <summary>
+    /// Post-render lifecycle method for configuring the shared layout state.
+    /// Sets up the employee-specific header and the global footer navigation.
+    /// Executes only on the first render to prevent unnecessary updates.
+    /// </summary>
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender && EmployeeInfo != null)
+        {
+            // Configure the header with the employee's department name
+            LayoutState.SetHeader(EmployeeInfo);
+
+            // Set the global footer navigation
+            LayoutState.SetFooter(FooterNavItems);
+        }
+    }
+
+    #endregion
+}

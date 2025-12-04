@@ -1,0 +1,596 @@
+﻿@* 
+Standard header card component that displays organizational information in different layouts.
+This is the general-purpose header card with visual dividers, as opposed to CorpHeadCard which has cleaner styling.
+Supports two main display modes:
+1. Territory Table Mode: For plants/area management with structured role/manager data
+2. Regular Info Mode: For departments/general pages with contact information and visual dividers
+Uses Telerik Grid Layout for precise positioning and responsive design.
+*@
+
+@* Required using statements for Telerik components and data models *@
+@using Telerik.Blazor.Components
+@using Telerik.Blazor
+@using EmpDir.Core.Models
+@using EmpDir.Core.Data.Context
+@using EmpDir
+@using EmpDir.UI.Components
+
+@* Inject navigation manager for URL-based logic *@
+@inject NavigationManager NavManager
+
+@* Only render content if header information is provided *@
+@if (Info is not null)
+{
+    <div class="header-wrapper">
+        @* 
+        Telerik Grid Layout provides structured positioning with 4 rows:
+        1. Title section (dynamic height based on title length)
+        2. Divider (2px fixed)
+        3. Content section (dynamic height to fill remaining space)
+        4. Search section (50px fixed)
+        *@
+        <TelerikGridLayout RowSpacing="1" ColumnSpacing="0" Class="header-grid-layout">
+            <GridLayoutColumns>
+                <GridLayoutColumn Width="1fr" />  
+            </GridLayoutColumns>
+            <GridLayoutRows>
+                <GridLayoutRow Height="@GetTitleHeight()" />    
+                <GridLayoutRow Height="2px" />                  
+                <GridLayoutRow Height="@GetContentHeight()" />  
+                <GridLayoutRow Height="50px" />                 
+            </GridLayoutRows>
+            <GridLayoutItems>
+
+                @* ===== TITLE SECTION ===== *@
+                <GridLayoutItem Row="1" Column="1" Class="header-title-item">
+                    <div class="header-title">
+                        @* Dynamic font sizing based on title length for optimal readability *@
+                        <span class="title-text" style="font-size: @GetOptimalFontSize()">
+                            @Info.Title
+                        </span>
+                    </div>
+                </GridLayoutItem>
+
+                @* ===== VISUAL DIVIDER ===== *@
+                <GridLayoutItem Row="2" Column="1">
+                    <div class="divider"></div>
+                    @* Alternative divider style (commented out): *@
+                    @* <div style="border-bottom: solid 2px var(--kendo-color-primary-subtle)"></div> *@
+                </GridLayoutItem>
+
+                @* ===== CONTENT SECTION - CONDITIONAL LAYOUT ===== *@
+                <GridLayoutItem Row="3" Column="1" Class="header-content-item">
+                    @* 
+                    Conditional rendering based on content type:
+                    - Territory Table: For complex organizational structures (plants, area management)
+                    - Regular Info: For departments, corporate, and simpler structures
+                    *@
+                    @if (ShowTerritoryTable)
+                    {
+                        @* ===== TERRITORY TABLE MODE ===== *@
+                        @* Used for plants and area management with multiple role/manager pairs *@
+                        <div class="content-container">
+                            @* Optional address display for location context *@
+                            @if (!string.IsNullOrWhiteSpace(Info.Address))
+                            {
+                                <div class="info-item address-item compact">
+                                    @Info.Address, @Info.City, @Info.State @Info.Zip
+                                </div>
+                            }
+
+                            @* Structured table showing territory/role to manager mappings *@
+                            <div class="territory-table compact">
+                                @* Table header with role and manager columns *@
+                                <div class="territory-header">
+                                    <div class="territory-header-cell">TERRITORY</div>
+                                    <div class="territory-header-cell">MANAGER</div>
+                                </div>
+
+                                @* 
+                                Dynamic rows based on available TManager data
+                                Each row shows a role/territory (Subtitle) paired with manager name (TManager)
+                                Only renders rows where both subtitle and manager are present
+                                *@
+                                @if (!string.IsNullOrWhiteSpace(Info.TManager1) && !string.IsNullOrWhiteSpace(Info.Subtitle1))
+                                {
+                                    <div class="territory-row">
+                                        <div class="territory-cell" style="text-align: right">@Info.Subtitle1</div>
+                                        <div class="territory-cell" style="text-align: left">@Info.TManager1</div>
+                                    </div>
+                                }
+                                @* Repeat pattern for up to 6 territory/manager pairs *@
+                                @if (!string.IsNullOrWhiteSpace(Info.TManager2) && !string.IsNullOrWhiteSpace(Info.Subtitle2))
+                                {
+                                    <div class="territory-row">
+                                        <div class="territory-cell" style="text-align: right">@Info.Subtitle2</div>
+                                        <div class="territory-cell" style="text-align: left">@Info.TManager2</div>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Info.TManager3) && !string.IsNullOrWhiteSpace(Info.Subtitle3))
+                                {
+                                    <div class="territory-row">
+                                        <div class="territory-cell" style="text-align: right">@Info.Subtitle3</div>
+                                        <div class="territory-cell" style="text-align: left">@Info.TManager3</div>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Info.TManager4) && !string.IsNullOrWhiteSpace(Info.Subtitle4))
+                                {
+                                    <div class="territory-row">
+                                        <div class="territory-cell" style="text-align: right">@Info.Subtitle4</div>
+                                        <div class="territory-cell" style="text-align: left">@Info.TManager4</div>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Info.TManager5) && !string.IsNullOrWhiteSpace(Info.Subtitle5))
+                                {
+                                    <div class="territory-row">
+                                        <div class="territory-cell" style="text-align: right">@Info.Subtitle5</div>
+                                        <div class="territory-cell" style="text-align: left">@Info.TManager5</div>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Info.TManager6) && !string.IsNullOrWhiteSpace(Info.Subtitle6))
+                                {
+                                    <div class="territory-row">
+                                        <div class="territory-cell" style="text-align: right">@Info.Subtitle6</div>
+                                        <div class="territory-cell" style="text-align: left">@Info.TManager6</div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        @* ===== REGULAR INFO MODE ===== *@
+                        @* Used for departments, corporate, and simpler organizational structures *@
+                        <div class="content-container">
+                            @* Optional address display with bottom divider *@
+                            @if (!string.IsNullOrWhiteSpace(Info.Address))
+                            {
+                                <div class="info-item address-item">
+                                    @Info.Address, @Info.City, @Info.State @Info.Zip
+                                    <div class="divider"></div>
+                                </div>
+                            }
+
+                            @* Commented out additional divider option *@
+                            @* <div class="divider"></div> *@
+                            @* <div style="border-bottom: solid 2px var(--kendo-color-primary-subtle)"></div> *@
+
+                            @* 
+                            Flexible information grid showing label/value pairs
+                            Displays various contact information and personnel based on available data
+                            *@
+                            <div class="info-grid">
+                                @* Primary contact info (typically phone) *@
+                                @if (!string.IsNullOrWhiteSpace(Info.Subtitle1) && !string.IsNullOrWhiteSpace(Info.Phone))
+                                {
+                                    <div class="info-item">
+                                        <span class="info-label">@Info.Subtitle1:</span>
+                                        <span class="info-value">@Info.Phone</span>
+                                    </div>
+                                }
+                                @* Secondary contact info (typically email) *@
+                                @if (!string.IsNullOrWhiteSpace(Info.Subtitle2) && !string.IsNullOrWhiteSpace(Info.Email))
+                                {
+                                    <div class="info-item">
+                                        <span class="info-label">@Info.Subtitle2:</span>
+                                        <span class="info-value email-value">@Info.Email</span>
+                                    </div>
+                                }
+                                @* Tertiary contact info (manager name or additional phone) *@
+                                @if (!string.IsNullOrWhiteSpace(Info.Subtitle3) && !string.IsNullOrWhiteSpace(Info.Phone2))
+                                {
+                                    <div class="info-item">
+                                        <span class="info-label">@Info.Subtitle3:</span>
+                                        <span class="info-value">@Info.Phone2</span>
+                                    </div>
+                                }
+                                @* Additional phone number if available *@
+                                @if (!string.IsNullOrWhiteSpace(Info.Phone3))
+                                {
+                                    <div class="info-item">
+                                        <span class="info-label">Phone 3:</span>
+                                        <span class="info-value">@Info.Phone3</span>
+                                    </div>
+                                }
+                                @* Store-specific manager information *@
+                                @if (!string.IsNullOrWhiteSpace(Info.StoreManager))
+                                {
+                                    <div class="info-item">
+                                        <span class="info-label">@Info.Subtitle1</span>
+                                        <span class="info-value">@Info.StoreManager</span>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Info.AreaManager))
+                                {
+                                    <div class="info-item">
+                                        <span class="info-label">@Info.Subtitle2</span>
+                                        <span class="info-value">@Info.AreaManager</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </GridLayoutItem>
+
+                @* ===== SEARCH SECTION ===== *@
+                @* Fixed-height section containing the search bar component *@
+                <GridLayoutItem Row="4" Column="1" RowSpan="2" Class="search-section-item">
+                    @* SearchBar component for site-wide search functionality *@
+                    @* Note: Back button logic commented out (was: ShowBackButton="!IsHomePage") *@
+                    <SearchBar />
+                </GridLayoutItem>
+            </GridLayoutItems>
+        </TelerikGridLayout>
+    </div>
+}
+
+@code {
+    #region Parameters
+
+    /// <summary>
+    /// Header information model containing all data to display.
+    /// Nullable to handle cases where no header information is provided.
+    /// </summary>
+    [Parameter]
+    public HeaderCardModels.HeadInfoCardModel? Info { get; set; }
+
+    #endregion
+
+    #region Computed Properties
+
+    /// <summary>
+    /// Determines whether to show the territory table layout or regular info layout.
+    /// Territory table is shown when any TManager fields contain data.
+    /// Used for plant and area management pages with structured role hierarchies.
+    /// </summary>
+    private bool ShowTerritoryTable => !string.IsNullOrWhiteSpace(Info?.TManager1) ||
+                                      !string.IsNullOrWhiteSpace(Info?.TManager2) ||
+                                      !string.IsNullOrWhiteSpace(Info?.TManager3) ||
+                                      !string.IsNullOrWhiteSpace(Info?.TManager4) ||
+                                      !string.IsNullOrWhiteSpace(Info?.TManager5) ||
+                                      !string.IsNullOrWhiteSpace(Info?.TManager6);
+
+    /// <summary>
+    /// Determines if the current page is the home page.
+    /// Used for conditional display logic (currently not actively used).
+    /// </summary>
+    private bool IsHomePage
+    {
+        get
+        {
+            var relativePath = NavManager.ToBaseRelativePath(NavManager.Uri);
+            return relativePath == "" || relativePath.Equals("home", StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    #endregion
+
+    #region Dynamic Sizing Methods
+
+    /// <summary>
+    /// Calculates optimal title section height based on title length.
+    /// Longer titles get more vertical space to prevent truncation.
+    /// </summary>
+    /// <returns>CSS height value for the title row</returns>
+    private string GetTitleHeight()
+    {
+        // Longer titles need more vertical space for proper display
+        if (Info?.Title?.Length > 20)
+            return "55px";
+        return "50px";
+    }
+
+    /// <summary>
+    /// Calculates content section height to fill remaining space.
+    /// Adjusts based on title height to maintain consistent total layout height.
+    /// Total layout calculation: ~250px total - title - divider - search = content height
+    /// </summary>
+    /// <returns>CSS height value for the content row</returns>
+    private string GetContentHeight()
+    {
+        // Calculate remaining height for content section
+        // Total: ~250px - Title (50-55px) - Divider (2px) - Search (50px) = ~143-148px
+        if (Info?.Title?.Length > 20)
+            return "148px";  // Less space when title takes more room
+        return "153px";      // More space when title is compact
+    }
+
+    /// <summary>
+    /// Determines optimal font size for the title based on character length.
+    /// Implements responsive typography to prevent overflow and maintain readability.
+    /// Optimized for typical header widths (~400px).
+    /// </summary>
+    /// <returns>CSS font-size value</returns>
+    private string GetOptimalFontSize()
+    {
+        if (Info?.Title == null) return "28px";
+
+        int titleLength = Info.Title.Length;
+
+        // Progressive font scaling based on title length
+        // Longer titles get smaller fonts to prevent overflow
+        return titleLength switch
+        {
+            > 30 => "19px",  // Very long titles - smallest font
+            > 25 => "20px",  // Long titles
+            > 20 => "23px",  // Medium-long titles
+            > 15 => "26px",  // Medium titles
+            > 10 => "30px",  // Short-medium titles
+            _ => "34px"      // Short titles - largest font
+        };
+    }
+
+    #endregion
+}
+
+@* ===== COMPONENT STYLING ===== *@
+<style>
+    /* ===== CSS VARIABLES ===== */
+    /* Centralized color and theme management */
+    :root {
+        --header-bg: #FF6666; /* Primary header background */
+        --header-text: white; /* Header text color */
+        --divider-color: rgba(255, 255, 255, 0.3); /* Semi-transparent dividers */
+        --hover-bg: rgba(255, 255, 255, 0.1); /* Hover state background */
+    }
+
+    /* ===== MAIN CONTAINER ===== */
+    .header-wrapper {
+        width: 100%;
+        /* height: 290px; */ /* Fixed height commented out for flexible sizing */
+        background-color: var(--kendo-color-primary); /* Uses Telerik theme primary color */
+        color: var(--header-text);
+        position: relative;
+    }
+
+    .header-grid-layout {
+        height: 100%;
+        background-color: var(--kendo-color-primary);
+    }
+
+    /* ===== TITLE SECTION ===== */
+    .header-title-item {
+        display: flex;
+        align-items: center; /* Vertically center title */
+        justify-content: center; /* Horizontally center title */
+        padding: 8px 10px;
+        background-color: var(--kendo-color-primary);
+        height: 100%;
+    }
+
+    .header-title {
+        width: 100%;
+        text-align: center;
+    }
+
+    .title-text {
+        font-weight: bold;
+        text-transform: uppercase; /* Consistent uppercase styling */
+        color: var(--header-text);
+        line-height: 1.1; /* Tight line spacing for titles */
+        white-space: nowrap; /* Prevent title wrapping */
+        overflow: hidden; /* Hide overflow */
+        text-overflow: ellipsis; /* Show "..." for overflow */
+        max-width: 100%;
+        padding: 0 8px;
+        display: inline-block;
+        letter-spacing: 0.02em; /* Slight letter spacing for readability */
+    }
+
+    /* ===== VISUAL DIVIDERS ===== */
+    .divider {
+        width: 100%;
+        height: 2px;
+        /* Gradient divider option (commented out): */
+        /* background: linear-gradient(to right, transparent 5%, var(--divider-color) 20%, var(--divider-color) 80%, transparent 95%); */
+        border-bottom: solid 2px var(--kendo-color-primary-subtle);
+        opacity: 25%; /* Semi-transparent for subtle separation */
+    }
+
+    /* ===== CONTENT SECTION ===== */
+    .header-content-item {
+        padding: 4px 0;
+        overflow: hidden; /* Prevent content overflow */
+        height: 100%;
+        display: flex;
+        align-items: flex-start; /* Align content to top */
+    }
+
+    .content-container {
+        display: flex;
+        flex-direction: column; /* Stack content vertically */
+        gap: 4px; /* Small spacing between elements */
+        width: 100%;
+    }
+
+    /* ===== REGULAR INFO LAYOUT ===== */
+    .info-grid {
+        display: flex;
+        flex-direction: column; /* Stack info items vertically */
+        gap: 4px; /* Consistent spacing */
+        padding-left: 40px; /* Indent from left edge */
+    }
+
+    .info-item {
+        color: var(--header-text);
+        font-size: 12px;
+        line-height: 1.8; /* Generous line spacing for readability */
+        display: flex;
+        align-items: baseline; /* Align text baselines */
+        gap: 4px; /* Space between label and value */
+    }
+
+    .info-label {
+        font-weight: normal;
+        white-space: nowrap; /* Prevent label wrapping */
+        min-width: fit-content; /* Size to content */
+        font-size: medium;
+        letter-spacing: 0.25px; /* Slight letter spacing */
+    }
+
+    .info-value {
+        word-break: break-word; /* Allow long values to wrap */
+        flex: 1; /* Take remaining space */
+        font-size: medium;
+    }
+
+    .email-value {
+        font-size: medium; /* Consistent email styling */
+    }
+
+    /* ===== SECTION UTILITIES ===== */
+    /* Utility classes for section spacing and alignment */
+    .section {
+        position: relative;
+        margin-bottom: 15px;
+    }
+
+    .section-right {
+        padding-right: 2rem !important;
+    }
+
+    .section-left {
+        padding-left: 2rem !important;
+    }
+
+    .section-content {
+        font-size: clamp(0.9rem, 2vw + 0.75rem, 1.25rem); /* Responsive font sizing */
+        line-height: 1;
+        letter-spacing: 1.25px;
+    }
+
+    /* ===== ADDRESS STYLING ===== */
+    .address-item {
+        font-size: medium;
+        font-weight: normal;
+        text-align: center; /* Center address text */
+        padding: 4px 0;
+        line-height: 1.2; /* Compact line spacing */
+        display: block;
+    }
+
+        /* Compact variant for territory table mode */
+        .address-item.compact {
+            margin-bottom: 2px;
+            padding-bottom: 2px;
+            font-size: 12px; /* Smaller font for compact layout */
+        }
+
+    /* ===== DECORATIVE DIVIDERS ===== */
+    /* Styled dividers with color accents (currently unused) */
+    .left-divider {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        font-size: 1.125rem;
+        color: #d4af37; /* Gold accent color */
+        font-weight: 600;
+        letter-spacing: 1.25px;
+    }
+
+        .left-divider::after {
+            content: '';
+            flex: 1;
+            border-top: 3px solid #4a9eff; /* Blue accent line */
+            margin-left: 1rem;
+        }
+
+    .right-divider {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        font-size: 1.125rem;
+        color: #d4af37; /* Gold accent color */
+        font-weight: 600;
+        letter-spacing: 1.25px;
+    }
+
+        .right-divider::before {
+            content: '';
+            flex: 1;
+            border-top: 3px solid #4a9eff; /* Blue accent line */
+            margin-right: 1rem;
+        }
+
+    /* ===== TERRITORY TABLE STYLING ===== */
+    /* Structured table layout for plant/area management display */
+    .territory-table {
+        width: 100%;
+        background-color: rgba(0, 0, 0, 0.05); /* Subtle background tint */
+        border-radius: 3px; /* Rounded corners */
+        overflow: hidden; /* Ensure rounded corners work */
+        border: 1px solid var(--divider-color);
+    }
+
+    .territory-header {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Two equal columns */
+        background-color: rgba(0, 0, 0, 0.1); /* Darker header background */
+        border-bottom: 1px solid var(--divider-color);
+    }
+
+    .territory-header-cell {
+        padding: 4px 8px;
+        font-weight: bold;
+        text-align: center;
+        color: var(--header-text);
+        font-size: 11px;
+        letter-spacing: 2px; /* Wide letter spacing for headers */
+        text-transform: uppercase; /* Uppercase header text */
+    }
+
+    .territory-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Two equal columns */
+        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        transition: background-color 0.2s; /* Smooth hover transition */
+        letter-spacing: 1.5px; /* Letter spacing for data rows */
+    }
+
+        .territory-row:hover {
+            background-color: var(--hover-bg); /* Hover effect */
+        }
+
+        .territory-row:last-child {
+            border-bottom: none; /* Remove border from last row */
+        }
+
+    .territory-cell {
+        padding: 3px 8px;
+        color: var(--header-text);
+        font-size: 11px;
+        line-height: 1.1; /* Compact line spacing */
+        word-break: break-word; /* Handle long text */
+    }
+
+        .territory-cell:first-child {
+            border-right: 1px solid rgba(255, 255, 255, 0.1); /* Column separator */
+            font-weight: 500; /* Slightly bolder for territory names */
+        }
+
+    /* ===== COMPACT TERRITORY TABLE MODIFIERS ===== */
+    /* Additional styling for compact territory table (currently commented out) */
+    /*
+        .territory-table.compact .territory-header-cell {
+            padding: 3px 6px;
+            font-size: 10px;
+        }
+
+        .territory-table.compact .territory-cell {
+            padding: 2px 6px;
+            font-size: 10px;
+            line-height: 1.2;
+        }
+        */
+
+    /* ===== SEARCH SECTION ===== */
+    .search-section-item {
+        background-color: rgba(0, 0, 0, 0.08); /* Subtle dark background */
+        border-top: 1px solid var(--divider-color); /* Top border separator */
+        height: 100%;
+        align-items: center;
+        justify-content: center; /* Center search bar */
+    }
+</style>

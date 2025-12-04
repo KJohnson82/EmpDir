@@ -1,0 +1,160 @@
+﻿@* 
+Plant locations directory page component.
+Displays a scrollable list of all manufacturing plant locations as navigation buttons.
+Features manufacturing and operations management hierarchy in header display.
+Serves as the main landing page for Plant section with operational leadership information.
+*@
+
+@* Route definition for Plant section root *@
+@page "/plant"
+
+@* Required using statements for data models and UI components *@
+@using EmpDir.Core.Models
+@using EmpDir.Core.Data.Context
+@using EmpDir
+@using Telerik.Blazor.Components
+@using Telerik.SvgIcons
+@using EmpDir.UI.Components
+@using EmpDir.UI.Layout
+
+@* Required dependency injections for page functionality *@
+@inject IDirectoryService DirectoryService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject EmpDir.UI.Services.LayoutState LayoutState
+
+@* Page title for browser tab/window *@
+<PageTitle>Plants</PageTitle>
+
+@* ===== LOADING STATE ===== *@
+@* Display loading message while plant locations data is being fetched *@
+@if (Plants == null || Plants.Count == 0)
+{
+    <p>Loading plant data...</p>
+}
+else
+{
+    @* ===== MAIN CONTENT CONTAINER ===== *@
+    @* 
+    Full-height container with scrollable plant locations list.
+    Uses flexible layout to fill available space minus header/footer.
+    Inherits styling from parent components for consistency across sections.
+    *@
+    <div class="button-page-container">
+        <div class="scrollable-wrapper">
+            @* 
+            Telerik ListView component for plant location navigation.
+            Renders each plant as a clickable navigation button.
+            EnableLoaderContainer provides built-in loading state support.
+            *@
+            <TelerikListView Data="@Plants" EnableLoaderContainer="true" Class="button-list-container">
+                <Template Context="plant">
+                    @* 
+                    Navigation link for each manufacturing plant location.
+                    Routes to individual plant detail pages.
+                    Uses Blazor NavLink for SPA navigation with corporate styling.
+                    *@
+                    <NavLink href="@($"/plant/{plant.Id}")" class="link-body-emphasis k-text-no-underline k-shadow">
+                        @* 
+                        Plant button with corporate styling and gradient background.
+                        Features plant name with consistent typography and layout.
+                        Uses Telerik CSS utility classes for professional appearance.
+                        *@
+                        <div class="menu-item k-d-flex k-flex-row k-text-uppercase k-font-size-lg k-font-semibold k-text-white k-justify-content-start k-align-items-center k-pl-10 k-bg-gradient k-py-6 hover:k-elevation-2">
+                            @plant.LocName
+                        </div>
+                    </NavLink>
+                </Template>
+            </TelerikListView>
+        </div>
+    </div>
+}
+
+@code {
+    #region Private Properties
+
+    /// <summary>
+    /// Collection of manufacturing plant locations loaded from the database.
+    /// Filtered by location type "plant" and sorted alphabetically by name.
+    /// Used to generate navigation buttons for each manufacturing facility.
+    /// </summary>
+    private List<Location>? Plants = new();
+
+    /// <summary>
+    /// Header card model configured for Plant section display.
+    /// Generated using HeaderCardModels.Plant() factory method.
+    /// Contains manufacturing and operations management hierarchy for plant operations.
+    /// </summary>
+    private HeaderCardModels.HeadInfoCardModel? PlantInfo;
+
+    /// <summary>
+    /// Footer navigation items configuration for Plant section.
+    /// Provides navigation to main application sections but excludes Plant
+    /// since user is already in Plant section (prevents redundant navigation).
+    /// </summary>
+    private List<FooterNav.FooterItem> FooterNavItems = new()
+    {
+        new FooterNav.FooterItem(CustomIcons.Home, "Home", "/"),
+        new FooterNav.FooterItem(CustomIcons.Corporate, "Corporate", "/corporate"),
+        new FooterNav.FooterItem(CustomIcons.MetalMart, "Metal Mart", "/metalmart"),
+        new FooterNav.FooterItem(CustomIcons.ServiceCenter, "Service Center", "/servicecenter")
+        // Note: Plant navigation excluded since user is already in Plant section
+    };
+
+    #endregion
+
+    #region Lifecycle Methods
+
+    /// <summary>
+    /// Component initialization method called when page loads.
+    /// Fetches all manufacturing plant locations and configures management hierarchy header.
+    /// Plants are sorted alphabetically by name for intuitive navigation.
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        // Fetch all locations of type "plant" from the database
+        Plants = await DirectoryService.GetLocationsByTypeAsync("plant");
+
+        // Sort plants alphabetically by name for predictable, user-friendly ordering
+        // Consistent with Service Center sorting approach
+        Plants = Plants.OrderBy(p => p.LocName).ToList();
+
+        // Create Plant header card using Plant factory method
+        // Displays manufacturing and operations management hierarchy structure
+        PlantInfo = HeaderCardModels.Plant(
+            title: "Plants",                           // Main section title
+            subtitle1: "Corp Manufacturing Mgr",       // Corporate manufacturing management role
+            tmanager1: "Marc Scammerhorn",              // Corporate manufacturing manager name
+            subtitle2: "Corp Traffic Mgr",             // Corporate traffic management role
+            tmanager2: "Steve Hunter",                  // Corporate traffic manager name
+            subtitle3: "Regional Ops Mgr",             // First regional operations management role
+            tmanager3: "Bruce Mancuso",                 // First regional operations manager name
+            subtitle4: "Regional Ops Mgr",             // Second regional operations management role
+            tmanager4: "Teresa Taylor",                 // Second regional operations manager name
+            subtitle5: "Regional Ops Mgr",             // Third regional operations management role
+            tmanager5: "Jeff Hoopes",                   // Third regional operations manager name
+            subtitle6: "Regional Ops Mgr",             // Fourth regional operations management role
+            tmanager6: "Don Jones"                      // Fourth regional operations manager name
+        );
+    }
+
+    /// <summary>
+    /// Post-render lifecycle method for configuring layout state.
+    /// Sets up Plant-specific header with manufacturing/operations management and global footer navigation.
+    /// Only executes on first render to avoid unnecessary state updates.
+    /// </summary>
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender && PlantInfo != null)
+        {
+            // Configure Plant header with manufacturing and operations management hierarchy
+            // Uses territory table layout to display management structure
+            LayoutState.SetHeader(PlantInfo);
+
+            // Set global footer navigation for section-to-section navigation
+            LayoutState.SetFooter(FooterNavItems);
+        }
+    }
+
+    #endregion
+}

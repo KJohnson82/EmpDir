@@ -1,0 +1,168 @@
+﻿@* Main layout component that provides the overall structure for all pages in the application *@
+@* Inherits from LayoutComponentBase to function as a Blazor layout component *@
+@inherits LayoutComponentBase
+
+@* Telerik Blazor component imports for UI framework *@
+@using Telerik.Blazor
+@using Telerik.Blazor.Components
+
+@* Implements IDisposable to ensure proper cleanup of event subscriptions *@
+@implements IDisposable
+
+@* Dependency injection for navigation management and global layout state *@
+@inject NavigationManager NavigationManager
+@inject EmpDir.UI.Services.LayoutState LayoutState
+
+@* TelerikRootComponent wraps the entire application to enable Telerik UI components *@
+<TelerikRootComponent>
+    @* Main container using flexbox layout for header/content/footer structure *@
+    <div class="main-layout-container">
+
+        @* Header section with conditional rendering based on current page type *@
+        <header class="main-layout-header">
+            @* Store-specific header for MetalMart and Service Center pages *@
+            @if (IsStoreSpecificPage())
+            {
+                <StoreTitleCard StoreInfo="GetStoreInfo()" />
+            }
+            @* Corporate header for home and corporate pages *@
+            else if (IsCorpPage())
+            {
+                <CorpHeadCard Info="LayoutState.HeaderInfo" />
+            }
+            @* Default header for all other pages *@
+            else
+            {
+                <HeadTitleCard Info="LayoutState.HeaderInfo" />
+            }
+        </header>
+
+        @* Main content area where page content is rendered *@
+        @* no-scrollbar class prevents scrolling at this level (likely handled by child components) *@
+        <main class="main-layout-content no-scrollbar">
+            @Body @* Blazor directive that renders the current page content *@
+        </main>
+
+        @* Footer section with navigation items from global state *@
+        <footer class="main-layout-footer">
+            <FooterNav Items="LayoutState.FooterItems" />
+        </footer>
+    </div>
+</TelerikRootComponent>
+
+@code {
+    /// <summary>
+    /// Component initialization - subscribes to layout state changes.
+    /// Called once when the component is first created.
+    /// </summary>
+    protected override void OnInitialized()
+    {
+        // Subscribe to state changes to react when header/footer data is updated
+        LayoutState.OnChange += OnStateChanged;
+    }
+
+    /// <summary>
+    /// Event handler for layout state changes.
+    /// Safely triggers UI re-render when layout state is modified.
+    /// Uses InvokeAsync to ensure thread safety when updating UI.
+    /// </summary>
+    private async void OnStateChanged()
+    {
+        // Safely update the UI when the state changes
+        // InvokeAsync ensures the UI update happens on the correct thread
+        await InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    /// Cleanup method called when component is disposed.
+    /// Unsubscribes from events to prevent memory leaks.
+    /// Critical for proper resource management.
+    /// </summary>
+    public void Dispose()
+    {
+        // Unsubscribe to prevent memory leaks
+        // Without this, the component could remain in memory even after navigation
+        LayoutState.OnChange -= OnStateChanged;
+    }
+
+    /// <summary>
+    /// Determines if the current page is store-specific (MetalMart or Service Center).
+    /// Used to show store-specific header with store details.
+    /// </summary>
+    /// <returns>True if current page is a store-specific page</returns>
+    private bool IsStoreSpecificPage()
+    {
+        // Get the relative path portion of the current URL
+        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+
+        // Check if the current path matches the store-specific page patterns
+        // These pages get specialized headers with store information
+        return relativePath.StartsWith("metalmart/", StringComparison.OrdinalIgnoreCase) ||
+               relativePath.StartsWith("servicecenter/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Determines if the current page is a corporate/home page.
+    /// Used to show corporate-style header instead of standard header.
+    /// </summary>
+    /// <returns>True if current page is corporate or home page</returns>
+    private bool IsCorpPage()
+    {
+        // Get the relative path and convert to lowercase for consistent comparison
+        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).ToLower();
+
+        // Check if the current path is home or corporate related
+        // Empty path = root/home, explicit "home", or corporate sections
+        return string.IsNullOrEmpty(relativePath) ||
+               relativePath == "home" ||
+               relativePath.StartsWith("corporate");
+    }
+
+    /// <summary>
+    /// Converts the generic HeaderInfo from LayoutState into store-specific model.
+    /// Transforms global header data into the format expected by StoreTitleCard component.
+    /// </summary>
+    /// <returns>StoreTitleCardModel with store information, or null if no header info available</returns>
+    private StoreTitleCard.StoreTitleCardModel? GetStoreInfo()
+    {
+        // Return null if no header information is available
+        if (LayoutState.HeaderInfo == null)
+            return null;
+
+        // Convert HeaderInfo to StoreTitleCardModel
+        // Maps generic header fields to store-specific display fields
+        return new StoreTitleCard.StoreTitleCardModel
+        {
+            Title = LayoutState.HeaderInfo.Title ?? string.Empty,
+            StoreManager = LayoutState.HeaderInfo.StoreManager ?? string.Empty,
+            AreaManager = LayoutState.HeaderInfo.AreaManager ?? string.Empty
+        };
+    }
+}
+
+@* CSS styles for the main layout structure *@
+<style>
+    /* Main container using flexbox for full-height layout */
+    .main-layout-container {
+        display: flex;
+        flex-direction: column; /* Stack header, content, footer vertically */
+        height: 100vh; /* Full viewport height */
+    }
+
+    /* Header section - fixed height, doesn't grow or shrink */
+    .main-layout-header {
+        flex-shrink: 0; /* Prevent header from shrinking */
+    }
+
+    /* Footer section - fixed height, doesn't grow or shrink */
+    .main-layout-footer {
+        flex-shrink: 0; /* Prevent footer from shrinking */
+    }
+
+    /* Content section - takes remaining space, handles overflow */
+    .main-layout-content {
+        flex: 1; /* Grow to fill remaining space */
+        overflow-y: hidden; /* Prevent vertical scrolling at layout level */
+        min-height: 0; /* Allow content to shrink below natural size */
+    }
+</style>
