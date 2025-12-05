@@ -6,7 +6,6 @@ Designed as a horizontal app bar with back button and search input.
 
 @* Required using statements for data access, components, and Telerik UI *@
 @using EmpDir
-@using EmpDir
 @using EmpDir.UI.Components
 @using Microsoft.AspNetCore.Components
 @using Telerik.Blazor
@@ -14,7 +13,8 @@ Designed as a horizontal app bar with back button and search input.
 @using Telerik.SvgIcons
 
 @* Inject search service for performing database searches *@
-@inject EmpDir.Core.Services.SearchService SearchService
+@* @inject EmpDir.Core.Services.SearchService SearchService *@
+@inject EmpDir.Core.Services.ISearchService SearchService
 
 @* 
 Telerik AppBar component configured as a horizontal search interface.

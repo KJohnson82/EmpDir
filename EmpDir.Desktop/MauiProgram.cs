@@ -5,9 +5,8 @@ using EmpDir.Core.Services;
 using EmpDir.Desktop.Data;
 using EmpDir.Desktop.Services;
 using EmpDir.UI.Services;
-
 using Microsoft.Extensions.Logging;
-
+using SQLitePCL;
 
 #if WINDOWS
 using Microsoft.UI.Windowing;
@@ -21,6 +20,9 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
+        // Initialize SQLite for unpackaged apps
+        //Batteries_V2.Init();
+
         var builder = MauiApp.CreateBuilder();
 
         builder
@@ -53,6 +55,8 @@ public static class MauiProgram
                         if (appWindow?.Presenter is OverlappedPresenter overlappedPresenter)
                         {
                             overlappedPresenter.IsMaximizable = false;
+                            overlappedPresenter.IsResizable = false;
+                            overlappedPresenter.IsMinimizable = true;
                         }
                     });
                 });
@@ -73,34 +77,25 @@ public static class MauiProgram
         });
 
         // ===== LOCAL CACHE DATABASE =====
-        // Use fallback for unpackaged Windows development
-        string localDbPath;
-        try
-        {
-            localDbPath = Path.Combine(FileSystem.AppDataDirectory, "empdir_cache.db");
-        }
-        catch (InvalidOperationException)
-        {
-            // Fallback for unpackaged Windows app during development
-            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            var appFolder = Path.Combine(localAppData, "EmpDir");
-            Directory.CreateDirectory(appFolder); // Ensure folder exists
-            localDbPath = Path.Combine(appFolder, "empdir_cache.db");
+        //var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        //var appFolder = Path.Combine(localAppData, "EmpDir");
+        //Directory.CreateDirectory(appFolder);
+        //var localDbPath = Path.Combine(appFolder, "empdir_cache.db");
+        // Remove the Environment.GetFolderPath code
+        // Use the simple MAUI API:
+        var localDbPath = Path.Combine(FileSystem.AppDataDirectory, "empdir_cache.db");
 
-#if DEBUG
-            Console.WriteLine($"⚠️ Using fallback AppData path (unpackaged): {localDbPath}");
-#endif
-        }
-
+        // Register DbContext with connection string
         builder.Services.AddDbContext<LocalCacheContext>(options =>
         {
-            options.UseSqlite($"Data Source={localDbPath}");
+            var connectionString = $"Data Source={localDbPath}";
+            options.UseSqlite(connectionString);
 
 #if DEBUG
             options.EnableSensitiveDataLogging();
             options.EnableDetailedErrors();
 #endif
-        });
+        }, ServiceLifetime.Scoped);
 
         // ===== SERVICE REGISTRATION =====
         // Desktop-specific services
@@ -111,25 +106,22 @@ public static class MauiProgram
         // IDirectoryService implementation using cache
         builder.Services.AddScoped<IDirectoryService, CachedDirectoryService>();
 
-        // UI services (if using EmpDir.UI components)
+        // UI services
         builder.Services.AddTelerikBlazor();
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddSingleton<LayoutState>();
 
-        // Add SearchService if needed
-        // builder.Services.AddScoped<SearchService>();
+        builder.Services.AddScoped<ISearchService, CachedSearchService>();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
         builder.Logging.AddDebug();
 #endif
 
-        var app = builder.Build();
+        return builder.Build();
 
-        // ===== INITIALIZE CACHE DATABASE =====
-        InitializeCacheDatabase(app.Services);
-
-        return app;
+        // NOTE: Database initialization removed from here!
+        // It will happen lazily when first accessed
     }
 
     private static IConfiguration LoadConfiguration()
@@ -137,49 +129,29 @@ public static class MauiProgram
         var configBuilder = new ConfigurationBuilder();
         var assembly = typeof(MauiProgram).Assembly;
 
+        // Load base appsettings.json
         var stream = assembly.GetManifestResourceStream("EmpDir.Desktop.appsettings.json");
-        // Load base settings
-        //using (var stream = assembly.GetManifestResourceStream("EmpDir.Desktop.appsettings.json"))
+        if (stream != null)
         {
-            if (stream != null)
-            {
-                configBuilder.AddJsonStream(stream);
-            }
+            configBuilder.AddJsonStream(stream);
         }
 
-#if !DEBUG
-        // In Release mode, load production settings
-        using (var prodStream = assembly.GetManifestResourceStream("EmpDir.Desktop.appsettings.Production.json"))
+#if DEBUG
+        // In Debug mode, load development settings
+        var devStream = assembly.GetManifestResourceStream("EmpDir.Desktop.appsettings.Development.json");
+        if (devStream != null)
         {
-            if (prodStream != null)
-            {
-                configBuilder.AddJsonStream(prodStream);
-            }
+            configBuilder.AddJsonStream(devStream);
+        }
+#else
+        // In Release mode, load production settings
+        var prodStream = assembly.GetManifestResourceStream("EmpDir.Desktop.appsettings.Production.json");
+        if (prodStream != null)
+        {
+            configBuilder.AddJsonStream(prodStream);
         }
 #endif
 
         return configBuilder.Build();
-    }
-
-    private static void InitializeCacheDatabase(IServiceProvider services)
-    {
-        using var scope = services.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<LocalCacheContext>();
-
-        try
-        {
-            context.Database.EnsureCreated();
-
-#if DEBUG
-            var dbPath = context.Database.GetConnectionString();
-            Console.WriteLine($"✓ Cache database initialized at: {dbPath}");
-#endif
-        }
-        catch (Exception ex)
-        {
-#if DEBUG
-            Console.WriteLine($"✗ Cache database initialization failed: {ex.Message}");
-#endif
-        }
     }
 }

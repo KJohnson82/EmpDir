@@ -1,4 +1,4 @@
-﻿namespace MMPD.Platforms.Windows
+﻿namespace EmpDir.Desktop.Platforms.Windows
 {
 #if WINDOWS
     using Microsoft.UI;

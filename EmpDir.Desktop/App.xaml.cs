@@ -12,32 +12,47 @@ namespace EmpDir.Desktop
             _syncService = syncService;
         }
 
-
         protected override Window CreateWindow(IActivationState? activationState)
         {
             var appWindow = new Window(new MainPage())
             {
                 Title = "McElroy Directory",
-                FlowDirection = FlowDirection.MatchParent,
-                TitleBar = new TitleBar
-                {
-                    Title = "McElroy Directory",
-                    Background = Colors.Transparent,
-                    ForegroundColor = Colors.Coral
-
-                }
-
+                FlowDirection = FlowDirection.MatchParent
             };
 
             // Load and apply saved window state
             var windowState = new SavedWindowState();
             windowState.ApplyToWindow(appWindow);
 
+//#if WINDOWS
+//            // Configure Windows-specific window behavior
+//            appWindow.Created += (s, e) =>
+//            {
+//                var handle = WinRT.Interop.WindowNative.GetWindowHandle(appWindow);
+//                var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(handle);
+//                var appWindowForId = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
 
-            // Save window state whenever it changes
+//                if (appWindowForId?.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
+//                {
+//                    // Completely prevent maximizing
+//                    presenter.IsMaximizable = false;
+//                    presenter.IsResizable = false; // This prevents double-click maximize too!
+
+//                    // Keep minimize button enabled
+//                    presenter.IsMinimizable = true;
+//                }
+
+//                // Optional: Customize title bar
+//                if (appWindowForId?.TitleBar != null)
+//                {
+//                    appWindowForId.TitleBar.ExtendsContentIntoTitleBar = false;
+//                }
+//            };
+//#endif
+
+            // Save window state on position/size changes
             appWindow.SizeChanged += (_, _) =>
             {
-                // Small delay to avoid saving during rapid resize operations
                 Task.Delay(500).ContinueWith(_ =>
                 {
                     MainThread.BeginInvokeOnMainThread(() =>
@@ -47,14 +62,10 @@ namespace EmpDir.Desktop
                 });
             };
 
-
-
-
             return appWindow;
         }
 
-
-        // ===== ADD THIS METHOD - SYNC ON APP LAUNCH =====
+        // Sync on app launch
         protected override void OnStart()
         {
             base.OnStart();
@@ -98,6 +109,7 @@ namespace EmpDir.Desktop
         }
     }
 
+    // Window state persistence using JSON file
     public class SavedWindowState
     {
         public double? X { get; set; }
@@ -113,6 +125,13 @@ namespace EmpDir.Desktop
         private const double DefaultMinWidth = 372;
         private const double DefaultMinHeight = 823;
 
+        // File path for storing window state
+        private static string SettingsFilePath => Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "EmpDir",
+            "window_state.json"
+        );
+
         // Constructor for saving current window state
         public SavedWindowState(Window window)
         {
@@ -125,10 +144,26 @@ namespace EmpDir.Desktop
         // Constructor for loading saved state
         public SavedWindowState()
         {
-            X = GetSavedValue("WindowLocationX");
-            Y = GetSavedValue("WindowLocationY");
-            Width = GetSavedValue("WindowSizeWidth");
-            Height = GetSavedValue("WindowSizeHeight");
+            try
+            {
+                if (File.Exists(SettingsFilePath))
+                {
+                    var json = File.ReadAllText(SettingsFilePath);
+                    var loaded = System.Text.Json.JsonSerializer.Deserialize<SavedWindowState>(json);
+
+                    if (loaded != null)
+                    {
+                        X = loaded.X;
+                        Y = loaded.Y;
+                        Width = loaded.Width;
+                        Height = loaded.Height;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading window state: {ex.Message}");
+            }
         }
 
         public void ApplyToWindow(Window window)
@@ -195,49 +230,24 @@ namespace EmpDir.Desktop
         {
             try
             {
-                SaveValue("WindowLocationX", X);
-                SaveValue("WindowLocationY", Y);
-                SaveValue("WindowSizeWidth", Width);
-                SaveValue("WindowSizeHeight", Height);
+                var directory = Path.GetDirectoryName(SettingsFilePath);
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                var json = System.Text.Json.JsonSerializer.Serialize(this, new System.Text.Json.JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+
+                File.WriteAllText(SettingsFilePath, json);
 
                 System.Diagnostics.Debug.WriteLine($"Saved window state: {Width}x{Height} at ({X}, {Y})");
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error saving window state: {ex.Message}");
-            }
-        }
-
-        private double? GetSavedValue(string valueKey)
-        {
-            try
-            {
-                var value = Preferences.Get(valueKey, double.NaN);
-                if (!double.IsNaN(value))
-                {
-                    return value;
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error loading preference {valueKey}: {ex.Message}");
-            }
-
-            return null;
-        }
-
-        private void SaveValue(string valueKey, double? value)
-        {
-            try
-            {
-                if (value != null)
-                    Preferences.Set(valueKey, value.Value);
-                else
-                    Preferences.Remove(valueKey);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error saving preference {valueKey}: {ex.Message}");
             }
         }
     }

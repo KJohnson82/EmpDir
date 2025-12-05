@@ -10,7 +10,7 @@ namespace EmpDir.Core.Services;
 /// Searches through Employees, Departments, and Locations using case-insensitive string matching.
 /// Uses Entity Framework Core for data access and includes extensive debugging capabilities.
 
-public class SearchService
+public class SearchService : ISearchService
 {
     #region Fields
 

@@ -1,0 +1,170 @@
+﻿@* ===================================================================== *@
+@* LOCATIONS COUNT CHART COMPONENT                                       *@
+@* Statistical visualization showing location distribution by type        *@
+@* Used in: Home dashboard (vertical tile component)                     *@
+@* ===================================================================== *@
+
+@* Import necessary namespaces for Entity Framework, Telerik components, and data models *@
+@using Microsoft.EntityFrameworkCore
+@using Telerik.Blazor
+@using Telerik.Blazor.Components
+@using Telerik.SvgIcons
+@using MMPD.Data.Data
+@using MMPD.Data.Models
+@using MMPD.Data.Context
+@using MMPD.Shared.Components
+@using MMPD.Shared.Layout
+
+@* Inject database context for data operations *@
+@inject AppDbContext dbContext
+
+@* ===================================================================== *@
+@* TELERIK DONUT CHART - Location type distribution visualization        *@
+@* ===================================================================== *@
+<TelerikChart>
+    <ChartSeriesItems>
+        @* Donut chart series displaying location counts by type *@
+        <ChartSeries Type="ChartSeriesType.Donut" 
+                     Data="@locationsDonut" 
+                     Field="@nameof(LocationsModel.LocationValue)" 
+                     CategoryField="@nameof(LocationsModel.TypeName)">
+            @* Categories: location type names *@
+            @* Chart labels configuration *@
+            <ChartSeriesLabels Visible="true" 
+                               Background="transparent" />           @* Transparent label background *@
+        </ChartSeries>
+    </ChartSeriesItems>
+
+    @* Chart configuration and styling *@
+    <ChartTitle Text="Location Totals by Type"></ChartTitle>         @* Chart title *@
+    <ChartLegend Position="ChartLegendPosition.Bottom" 
+                 Background=""></ChartLegend>                        @* Transparent legend background *@
+</TelerikChart>
+
+@code {
+    // =====================================================================
+    // LEGACY CODE SECTIONS (commented out for reference)
+    // =====================================================================
+
+    // Original approach with manual list creation (commented out):
+    // public List<Location> locations { get; set; }
+    // public class LocationsModel
+    // {
+    //     public string TypeName { get; set; }
+    //     public int LocationValue { get; set; }
+    //     public bool LegendDisplay { get; set; }  // Legacy property not used
+    // }
+
+    // =====================================================================
+    // COMPONENT STATE PROPERTIES
+    // =====================================================================
+
+    /// <summary>
+    /// List of location count data aggregated by location type
+    /// Populated during component initialization from database query
+    /// Excludes corporate locations (Loctype = 1) to focus on operational facilities
+    /// </summary>
+    public List<LocationsModel> locationsDonut { get; set; } = new();
+
+    // =====================================================================
+    // DATA MODEL CLASSES
+    // =====================================================================
+
+    /// <summary>
+    /// Data model representing location count for a specific location type
+    /// Used as the data source for the Telerik Donut Chart component
+    /// </summary>
+    public class LocationsModel
+    {
+        /// <summary>
+        /// Human-readable location type name for chart display
+        /// Used as the category field in the donut chart segments
+        /// Values: "Metal Mart", "Service Center", "Plant"
+        /// </summary>
+        public string TypeName { get; set; } = "";
+
+        /// <summary>
+        /// Number of locations of this type
+        /// Used as the value field determining segment size in donut chart
+        /// </summary>
+        public int LocationValue { get; set; }
+    }
+
+    // =====================================================================
+    // COMPONENT LIFECYCLE METHODS
+    // =====================================================================
+
+    /// <summary>
+    /// Component initialization - loads and aggregates location data by type
+    /// Executes LINQ query to group locations and convert type IDs to readable names
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        // LINQ query to aggregate location data by type (excluding corporate)
+        locationsDonut = await dbContext.Locations
+            .Where(l => l.Loctype != 1)                    // Exclude corporate locations (Loctype = 1)
+            .GroupBy(l => l.Loctype)                       // Group by location type ID
+            .Select(g => new LocationsModel                // Project to chart model
+            {
+                // Convert location type ID to human-readable name using ternary operators
+                TypeName = g.Key == 2 ? "Metal Mart" :     // Loctype 2 = Metal Mart (retail)
+                          g.Key == 3 ? "Service Center" :  // Loctype 3 = Service Center
+                          "Plant",                          // Loctype 4 or other = Plant (manufacturing)
+
+                // Count locations of this type
+                LocationValue = g.Count()
+            })
+            .ToListAsync();                                // Execute query asynchronously
+
+        // =====================================================================
+        // LEGACY MANUAL DATA CREATION (commented out for reference)
+        // =====================================================================
+        // Original approach using manual object creation:
+        // new LocationsModel
+        // {
+        //     TypeName = "Metal Mart",
+        //     LocationValue = locationsDonut.Count()  // This was incorrect logic
+        // };
+        // new LocationsModel
+        // {
+        //     TypeName = "Service Center",
+        //     LocationValue = locationsDonut.Count()  // This was incorrect logic
+        // };
+        // new LocationsModel
+        // {
+        //     TypeName = "Plant",
+        //     LocationValue = locationsDonut.Count()  // This was incorrect logic
+        // };
+    }
+
+    // =====================================================================
+    // LOCATION TYPE MAPPING REFERENCE
+    // =====================================================================
+
+    /*
+    MCELROY METAL LOCATION TYPES:
+
+    1 = Corporate      (EXCLUDED from chart - administrative only)
+    2 = Metal Mart     (Retail locations selling metal products)
+    3 = Service Center (Customer service and support facilities)
+    4 = Plant          (Manufacturing and production facilities)
+
+    CHART PURPOSE:
+    - Shows distribution of operational facilities (excludes corporate)
+    - Donut chart provides proportional view of facility types
+    - Useful for understanding McElroy's operational footprint
+    - Helps identify business focus areas (retail vs manufacturing vs service)
+
+    QUERY LOGIC:
+    - Filters out corporate locations (Loctype != 1)
+    - Groups remaining locations by type ID
+    - Uses ternary operators to convert IDs to readable names
+    - Counts locations in each type group
+
+    BUSINESS VALUE:
+    - Executive overview of facility distribution
+    - Strategic planning for expansion/consolidation
+    - Understanding operational capacity by facility type
+    - Visual representation of McElroy's business model balance
+    */
+}

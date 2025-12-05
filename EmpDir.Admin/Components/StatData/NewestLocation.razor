@@ -1,0 +1,158 @@
+﻿@* ===================================================================== *@
+@* NEWEST LOCATION COMPONENT                                             *@
+@* Displays the 3 most recently added locations                         *@
+@* Used in: Home dashboard (top row tile component)                     *@
+@* ===================================================================== *@
+
+@* Import necessary namespaces for Entity Framework, Telerik components, and data models *@
+@using Microsoft.EntityFrameworkCore
+@using Telerik.Blazor
+@using Telerik.Blazor.Components
+@using Telerik.SvgIcons
+@using MMPD.Data.Data
+@using MMPD.Data.Models
+@using MMPD.Data.Context
+@using MMPD.Shared.Components
+@using MMPD.Shared.Layout
+
+@* Inject database context for data operations *@
+@inject AppDbContext dbContext
+
+@* ===================================================================== *@
+@* CONDITIONAL RENDERING - Handle loading and empty states               *@
+@* ===================================================================== *@
+
+@* Loading state - shown while data is being fetched from database *@
+@if (locations == null)
+{
+    <p>Loading...</p>
+}
+@* Empty state - shown when no locations exist in database *@
+else if (!locations.Any())
+{
+    <p>No employees found.</p>  @* Note: Message says "employees" but should say "locations" *@
+}
+@* Data display state - shown when locations are successfully loaded *@
+else
+{
+    @* ================================================================= *@
+    @* LOCATION LIST - Ordered list of recently added locations         *@
+    @* ================================================================= *@
+    <ol>
+        @foreach (var location in locations)
+        {
+            <li>
+                @* Location name and number display *@
+                <strong>@location.LocName - @location.LocNum</strong> <br />
+                @* Record creation date display *@
+                Added On: @location.RecordAdd?.ToString("MM/dd/yyyy")
+            </li>
+        }
+    </ol>
+}
+
+@code {
+    // =====================================================================
+    // COMPONENT STATE PROPERTIES
+    // =====================================================================
+
+    /// <summary>
+    /// List of the most recently added locations
+    /// Initialized as null to enable loading state detection
+    /// Populated with top 3 newest locations from database
+    /// </summary>
+    private List<Location> locations { get; set; }
+
+    // =====================================================================
+    // COMPONENT LIFECYCLE METHODS
+    // =====================================================================
+
+    /// <summary>
+    /// Component initialization - loads the 3 most recently added locations
+    /// Orders locations by creation date (newest first) and takes top 3
+    /// Simple query without navigation properties for fast loading
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        locations = await dbContext.Locations
+            .OrderByDescending(l => l.RecordAdd)    // Sort by creation date, newest first
+            .Take(3)                                // Limit to 3 most recent locations
+            .ToListAsync();                         // Execute query asynchronously
+    }
+
+    // =====================================================================
+    // COMPONENT FUNCTIONALITY NOTES
+    // =====================================================================
+
+    /*
+    COMPONENT PURPOSE:
+    - Provides quick visibility into recently added business locations
+    - Helps track facility expansion and growth
+    - Part of executive dashboard showing recent expansion activity
+    - Useful for monitoring new location opening trends
+
+    DATA DISPLAY:
+    - Shows location name and location number for identification
+    - Displays creation date for temporal context
+    - Limited to 3 items to fit dashboard tile space
+    - Uses ordered list for numbered presentation
+
+    LOCATION IDENTIFICATION:
+    - LocName: Human-readable location name (e.g., "Dallas Service Center")
+    - LocNum: Numeric identifier for internal tracking
+    - Combined display provides both context and reference number
+
+    BUSINESS APPLICATIONS:
+    - Facilities management dashboard
+    - Executive oversight of expansion activities
+    - Real estate and operations team awareness
+    - Historical tracking of location growth
+
+    STRATEGIC VALUE:
+    - Tracks geographic expansion patterns
+    - Monitors facility investment and growth
+    - Supports strategic planning for market presence
+    - Shows recent business development activity
+
+    LOCATION TYPES CONTEXT:
+    This component shows all location types including:
+    - Corporate offices (Loctype = 1)
+    - Metal Mart retail locations (Loctype = 2)
+    - Service Centers (Loctype = 3)
+    - Manufacturing Plants (Loctype = 4)
+
+    POTENTIAL ENHANCEMENTS:
+    1. Fix error message to say "locations" instead of "employees"
+    2. Add location type display for context (Metal Mart, Plant, etc.)
+    3. Include city/state information for geographic context
+    4. Add click functionality to view location details
+    5. Filter by location type if needed for specific insights
+    6. Add location type icons for visual identification
+    7. Consider showing address or key contact information
+
+    COMPARISON WITH SIMILAR COMPONENTS:
+    - NewestEmployee: Shows employee names and hire dates
+    - NewestDepartment: Shows departments with location context
+    - This component: Focuses on facility expansion and location data
+
+    FACILITIES AND OPERATIONS VALUE:
+    - Tracks expansion velocity and market penetration
+    - Provides visibility into recent facility investments
+    - Supports facilities planning and resource allocation
+    - Helps identify growth patterns and expansion trends
+    - Quick reference for new location awareness
+
+    QUERY CHARACTERISTICS:
+    - Lightweight query without complex joins
+    - RecordAdd field represents location establishment date
+    - No navigation properties needed for basic display
+    - Could be enhanced with location type lookup for context
+
+    BUSINESS INTELLIGENCE APPLICATIONS:
+    - Market expansion tracking
+    - Investment timeline visualization
+    - Geographic growth pattern analysis
+    - Facility portfolio management
+    - Strategic planning support for site selection
+    */
+}
