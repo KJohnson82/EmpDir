@@ -1,19 +1,12 @@
 using EmpDir.Core.Data.Context;
 using EmpDir.Core.DTOs;
 using EmpDir.Core.Extensions;
-using EmpDir.Core.Models;
 using EmpDir.Core.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
-
-
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
 // IDirectoryService implementation using cache
 builder.Services.AddScoped<IDirectoryService, DirectoryService>();
 
@@ -25,14 +18,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-
 // ===== MINIMAL API ENDPOINTS =====
-
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
     .WithName("HealthCheck")
     .WithTags("System");
@@ -41,6 +27,7 @@ app.MapGet("/api/directory/sync", async ([FromServices] IDirectoryService servic
 {
     try
     {
+        // Service now returns DTOs directly - no need to map!
         var employees = await service.GetEmployeesAsync();
         var departments = await service.GetDepartmentsAsync();
         var locations = await service.GetLocationsAsync();
@@ -48,10 +35,10 @@ app.MapGet("/api/directory/sync", async ([FromServices] IDirectoryService servic
 
         var syncData = new DirectorySyncDto
         {
-            Employees = employees.Select(e => e.ToDto()).ToList(),
-            Departments = departments.Select(d => d.ToDto()).ToList(),
-            Locations = locations.Select(l => l.ToDto()).ToList(),
-            LocationTypes = locationTypes.Select(lt => lt.ToDto()).ToList(),
+            Employees = employees,        // Already DTOs!
+            Departments = departments,    // Already DTOs!
+            Locations = locations,        // Already DTOs!
+            LocationTypes = locationTypes, // Already DTOs!
             Timestamp = DateTime.UtcNow
         };
 
@@ -64,10 +51,6 @@ app.MapGet("/api/directory/sync", async ([FromServices] IDirectoryService servic
 })
 .WithName("DirectorySync")
 .WithTags("Directory");
-//.RequireAuthorization(); // If you have API key middleware
 
 app.UseHttpsRedirection();
-
-
 app.Run();
-

@@ -9,9 +9,11 @@ Part of the corporate section navigation hierarchy: Corporate > Department > Emp
 @page "/corporate/{departmentID:int}"
 
 @* Required using statements for data models and UI components *@
-@using EmpDir.Core.Models
-@using EmpDir.Core.Data.Context
 @using EmpDir
+@using EmpDir.Core.DTOs
+@using EmpDir.Core.Data.Context
+@using EmpDir.Core.Models
+@using EmpDir.Core.Services
 @using EmpDir.UI.Components
 @using EmpDir.UI.Layout
 @using Telerik.Blazor
@@ -111,7 +113,7 @@ else
     /// Nullable to handle loading state and invalid department IDs.
     /// Contains all employee information for the specified department.
     /// </summary>
-    private Department? Department;
+    private DepartmentDto? Department;
 
     /// <summary>
     /// Header card model configured for department display.

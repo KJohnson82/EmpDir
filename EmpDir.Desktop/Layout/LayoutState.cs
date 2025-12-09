@@ -1,9 +1,8 @@
-﻿using EmpDir.Desktop.Layout;
-using EmpDir.UI.Layout;
+﻿using EmpDir.UI.Layout;
 using static EmpDir.UI.Components.FooterNav;
 
 
-namespace EmpDir.UI.Services
+namespace EmpDir.Desktop.Layout
 {
     /// <summary>
     /// Service class that manages the global layout state for the application.

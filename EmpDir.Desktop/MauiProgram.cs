@@ -4,9 +4,12 @@ using Microsoft.Maui.LifecycleEvents;
 using EmpDir.Core.Services;
 using EmpDir.Desktop.Data;
 using EmpDir.Desktop.Services;
-using EmpDir.UI.Services;
 using Microsoft.Extensions.Logging;
-using SQLitePCL;
+using System.IO;
+using EmpDir.Desktop.Layout;
+
+
+
 
 #if WINDOWS
 using Microsoft.UI.Windowing;
@@ -22,6 +25,7 @@ public static class MauiProgram
     {
         // Initialize SQLite for unpackaged apps
         //Batteries_V2.Init();
+        SQLitePCL.Batteries_V2.Init();
 
         var builder = MauiApp.CreateBuilder();
 
@@ -77,25 +81,35 @@ public static class MauiProgram
         });
 
         // ===== LOCAL CACHE DATABASE =====
-        //var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        //var appFolder = Path.Combine(localAppData, "EmpDir");
-        //Directory.CreateDirectory(appFolder);
-        //var localDbPath = Path.Combine(appFolder, "empdir_cache.db");
-        // Remove the Environment.GetFolderPath code
-        // Use the simple MAUI API:
-        var localDbPath = Path.Combine(FileSystem.AppDataDirectory, "empdir_cache.db");
+        // 1. Define the path
+        //var localDbPath = Path.Combine(FileSystem.AppDataDirectory, "empdir_cache.db");
 
-        // Register DbContext with connection string
+        // FIX 1: Use standard AppData path instead of MAUI sandbox path
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var appFolder = Path.Combine(localAppData, "EmpDir");
+        var localDbPath = Path.Combine(appFolder, "empdir_cache.db");
+
+        // 2. CRITICAL: Ensure the directory exists
+        var dbDirectory = Path.GetDirectoryName(localDbPath);
+        if (!string.IsNullOrEmpty(dbDirectory) && !Directory.Exists(dbDirectory))
+        {
+            Directory.CreateDirectory(dbDirectory);
+        }
+
+        // 3. Register DbContext
         builder.Services.AddDbContext<LocalCacheContext>(options =>
         {
-            var connectionString = $"Data Source={localDbPath}";
+            //var connectionString = $"Data Source={localDbPath}";
+            //options.UseSqlite(connectionString);
+            // FIX 2: Add Pooling=False to prevent "Error 14" file locks during development
+            var connectionString = $"Data Source={localDbPath};Pooling=False";
             options.UseSqlite(connectionString);
 
 #if DEBUG
             options.EnableSensitiveDataLogging();
             options.EnableDetailedErrors();
 #endif
-        }, ServiceLifetime.Scoped);
+        }, ServiceLifetime.Scoped); // <--- Make sure this closes here
 
         // ===== SERVICE REGISTRATION =====
         // Desktop-specific services
@@ -110,7 +124,6 @@ public static class MauiProgram
         builder.Services.AddTelerikBlazor();
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddSingleton<LayoutState>();
-
         builder.Services.AddScoped<ISearchService, CachedSearchService>();
 
 #if DEBUG
@@ -118,11 +131,14 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-        return builder.Build();
+        var app = builder.Build();
 
-        // NOTE: Database initialization removed from here!
-        // It will happen lazily when first accessed
+        // ===== INITIALIZE CACHE DATABASE =====
+        InitializeCacheDatabase(app.Services);
+
+        return app;
     }
+              
 
     private static IConfiguration LoadConfiguration()
     {
@@ -154,4 +170,33 @@ public static class MauiProgram
 
         return configBuilder.Build();
     }
+
+    private static void InitializeCacheDatabase(IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<LocalCacheContext>();
+
+        try
+        {
+            var dbPath = context.Database.GetConnectionString();
+            Console.WriteLine($"DEBUG: Database path is: {dbPath}");
+            var displayPath = dbPath?.Replace("Data Source=", "").Replace(";Pooling=False", "");
+            Console.WriteLine($"DEBUG: Database path is: {displayPath}");
+
+            // FIX 3: Clear pools explicitly before deleting to avoid "Error 14"
+            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+
+            // Force recreation during development
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
+
+            Console.WriteLine($"✓ Cache database recreated at: {dbPath}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"✗ Cache database initialization failed: {ex.Message}");
+        }
+    }
 }
+

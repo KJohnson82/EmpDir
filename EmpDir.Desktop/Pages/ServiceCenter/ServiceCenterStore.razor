@@ -9,11 +9,13 @@ Represents the detail level in Service Center navigation hierarchy: Service Cent
 @page "/servicecenter/{storeID:int}"
 
 @* Required using statements for data models and UI components *@
-@using EmpDir.Core.Models
+@using EmpDir
+@using EmpDir.Core.DTOs
 @using EmpDir.Core.Data.Context
+@using EmpDir.Core.Models
+@using EmpDir.Core.Services
 @using EmpDir.UI.Components
 @using EmpDir.UI.Layout
-@using EmpDir
 @using Telerik.Blazor
 @using Telerik.Blazor.Components
 @using Telerik.SvgIcons
@@ -202,7 +204,7 @@ else
     /// Loaded from database using the storeID route parameter.
     /// Contains all data displayed on the service center detail page.
     /// </summary>
-    private Location? Store;
+    private LocationDto? Store;
 
     /// <summary>
     /// Header card model configured for Service Center store display.

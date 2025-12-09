@@ -24,31 +24,31 @@ namespace EmpDir.Desktop
             var windowState = new SavedWindowState();
             windowState.ApplyToWindow(appWindow);
 
-//#if WINDOWS
-//            // Configure Windows-specific window behavior
-//            appWindow.Created += (s, e) =>
-//            {
-//                var handle = WinRT.Interop.WindowNative.GetWindowHandle(appWindow);
-//                var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(handle);
-//                var appWindowForId = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
+            //#if WINDOWS
+            //            // Configure Windows-specific window behavior
+            //            appWindow.Created += (s, e) =>
+            //            {
+            //                var handle = WinRT.Interop.WindowNative.GetWindowHandle(appWindow);
+            //                var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(handle);
+            //                var appWindowForId = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
 
-//                if (appWindowForId?.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
-//                {
-//                    // Completely prevent maximizing
-//                    presenter.IsMaximizable = false;
-//                    presenter.IsResizable = false; // This prevents double-click maximize too!
+            //                if (appWindowForId?.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
+            //                {
+            //                    // Completely prevent maximizing
+            //                    presenter.IsMaximizable = false;
+            //                    presenter.IsResizable = false; // This prevents double-click maximize too!
 
-//                    // Keep minimize button enabled
-//                    presenter.IsMinimizable = true;
-//                }
+            //                    // Keep minimize button enabled
+            //                    presenter.IsMinimizable = true;
+            //                }
 
-//                // Optional: Customize title bar
-//                if (appWindowForId?.TitleBar != null)
-//                {
-//                    appWindowForId.TitleBar.ExtendsContentIntoTitleBar = false;
-//                }
-//            };
-//#endif
+            //                // Optional: Customize title bar
+            //                if (appWindowForId?.TitleBar != null)
+            //                {
+            //                    appWindowForId.TitleBar.ExtendsContentIntoTitleBar = false;
+            //                }
+            //            };
+            //#endif
 
             // Save window state on position/size changes
             appWindow.SizeChanged += (_, _) =>

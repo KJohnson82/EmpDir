@@ -23,6 +23,8 @@ namespace EmpDir.Core.DTOs
 
         // Flattened related data
         public string? LocationName { get; set; }
+
+        public List<EmployeeDto> Employees { get; set; } = new List<EmployeeDto>();
     }
 
 }

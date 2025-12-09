@@ -8,9 +8,11 @@ Serves as a navigation hub to individual employee detail pages.
 @page "/plant/{locationID:int}/{departmentID:int}"
 
 @* Required using statements for data models and UI components *@
-@using EmpDir.Core.Models
-@using EmpDir.Core.Data.Context
 @using EmpDir
+@using EmpDir.Core.DTOs
+@using EmpDir.Core.Data.Context
+@using EmpDir.Core.Models
+@using EmpDir.Core.Services
 @using EmpDir.UI.Components
 @using EmpDir.UI.Layout
 @using Telerik.Blazor
@@ -98,7 +100,7 @@ else
     /// The department object, including a list of its employees.
     /// Loaded from the database based on the departmentID route parameter.
     /// </summary>
-    private Department? Department;
+    private DepartmentDto? Department;
 
     /// <summary>
     /// Header card model configured for the department display.

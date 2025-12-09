@@ -8,9 +8,11 @@ Provides a focused view of an individual's contact details like phone, email, an
 @page "/plant/{locationID:int}/{departmentID:int}/{employeeID:int}"
 
 @* Required using statements for data models and UI components *@
-@using EmpDir.Core.Models
-@using EmpDir.Core.Data.Context
 @using EmpDir
+@using EmpDir.Core.DTOs
+@using EmpDir.Core.Data.Context
+@using EmpDir.Core.Models
+@using EmpDir.Core.Services
 @using EmpDir.UI.Components
 @using EmpDir.UI.Layout
 @using Telerik.Blazor
@@ -284,13 +286,13 @@ else
     /// The department object for the current employee.
     /// Loaded from the database to display the department name in the header.
     /// </summary>
-    private Department? Department;
+    private DepartmentDto? Department;
 
     /// <summary>
     /// The employee object containing all details to be displayed on the page.
     /// Loaded from the database based on the employeeID route parameter.
     /// </summary>
-    private Employee? Employee;
+    private EmployeeDto? Employee;
 
     /// <summary>
     /// Header card model configured for the employee detail display.
@@ -334,7 +336,7 @@ else
             // Create the header card using the Employee factory method
             EmployeeInfo = HeaderCardModels.Employee(
                 // Use department name for the title, with fallbacks for safety
-                title: Department?.DeptName ?? Employee.EmpDepartment?.DeptName ?? "Plant Employee"
+                title: Department?.DeptName ?? Employee.DepartmentName ?? "Plant Employee"
             );
         }
     }

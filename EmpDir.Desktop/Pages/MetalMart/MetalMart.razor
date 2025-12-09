@@ -9,9 +9,11 @@ Serves as the main landing page for Metal Mart section with territory manager in
 @page "/metalmart"
 
 @* Required using statements for data models and UI components *@
-@using EmpDir.Core.Models
-@using EmpDir.Core.Data.Context
 @using EmpDir
+@using EmpDir.Core.DTOs
+@using EmpDir.Core.Data.Context
+@using EmpDir.Core.Models
+@using EmpDir.Core.Services
 @using EmpDir.UI.Components
 @using EmpDir.UI.Layout
 @using Telerik.Blazor
@@ -90,13 +92,13 @@ else
     /// Filtered by location type "metal mart" and sorted by location number.
     /// Used to generate navigation buttons for each store location.
     /// </summary>
-    private List<Location> Locations = new();
+    private List<LocationDto> Locations = new();
 
     /// <summary>
     /// Individual store location entity (currently unused but preserved).
     /// Could be used for store-specific context or detailed information.
     /// </summary>
-    private Location? Store;
+    private LocationDto? Store;
 
     /// <summary>
     /// Store ID parameter (currently unused in this directory page).

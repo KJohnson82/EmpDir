@@ -9,9 +9,11 @@ Features plant-specific header information and department-based navigation struc
 @page "/plant/{locationID:int}"
 
 @* Required using statements for data models and UI components *@
-@using EmpDir.Core.Models
 @using EmpDir
+@using EmpDir.Core.DTOs
 @using EmpDir.Core.Data.Context
+@using EmpDir.Core.Models
+@using EmpDir.Core.Services
 @using EmpDir.UI.Components
 @using EmpDir.UI.Layout
 @using Telerik.Blazor.Components
@@ -88,14 +90,14 @@ else
     /// Loaded from database using the locationID route parameter.
     /// Contains plant details and associated departments collection.
     /// </summary>
-    private Location? Plant;
+    private LocationDto? Plant;
 
     /// <summary>
     /// Collection of departments within the selected manufacturing plant.
     /// Extracted from Plant.Departments and sorted alphabetically.
     /// Used to generate navigation buttons for each plant department.
     /// </summary>
-    private List<Department> Departments = new();
+    private List<DepartmentDto> Departments = new();
 
     /// <summary>
     /// Header card model configured for plant location display.

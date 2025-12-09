@@ -1,161 +1,182 @@
-﻿
-using EmpDir.Core.Data.Context;
+﻿using EmpDir.Core.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using EmpDir.Core.Models;
-using EmpDir.Core.Services;
-
-/// Implementation of IDirectoryService using Entity Framework Core
-/// Used by: EmpDir.Api and EmpDir.Admin (direct database access)
-/// NOT used by: EmpDir.Desktop (uses CachedDirectoryService instead)
+using EmpDir.Core.DTOs;
+using EmpDir.Core.Extensions;
 
 namespace EmpDir.Core.Services;
 
+/// <summary>
+/// Implementation of IDirectoryService using Entity Framework Core
+/// Used by: EmpDir.Api and EmpDir.Admin (direct database access)
+/// </summary>
 public class DirectoryService : IDirectoryService
 {
     private readonly AppDbContext _context;
+
     public DirectoryService(AppDbContext context)
     {
         _context = context;
     }
 
-    
-    /// Gets location with its active departments only
-    
-    public async Task<Location?> GetLocationWithDepartmentsAsync(int locationId) =>
-        await _context.Locations
+    public async Task<LocationDto?> GetLocationWithDepartmentsAsync(int locationId)
+    {
+        var location = await _context.Locations
             .Where(l => l.Active == true)
-            .Include(l => l.Departments.Where(d => d.Active == true)) // Filter departments by Active
+            .Include(l => l.LocationType)
+            .Include(l => l.Departments.Where(d => d.Active == true))
+            .AsNoTracking()
             .FirstOrDefaultAsync(l => l.Id == locationId);
 
-    
-    /// Gets department with its active employees only
-    
-    public async Task<Department?> GetDepartmentWithEmployeesAsync(int departmentId) =>
-        await _context.Departments
+        return location?.ToDto();
+    }
+
+    public async Task<DepartmentDto?> GetDepartmentWithEmployeesAsync(int departmentId)
+    {
+        var department = await _context.Departments
             .Where(d => d.Active == true)
-            .Include(d => d.Employees.Where(e => e.Active == true)) // Filter employees by Active
+            .Include(d => d.DeptLocation)
+            .Include(d => d.Employees.Where(e => e.Active == true))
+            .AsNoTracking()
             .FirstOrDefaultAsync(d => d.Id == departmentId);
 
-    
-    /// Gets employee by ID (only if active)
-    
-    public async Task<Employee?> GetEmployeeByIdAsync(int employeeId) =>
-        await _context.Employees
-            .Where(e => e.Active == true) // Add Active filter
+        return department?.ToDto();
+    }
+
+    public async Task<EmployeeDto?> GetEmployeeByIdAsync(int employeeId)
+    {
+        var employee = await _context.Employees
+            .Where(e => e.Active == true)
+            .Include(e => e.EmpLocation)
+            .Include(e => e.EmpDepartment)
+            .AsNoTracking()
             .FirstOrDefaultAsync(e => e.Id == employeeId);
 
-    
-    /// Gets active employees by department
-    
-    public async Task<List<Employee>> GetEmployeesByDepartmentAsync(int departmentId) =>
-        await _context.Employees
-            .Where(e => e.Active == true) // Add Active filter
-            .Where(e => e.Department == departmentId)
+        return employee?.ToDto();
+    }
+
+    public async Task<List<EmployeeDto>> GetEmployeesByDepartmentAsync(int departmentId)
+    {
+        var employees = await _context.Employees
+            .Where(e => e.Active == true && e.Department == departmentId)
+            .Include(e => e.EmpLocation)
+            .Include(e => e.EmpDepartment)
+            .AsNoTracking()
             .ToListAsync();
 
-    
-    /// Gets all active departments
-    
-    public async Task<List<Department>> GetDepartmentsAsync() =>
-        await _context.Departments
+        return employees.Select(e => e.ToDto()).ToList();
+    }
+
+    public async Task<List<DepartmentDto>> GetDepartmentsAsync()
+    {
+        var departments = await _context.Departments
             .Where(d => d.Active == true)
             .Include(d => d.DeptLocation)
+            .AsNoTracking()
             .ToListAsync();
 
-    
-    /// Gets active department by ID
-    
-    public async Task<Department?> GetDepartmentByIdAsync(int id) =>
-        await _context.Departments
+        return departments.Select(d => d.ToDto()).ToList();
+    }
+
+    public async Task<DepartmentDto?> GetDepartmentByIdAsync(int id)
+    {
+        var department = await _context.Departments
             .Where(d => d.Active == true)
             .Include(d => d.DeptLocation)
+            .AsNoTracking()
             .FirstOrDefaultAsync(d => d.Id == id);
 
-    
-    /// Gets active locations by type
-    
-    public async Task<List<Location>> GetLocationsByTypeAsync(string loctypeName)
+        return department?.ToDto();
+    }
+
+    public async Task<List<LocationDto>> GetLocationsByTypeAsync(string loctypeName)
     {
-        return await _context.Locations
+        var locations = await _context.Locations
             .Where(l => l.Active == true)
             .Include(l => l.LocationType)
             .Where(l => l.LocationType!.LoctypeName.ToLower() == loctypeName.ToLower())
+            .AsNoTracking()
             .ToListAsync();
+
+        return locations.Select(l => l.ToDto()).ToList();
     }
 
-    
-    /// Gets active location by type and ID
-    
-    public async Task<Location?> GetLocationByIdAsync(string loctypeName, int id)
+    public async Task<LocationDto?> GetLocationByIdAsync(string loctypeName, int id)
     {
-        return await _context.Locations
+        var location = await _context.Locations
             .Where(l => l.Active == true)
             .Include(l => l.LocationType)
             .Where(l => l.LocationType!.LoctypeName.ToLower() == loctypeName.ToLower() && l.Id == id)
+            .AsNoTracking()
             .FirstOrDefaultAsync();
+
+        return location?.ToDto();
     }
 
-    
-    /// Gets all location types (no Active filter needed)
-    
-    public async Task<List<Loctype>> GetLoctypesAsync()
+    public async Task<List<LoctypeDto>> GetLoctypesAsync()
     {
-        return await _context.Loctypes.ToListAsync();
-    }
-
-    
-    /// Gets all active locations
-    
-    public async Task<List<Location>> GetLocationsAsync()
-    {
-        return await _context.Locations
-            .Where(l => l.Active == true)
-            .Include(l => l.LocationType)
+        var loctypes = await _context.Loctypes
+            .AsNoTracking()
             .ToListAsync();
+
+        return loctypes.Select(lt => lt.ToDto()).ToList();
     }
 
-    
-    /// Gets active location by ID
-    
-    public async Task<Location?> GetLocationByIdAsync(int id)
+    public async Task<List<LocationDto>> GetLocationsAsync()
     {
-        return await _context.Locations
+        var locations = await _context.Locations
             .Where(l => l.Active == true)
             .Include(l => l.LocationType)
-            .FirstOrDefaultAsync(l => l.Id == id);
+            .AsNoTracking()
+            .ToListAsync();
+
+        return locations.Select(l => l.ToDto()).ToList();
     }
 
-    
-    /// Gets all active employees
-    
-    public async Task<List<Employee>> GetEmployeesAsync()
+    public async Task<LocationDto?> GetLocationByIdAsync(int id)
     {
-        return await _context.Employees
+        var location = await _context.Locations
+            .Where(l => l.Active == true)
+            .Include(l => l.LocationType)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(l => l.Id == id);
+
+        return location?.ToDto();
+    }
+
+    public async Task<List<EmployeeDto>> GetEmployeesAsync()
+    {
+        var employees = await _context.Employees
             .Where(e => e.Active == true)
             .Include(e => e.EmpDepartment)
             .Include(e => e.EmpLocation)
+            .AsNoTracking()
             .ToListAsync();
+
+        return employees.Select(e => e.ToDto()).ToList();
     }
 
-    
-    /// Gets active employees by location
-    
-    public async Task<List<Employee>> GetEmployeesByLocationAsync(int locationId)
+    public async Task<List<EmployeeDto>> GetEmployeesByLocationAsync(int locationId)
     {
-        return await _context.Employees
-            .Where(e => e.Active == true)
-            .Where(e => e.Location == locationId)
+        var employees = await _context.Employees
+            .Where(e => e.Active == true && e.Location == locationId)
+            .Include(e => e.EmpDepartment)
+            .Include(e => e.EmpLocation)
+            .AsNoTracking()
             .ToListAsync();
+
+        return employees.Select(e => e.ToDto()).ToList();
     }
 
-    
-    /// Gets active employees by location and department
-    
-    public async Task<List<Employee>> GetEmployeesByLocationAndDepartmentAsync(int locationId, int departmentId)
+    public async Task<List<EmployeeDto>> GetEmployeesByLocationAndDepartmentAsync(int locationId, int departmentId)
     {
-        return await _context.Employees
-            .Where(e => e.Active == true)
-            .Where(e => e.Location == locationId && e.Department == departmentId)
+        var employees = await _context.Employees
+            .Where(e => e.Active == true && e.Location == locationId && e.Department == departmentId)
+            .Include(e => e.EmpDepartment)
+            .Include(e => e.EmpLocation)
+            .AsNoTracking()
             .ToListAsync();
+
+        return employees.Select(e => e.ToDto()).ToList();
     }
 }

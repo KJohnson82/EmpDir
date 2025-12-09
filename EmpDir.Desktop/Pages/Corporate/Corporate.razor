@@ -15,11 +15,13 @@ Uses LayoutState to configure corporate-specific header and global footer naviga
 @inject LayoutState LayoutState
 
 @* Required using statements for data models and UI components *@
-@using EmpDir.Core.Models
+@using EmpDir
+@using EmpDir.Core.DTOs
 @using EmpDir.Core.Data.Context
+@using EmpDir.Core.Models
+@using EmpDir.Core.Services
 @using EmpDir.UI.Components
 @using EmpDir.UI.Layout
-@using EmpDir
 @using Telerik.Blazor
 @using Telerik.Blazor.Components
 @using Telerik.SvgIcons
@@ -135,13 +137,13 @@ else
     /// Nullable to handle loading state before data is available.
     /// Sorted alphabetically by department name for consistent presentation.
     /// </summary>
-    private List<Department>? Departments = new();
+    private List<DepartmentDto>? Departments = new();
 
     /// <summary>
     /// Corporate location entity with related departments.
     /// Used to fetch all departments associated with corporate headquarters (location ID 1).
     /// </summary>
-    private Location? corporate;
+    private LocationDto? corporate;
 
     /// <summary>
     /// Footer navigation items configuration for corporate section.
@@ -172,7 +174,7 @@ else
 
         // Extract and sort departments alphabetically for consistent presentation
         // Handles null cases gracefully with empty list fallback
-        Departments = corporate?.Departments.OrderBy(d => d.DeptName).ToList() ?? new List<Department>();
+        Departments = corporate?.Departments.OrderBy(d => d.DeptName).ToList() ?? new List<DepartmentDto>();
     }
 
     #endregion

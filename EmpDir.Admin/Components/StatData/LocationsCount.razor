@@ -5,15 +5,12 @@
 @* ===================================================================== *@
 
 @* Import necessary namespaces for Entity Framework, Telerik components, and data models *@
+@using EmpDir.Core.Data.Context
 @using Microsoft.EntityFrameworkCore
 @using Telerik.Blazor
 @using Telerik.Blazor.Components
 @using Telerik.SvgIcons
-@using MMPD.Data.Data
-@using MMPD.Data.Models
-@using MMPD.Data.Context
-@using MMPD.Shared.Components
-@using MMPD.Shared.Layout
+
 
 @* Inject database context for data operations *@
 @inject AppDbContext dbContext

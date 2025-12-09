@@ -8,3 +8,7 @@ GET {{EmpDir.Api_HostAddress}}/health
 GET {{EmpDir.Api_HostAddress}}/api/directory/sync
 
 ###
+
+GET {{EmpDir.Api_HostAddress}}/health
+
+###

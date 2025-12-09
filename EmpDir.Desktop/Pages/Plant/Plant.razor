@@ -9,13 +9,15 @@ Serves as the main landing page for Plant section with operational leadership in
 @page "/plant"
 
 @* Required using statements for data models and UI components *@
-@using EmpDir.Core.Models
-@using EmpDir.Core.Data.Context
 @using EmpDir
-@using Telerik.Blazor.Components
-@using Telerik.SvgIcons
+@using EmpDir.Core.DTOs
+@using EmpDir.Core.Data.Context
+@using EmpDir.Core.Models
+@using EmpDir.Core.Services
 @using EmpDir.UI.Components
 @using EmpDir.UI.Layout
+@using Telerik.Blazor.Components
+@using Telerik.SvgIcons
 
 @* Required dependency injections for page functionality *@
 @inject IDirectoryService DirectoryService
@@ -78,7 +80,7 @@ else
     /// Filtered by location type "plant" and sorted alphabetically by name.
     /// Used to generate navigation buttons for each manufacturing facility.
     /// </summary>
-    private List<Location>? Plants = new();
+    private List<LocationDto>? Plants = new();
 
     /// <summary>
     /// Header card model configured for Plant section display.

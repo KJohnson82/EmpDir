@@ -9,9 +9,11 @@ Uses both department and employee IDs for complete navigation context.
 @page "/corporate/{departmentID:int}/{employeeID:int}"
 
 @* Required using statements for data models and UI components *@
-@using EmpDir.Core.Models
-@using EmpDir.Core.Data.Context
 @using EmpDir
+@using EmpDir.Core.DTOs
+@using EmpDir.Core.Data.Context
+@using EmpDir.Core.Models
+@using EmpDir.Core.Services
 @using EmpDir.UI.Components
 @using EmpDir.UI.Layout
 @using Telerik.Blazor
@@ -322,14 +324,14 @@ else
     /// Department entity (currently unused but preserved for potential future use).
     /// Could be used for department context or breadcrumb navigation.
     /// </summary>
-    private Department? Department;
+    private DepartmentDto? Department;
 
     /// <summary>
     /// Employee entity with all personal and contact information.
     /// Loaded from database using the employeeID route parameter.
     /// Contains all data displayed on the employee detail page.
     /// </summary>
-    private Employee? Employee;
+    private EmployeeDto? Employee;
 
     /// <summary>
     /// Header card model configured for employee display.
@@ -372,7 +374,7 @@ else
             // Use the Employee static factory method from HeaderCardModels
             // Shows department name if available, otherwise falls back to employee name
             EmployeeInfo = HeaderCardModels.Employee(
-                title: Employee.EmpDepartment?.DeptName ?? Employee.FirstName + " " + Employee.LastName
+                title: Employee.DepartmentName ?? Employee.FirstName + " " + Employee.LastName
             // Note: Employee factory method only takes title parameter
             // Other contact details are displayed in page content, not header
             );

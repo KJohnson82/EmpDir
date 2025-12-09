@@ -1,7 +1,9 @@
-﻿using EmpDir.Core.Models;
+﻿using EmpDir.Core.DTOs;
+using EmpDir.Core.Extensions;
+using EmpDir.Core.Models;
+using EmpDir.Core.Services;
 using EmpDir.Desktop.Data;
 using Microsoft.EntityFrameworkCore;
-using Location = EmpDir.Core.Models.Location;
 
 namespace EmpDir.Desktop.Services;
 
@@ -18,138 +20,184 @@ public class CachedDirectoryService : IDirectoryService
         _context = context;
     }
 
-    public async Task<List<Department>> GetDepartmentsAsync()
+    public async Task<List<DepartmentDto>> GetDepartmentsAsync()
     {
-        return await _context.Departments
+        var departments = await _context.Departments
             .Include(d => d.DeptLocation)
             .Include(d => d.Employees)
             .Where(d => (bool)d.Active)
             .OrderBy(d => d.DeptName)
+            .AsNoTracking()
             .ToListAsync();
+
+        return departments.Select(d => d.ToDto()).ToList();
     }
 
-    public async Task<Department?> GetDepartmentByIdAsync(int id)
+    public async Task<DepartmentDto?> GetDepartmentByIdAsync(int id)
     {
-        return await _context.Departments
+        var department = await _context.Departments
             .Include(d => d.DeptLocation)
             .Include(d => d.Employees)
+            .AsNoTracking()
             .FirstOrDefaultAsync(d => d.Id == id);
+
+        return department?.ToDto();
     }
 
-    public async Task<Employee?> GetEmployeeByIdAsync(int id)
+    public async Task<EmployeeDto?> GetEmployeeByIdAsync(int id)
     {
-        return await _context.Employees
+        var employee = await _context.Employees
             .Include(e => e.EmpLocation)
             .Include(e => e.EmpDepartment)
+            .AsNoTracking()
             .FirstOrDefaultAsync(e => e.Id == id);
+
+        return employee?.ToDto();
     }
 
-    public async Task<List<Location>> GetLocationsByTypeAsync(string loctypeName)
+    public async Task<List<LocationDto>> GetLocationsByTypeAsync(string loctypeName)
     {
-        return await _context.Locations
+        var locations = await _context.Locations
             .Include(l => l.LocationType)
             .Include(l => l.Departments)
             .Include(l => l.Employees)
-            .Where(l => l.LocationType != null && l.LocationType.LoctypeName == loctypeName && l.Active == true)
+            .Where(l => l.LocationType != null
+                && l.LocationType.LoctypeName.ToLower() == loctypeName.ToLower()  // ✅ Case-insensitive!
+                && l.Active == true)
             .OrderBy(l => l.LocName)
+            .AsNoTracking()
             .ToListAsync();
+
+        return locations.Select(l => l.ToDto(includeRelated: true)).ToList();
     }
 
-    public async Task<Location?> GetLocationWithDepartmentsAsync(int locationId)
+    public async Task<LocationDto?> GetLocationWithDepartmentsAsync(int locationId)
     {
-        return await _context.Locations
+        var location = await _context.Locations
             .Include(l => l.LocationType)
             .Include(l => l.Departments)
             .Include(l => l.Employees)
+            .AsNoTracking()
             .FirstOrDefaultAsync(l => l.Id == locationId);
+
+        return location?.ToDto();
     }
 
-    public async Task<Department?> GetDepartmentWithEmployeesAsync(int departmentId)
+    public async Task<DepartmentDto?> GetDepartmentWithEmployeesAsync(int departmentId)
     {
-        return await _context.Departments
+        var department = await _context.Departments
             .Include(d => d.DeptLocation)
             .Include(d => d.Employees)
+            .AsNoTracking()
             .FirstOrDefaultAsync(d => d.Id == departmentId);
+
+        return department?.ToDto();
     }
 
-    public async Task<Location?> GetLocationByIdAsync(string loctypeName, int id)
+    public async Task<LocationDto?> GetLocationByIdAsync(string loctypeName, int id)
     {
-        return await _context.Locations
+        var location = await _context.Locations
             .Include(l => l.LocationType)
             .Include(l => l.Departments)
             .Include(l => l.Employees)
-            .FirstOrDefaultAsync(l => l.Id == id && l.LocationType != null && l.LocationType.LoctypeName == loctypeName);
+            .AsNoTracking()
+            .FirstOrDefaultAsync(l => l.Id == id
+                && l.LocationType != null
+                && l.LocationType.LoctypeName.ToLower() == loctypeName.ToLower());  // ✅ Case-insensitive!
+
+        return location?.ToDto(includeRelated: true);
     }
 
-    public async Task<Location?> GetLocationByIdAsync(int id)
+    public async Task<LocationDto?> GetLocationByIdAsync(int id)
     {
-        return await _context.Locations
+        var location = await _context.Locations
             .Include(l => l.LocationType)
             .Include(l => l.Departments)
             .Include(l => l.Employees)
+            .AsNoTracking()
             .FirstOrDefaultAsync(l => l.Id == id);
+
+        return location?.ToDto();
     }
 
-    public async Task<List<Loctype>> GetLoctypesAsync()
+    public async Task<List<LoctypeDto>> GetLoctypesAsync()
     {
-        return await _context.Loctypes
+        var loctypes = await _context.Loctypes
             .Include(lt => lt.Locations)
             .OrderBy(lt => lt.LoctypeName)
+            .AsNoTracking()
             .ToListAsync();
+
+        return loctypes.Select(lt => lt.ToDto()).ToList();
     }
 
-    public async Task<List<Location>> GetLocationsAsync()
+    public async Task<List<LocationDto>> GetLocationsAsync()
     {
-        return await _context.Locations
+        var locations = await _context.Locations
             .Include(l => l.LocationType)
             .Include(l => l.Departments)
             .Include(l => l.Employees)
             .Where(l => (bool)l.Active)
             .OrderBy(l => l.LocName)
+            .AsNoTracking()
             .ToListAsync();
+
+        return locations.Select(l => l.ToDto()).ToList();
     }
 
-    public async Task<List<Employee>> GetEmployeesAsync()
+    public async Task<List<EmployeeDto>> GetEmployeesAsync()
     {
-        return await _context.Employees
+        var employees = await _context.Employees
             .Include(e => e.EmpLocation)
             .Include(e => e.EmpDepartment)
             .Where(e => (bool)e.Active)
             .OrderBy(e => e.LastName)
             .ThenBy(e => e.FirstName)
+            .AsNoTracking()
             .ToListAsync();
+
+        return employees.Select(e => e.ToDto()).ToList();
     }
 
-    public async Task<List<Employee>> GetEmployeesByDepartmentAsync(int departmentId)
+    public async Task<List<EmployeeDto>> GetEmployeesByDepartmentAsync(int departmentId)
     {
-        return await _context.Employees
+        var employees = await _context.Employees
             .Include(e => e.EmpLocation)
             .Include(e => e.EmpDepartment)
             .Where(e => e.Department == departmentId && e.Active == true)
             .OrderBy(e => e.LastName)
             .ThenBy(e => e.FirstName)
+            .AsNoTracking()
             .ToListAsync();
+
+        return employees.Select(e => e.ToDto()).ToList();
     }
 
-    public async Task<List<Employee>> GetEmployeesByLocationAsync(int locationId)
+    public async Task<List<EmployeeDto>> GetEmployeesByLocationAsync(int locationId)
     {
-        return await _context.Employees
+        var employees = await _context.Employees
             .Include(e => e.EmpLocation)
             .Include(e => e.EmpDepartment)
             .Where(e => e.Location == locationId && e.Active == true)
             .OrderBy(e => e.LastName)
             .ThenBy(e => e.FirstName)
+            .AsNoTracking()
             .ToListAsync();
+
+        return employees.Select(e => e.ToDto()).ToList();
     }
 
-    public async Task<List<Employee>> GetEmployeesByLocationAndDepartmentAsync(int locationId, int departmentId)
+    public async Task<List<EmployeeDto>> GetEmployeesByLocationAndDepartmentAsync(int locationId, int departmentId)
     {
-        return await _context.Employees
+        var employees = await _context.Employees
             .Include(e => e.EmpLocation)
             .Include(e => e.EmpDepartment)
             .Where(e => e.Location == locationId && e.Department == departmentId && e.Active == true)
             .OrderBy(e => e.LastName)
             .ThenBy(e => e.FirstName)
+            .AsNoTracking()
             .ToListAsync();
+
+        return employees.Select(e => e.ToDto()).ToList();
     }
 }

@@ -9,9 +9,11 @@ Serves as the main landing page for Service Center section with territorial mana
 @page "/servicecenter"
 
 @* Required using statements for data models and UI components *@
-@using EmpDir.Core.Models
 @using EmpDir
+@using EmpDir.Core.DTOs
 @using EmpDir.Core.Data.Context
+@using EmpDir.Core.Models
+@using EmpDir.Core.Services
 @using EmpDir.UI.Components
 @using EmpDir.UI.Layout
 @using Telerik.Blazor
@@ -90,7 +92,7 @@ else
     /// Filtered by location type "service center" and sorted alphabetically by name.
     /// Used to generate navigation buttons for each service center location.
     /// </summary>
-    private List<Location> Locations = new();
+    private List<LocationDto> Locations = new();
 
     /// <summary>
     /// Footer navigation items configuration for Service Center section.
