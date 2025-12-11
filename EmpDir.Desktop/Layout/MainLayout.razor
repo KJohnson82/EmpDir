@@ -3,8 +3,13 @@
 @inherits LayoutComponentBase
 
 @* Telerik Blazor component imports for UI framework *@
+@using EmpDir.Core.Services
+@using Microsoft.Extensions.Logging
 @using Telerik.Blazor
 @using Telerik.Blazor.Components
+@using EmpDir.Desktop.Data
+@using EmpDir.Desktop.Services
+@using EmpDir.UI
 
 @* Implements IDisposable to ensure proper cleanup of event subscriptions *@
 @implements IDisposable
@@ -12,6 +17,8 @@
 @* Dependency injection for navigation management and global layout state *@
 @inject NavigationManager NavigationManager
 @inject LayoutState LayoutState  
+@inject ISyncService SyncService
+@inject ILogger<MainLayout> Logger
 
 @* TelerikRootComponent wraps the entire application to enable Telerik UI components *@
 <TelerikRootComponent>
@@ -55,11 +62,31 @@
     /// Component initialization - subscribes to layout state changes.
     /// Called once when the component is first created.
     /// </summary>
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        // Subscribe to state changes to react when header/footer data is updated
+        // Sync data from API to local cache on app startup
+        try
+        {
+            Logger.LogInformation("Starting initial sync...");
+            var result = await SyncService.SyncOnLaunchAsync();
+
+            if (result.Success)
+            {
+                Logger.LogInformation("Sync completed: {Message} - {EmployeeCount} employees",
+                    result.Message, result.EmployeesUpdated);
+            }
+            else
+            {
+                Logger.LogWarning("Sync issue: {Message}", result.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Sync failed on startup");
+        }
         LayoutState.OnChange += OnStateChanged;
     }
+    
 
     /// <summary>
     /// Event handler for layout state changes.

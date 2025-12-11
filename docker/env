@@ -1,0 +1,8 @@
+# PostgreSQL Configuration
+POSTGRES_USER=empdir_user
+POSTGRES_PASSWORD=EmpDir2025!Secure
+POSTGRES_DB=empdir_db
+
+# pgAdmin Configuration (optional web UI at http://localhost:5050)
+PGADMIN_EMAIL=admin@empdir.local
+PGADMIN_PASSWORD=admin123

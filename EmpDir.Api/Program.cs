@@ -1,3 +1,4 @@
+
 using EmpDir.Core.Data.Context;
 using EmpDir.Core.DTOs;
 using EmpDir.Core.Extensions;
@@ -7,27 +8,104 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// IDirectoryService implementation using cache
-builder.Services.AddScoped<IDirectoryService, DirectoryService>();
-
+// ===== DATABASE CONFIGURATION =====
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    options.UseSqlite(connectionString);
+
+    // Use PostgreSQL instead of SQLite
+    options.UseNpgsql(connectionString, npgsqlOptions =>
+    {
+        // Enable retry on failure for transient errors (network blips, etc.)
+        npgsqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 3,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorCodesToAdd: null);
+    });
+
+#if DEBUG
+    options.EnableSensitiveDataLogging();
+    options.EnableDetailedErrors();
+#endif
 });
+
+// ===== SERVICE REGISTRATION =====
+builder.Services.AddScoped<IDirectoryService, DirectoryService>();
 
 var app = builder.Build();
 
-// ===== MINIMAL API ENDPOINTS =====
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
-    .WithName("HealthCheck")
-    .WithTags("System");
+// ===== DATABASE INITIALIZATION =====
+// Ensure database schema exists on startup
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
+    try
+    {
+        logger.LogInformation("Checking database connection...");
+
+        // Test connection first
+        if (await context.Database.CanConnectAsync())
+        {
+            logger.LogInformation("Database connection successful!");
+
+            // Create tables if they don't exist
+            // For production, consider using migrations instead
+            await context.Database.EnsureCreatedAsync();
+
+            logger.LogInformation("Database schema ready!");
+        }
+        else
+        {
+            logger.LogError("Cannot connect to database. Is PostgreSQL running?");
+            throw new Exception("Database connection failed");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while initializing the database");
+        logger.LogError("Make sure PostgreSQL is running: docker-compose up -d");
+        throw;
+    }
+}
+
+// ===== MINIMAL API ENDPOINTS =====
+
+// Health check endpoint
+app.MapGet("/health", async ([FromServices] AppDbContext context) =>
+{
+    try
+    {
+        // Actually check database connectivity
+        var canConnect = await context.Database.CanConnectAsync();
+
+        return Results.Ok(new
+        {
+            status = canConnect ? "healthy" : "degraded",
+            database = canConnect ? "connected" : "disconnected",
+            timestamp = DateTime.UtcNow
+        });
+    }
+    catch (Exception ex)
+    {
+        return Results.Ok(new
+        {
+            status = "unhealthy",
+            database = "error",
+            error = ex.Message,
+            timestamp = DateTime.UtcNow
+        });
+    }
+})
+.WithName("HealthCheck")
+.WithTags("System");
+
+// Directory sync endpoint
 app.MapGet("/api/directory/sync", async ([FromServices] IDirectoryService service) =>
 {
     try
     {
-        // Service now returns DTOs directly - no need to map!
         var employees = await service.GetEmployeesAsync();
         var departments = await service.GetDepartmentsAsync();
         var locations = await service.GetLocationsAsync();
@@ -35,10 +113,10 @@ app.MapGet("/api/directory/sync", async ([FromServices] IDirectoryService servic
 
         var syncData = new DirectorySyncDto
         {
-            Employees = employees,        // Already DTOs!
-            Departments = departments,    // Already DTOs!
-            Locations = locations,        // Already DTOs!
-            LocationTypes = locationTypes, // Already DTOs!
+            Employees = employees,
+            Departments = departments,
+            Locations = locations,
+            LocationTypes = locationTypes,
             Timestamp = DateTime.UtcNow
         };
 
@@ -52,5 +130,84 @@ app.MapGet("/api/directory/sync", async ([FromServices] IDirectoryService servic
 .WithName("DirectorySync")
 .WithTags("Directory");
 
+// Database info endpoint (useful for debugging)
+app.MapGet("/api/system/dbinfo", async ([FromServices] AppDbContext context) =>
+{
+    try
+    {
+        var employeeCount = await context.Employees.CountAsync();
+        var departmentCount = await context.Departments.CountAsync();
+        var locationCount = await context.Locations.CountAsync();
+        var loctypeCount = await context.Loctypes.CountAsync();
+
+        return Results.Ok(new
+        {
+            provider = "PostgreSQL",
+            employees = employeeCount,
+            departments = departmentCount,
+            locations = locationCount,
+            locationTypes = loctypeCount,
+            timestamp = DateTime.UtcNow
+        });
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"Error getting database info: {ex.Message}");
+    }
+})
+.WithName("DatabaseInfo")
+.WithTags("System");
+
 app.UseHttpsRedirection();
 app.Run();
+
+
+//var builder = WebApplication.CreateBuilder(args);
+
+//// IDirectoryService implementation using cache
+//builder.Services.AddScoped<IDirectoryService, DirectoryService>();
+
+//builder.Services.AddDbContext<AppDbContext>(options =>
+//{
+//    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+//    options.UseSqlite(connectionString);
+//});
+
+//var app = builder.Build();
+
+//// ===== MINIMAL API ENDPOINTS =====
+//app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
+//    .WithName("HealthCheck")
+//    .WithTags("System");
+
+//app.MapGet("/api/directory/sync", async ([FromServices] IDirectoryService service) =>
+//{
+//    try
+//    {
+//        // Service now returns DTOs directly - no need to map!
+//        var employees = await service.GetEmployeesAsync();
+//        var departments = await service.GetDepartmentsAsync();
+//        var locations = await service.GetLocationsAsync();
+//        var locationTypes = await service.GetLoctypesAsync();
+
+//        var syncData = new DirectorySyncDto
+//        {
+//            Employees = employees,        // Already DTOs!
+//            Departments = departments,    // Already DTOs!
+//            Locations = locations,        // Already DTOs!
+//            LocationTypes = locationTypes, // Already DTOs!
+//            Timestamp = DateTime.UtcNow
+//        };
+
+//        return Results.Ok(syncData);
+//    }
+//    catch (Exception ex)
+//    {
+//        return Results.Problem($"Error retrieving directory data: {ex.Message}");
+//    }
+//})
+//.WithName("DirectorySync")
+//.WithTags("Directory");
+
+//app.UseHttpsRedirection();
+//app.Run();

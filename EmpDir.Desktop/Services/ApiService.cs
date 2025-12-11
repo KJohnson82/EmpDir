@@ -2,6 +2,7 @@
 using EmpDir.Core.Services;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
+using System.Net.Sockets;
 using System.Text.Json;
 
 namespace EmpDir.Desktop.Services;
@@ -55,12 +56,17 @@ public class ApiService : IApiService
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "Network error when calling API");
+            _logger.LogWarning(ex, "Network error when calling API - server may be unavailable");
+            return null;
+        }
+        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+        {
+            _logger.LogWarning("API request timed out");
             return null;
         }
         catch (TaskCanceledException ex)
         {
-            _logger.LogError(ex, "API request timed out");
+            _logger.LogWarning(ex, "API request was cancelled");
             return null;
         }
         catch (JsonException ex)
@@ -68,9 +74,25 @@ public class ApiService : IApiService
             _logger.LogError(ex, "Failed to deserialize API response");
             return null;
         }
+        catch (IOException ex)
+        {
+            // This catches socket disconnections and connection resets
+            _logger.LogWarning(ex, "I/O error when calling API - connection may have been closed");
+            return null;
+        }
+        catch (SocketException ex)
+        {
+            _logger.LogWarning(ex, "Socket error when calling API - network issue");
+            return null;
+        }
+        catch (OperationCanceledException ex)
+        {
+            _logger.LogWarning(ex, "API operation was cancelled");
+            return null;
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error when calling API");
+            _logger.LogError(ex, "Unexpected error when calling API: {ErrorType}", ex.GetType().Name);
             return null;
         }
     }
@@ -80,11 +102,42 @@ public class ApiService : IApiService
         try
         {
             var client = _httpClientFactory.CreateClient("EmpDirApi");
-            var response = await client.GetAsync("/health");
+
+            // Use a shorter timeout for health checks
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var response = await client.GetAsync("/health", cts.Token);
+
             return response.IsSuccessStatusCode;
         }
-        catch
+        catch (HttpRequestException)
         {
+            // Server not available - this is expected when offline
+            return false;
+        }
+        catch (TaskCanceledException)
+        {
+            // Timeout or cancellation
+            return false;
+        }
+        catch (IOException)
+        {
+            // Connection issues
+            return false;
+        }
+        catch (SocketException)
+        {
+            // Network issues
+            return false;
+        }
+        catch (OperationCanceledException)
+        {
+            // Cancelled
+            return false;
+        }
+        catch (Exception ex)
+        {
+            // Log unexpected errors but don't crash
+            System.Diagnostics.Debug.WriteLine($"Health check unexpected error: {ex.GetType().Name} - {ex.Message}");
             return false;
         }
     }

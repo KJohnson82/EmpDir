@@ -1,4 +1,5 @@
-@EmpDir.Api_HostAddress = https://localhost:7290
+# @EmpDir.Api_HostAddress = https://localhost:7290
+@EmpDir.Api_HostAddress = https://localhost:5206
 
 
 GET {{EmpDir.Api_HostAddress}}/health

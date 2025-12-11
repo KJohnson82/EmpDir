@@ -17,11 +17,18 @@ namespace EmpDir.Desktop
             var appWindow = new Window(new MainPage())
             {
                 Title = "McElroy Directory",
-                FlowDirection = FlowDirection.MatchParent
+                FlowDirection = FlowDirection.MatchParent,
+                TitleBar = new TitleBar
+                {
+                    Title = "McElroy Directory",
+                    Background = Colors.Transparent,
+                    ForegroundColor = Colors.Coral
+
+                }
             };
 
             // Load and apply saved window state
-            var windowState = new SavedWindowState();
+            var windowState = SavedWindowState.Load();
             windowState.ApplyToWindow(appWindow);
 
             //#if WINDOWS
@@ -70,6 +77,7 @@ namespace EmpDir.Desktop
         {
             base.OnStart();
 
+
             // Perform sync in background on app launch
             _ = Task.Run(async () =>
             {
@@ -101,6 +109,11 @@ namespace EmpDir.Desktop
                         // For example, update a status bar or show a brief toast
                     });
                 }
+                catch (System.IO.IOException ioEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"✗ Network I/O error during sync: {ioEx.Message}");
+                    System.Diagnostics.Debug.WriteLine("App will continue with cached data");
+                }
                 catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine($"✗ Sync error: {ex.Message}");
@@ -118,12 +131,12 @@ namespace EmpDir.Desktop
         public double? Height { get; set; }
 
         // Default dimensions for first launch
-        private const double DefaultWidth = 373;
-        private const double DefaultHeight = 830;
+        private const double DefaultWidth = 375;
+        private const double DefaultHeight = 874;
         private const double DefaultMaxWidth = 425;
         private const double DefaultMaxHeight = 900;
         private const double DefaultMinWidth = 372;
-        private const double DefaultMinHeight = 823;
+        private const double DefaultMinHeight = 826;
 
         // File path for storing window state
         private static string SettingsFilePath => Path.Combine(
@@ -142,7 +155,39 @@ namespace EmpDir.Desktop
         }
 
         // Constructor for loading saved state
+        //public SavedWindowState()
+        //{
+        //    try
+        //    {
+        //        if (File.Exists(SettingsFilePath))
+        //        {
+        //            var json = File.ReadAllText(SettingsFilePath);
+        //            var loaded = System.Text.Json.JsonSerializer.Deserialize<SavedWindowState>(json);
+
+        //            if (loaded != null)
+        //            {
+        //                X = loaded.X;
+        //                Y = loaded.Y;
+        //                Width = loaded.Width;
+        //                Height = loaded.Height;
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        System.Diagnostics.Debug.WriteLine($"Error loading window state: {ex.Message}");
+        //    }
+        //}
+
+        // Parameterless constructor for deserialization - DO NOT load here!
         public SavedWindowState()
+        {
+            // Empty - properties will be set by deserializer
+        }
+
+
+        // Static method to load saved state
+        public static SavedWindowState Load()
         {
             try
             {
@@ -153,10 +198,7 @@ namespace EmpDir.Desktop
 
                     if (loaded != null)
                     {
-                        X = loaded.X;
-                        Y = loaded.Y;
-                        Width = loaded.Width;
-                        Height = loaded.Height;
+                        return loaded;
                     }
                 }
             }
@@ -164,6 +206,8 @@ namespace EmpDir.Desktop
             {
                 System.Diagnostics.Debug.WriteLine($"Error loading window state: {ex.Message}");
             }
+
+            return new SavedWindowState(); // Return empty state if load fails
         }
 
         public void ApplyToWindow(Window window)

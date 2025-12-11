@@ -71,6 +71,7 @@ public class SyncService : ISyncService
             // Get data from API
             var syncData = await _apiService.GetFullDirectoryAsync();
 
+
             if (syncData == null)
             {
                 _logger.LogError("Failed to retrieve data from API");
@@ -88,6 +89,29 @@ public class SyncService : ISyncService
             var departments = syncData.Departments.Select(dto => dto.ToModel()).ToList();
             var locations = syncData.Locations.Select(dto => dto.ToModel()).ToList();
             var locationTypes = syncData.LocationTypes.Select(dto => dto.ToModel()).ToList();
+
+            // Fix Locations (Break link to Loctype)
+            foreach (var loc in locations)
+            {
+                loc.LocationType = null; // Keep loc.Loctype (the int ID)
+            }
+
+            // Fix Departments (Break link to Location)
+            foreach (var dept in departments)
+            {
+                dept.DeptLocation = null; // Keep dept.Location (the int ID)
+            }
+
+            // Fix Employees (Break links to Dept and Location)
+            foreach (var emp in employees)
+            {
+                emp.EmpLocation = null;    // Keep emp.Location (the int ID)
+                emp.EmpDepartment = null;  // Keep emp.Department (the int ID)
+            }
+
+            // Since MauiProgram no longer deletes the DB, we must wipe tables here
+            // before inserting the fresh data.
+            await _cacheService.ClearAllDataAsync();
 
             // Save to cache
             await _cacheService.SaveLocationTypesAsync(locationTypes);

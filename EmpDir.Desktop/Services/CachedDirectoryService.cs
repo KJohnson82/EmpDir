@@ -1,6 +1,5 @@
 ﻿using EmpDir.Core.DTOs;
 using EmpDir.Core.Extensions;
-using EmpDir.Core.Models;
 using EmpDir.Core.Services;
 using EmpDir.Desktop.Data;
 using Microsoft.EntityFrameworkCore;

@@ -1,0 +1,6 @@
+|Id |LoctypeName   |
+|---|--------------|
+|1  |Corporate     |
+|2  |Metal Mart    |
+|3  |Service Center|
+|4  |Plant         |
