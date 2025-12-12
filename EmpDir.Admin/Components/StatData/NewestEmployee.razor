@@ -14,7 +14,8 @@
 
 
 @* Inject database context for data operations *@
-@inject AppDbContext dbContext
+@* @inject AppDbContext dbContext *@
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 
 @* ===================================================================== *@
 @* CONDITIONAL RENDERING - Handle loading and empty states               *@
@@ -72,7 +73,9 @@ else
     /// </summary>
     protected override async Task OnInitializedAsync()
     {
-        employees = await dbContext.Employees
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        // employees = await dbContext.Employees
+        employees = await context.Employees
             .OrderByDescending(e => e.RecordAdd)    // Sort by creation date, newest first
             .Take(3)                                // Limit to 3 most recent employees
             .ToListAsync();                         // Execute query asynchronously

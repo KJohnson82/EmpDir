@@ -20,7 +20,8 @@
 
 
 @* Inject database context for data operations *@
-@inject AppDbContext dbContext
+@* @inject AppDbContext dbContext *@
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 
 <RequireAuth>
 @* ===================================================================== *@
@@ -505,12 +506,15 @@
         {
             isLoading = true;
 
+            // Create a DbContext from the factory
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+
             // Load reference data for dropdowns
-            locations = await dbContext.Locations.OrderBy(l => l.LocNum).ToListAsync();
-            departments = await dbContext.Departments.ToListAsync();
+            locations = await context.Locations.OrderBy(l => l.LocNum).ToListAsync();
+            departments = await context.Departments.ToListAsync();
 
             // Load employees with complex Entity Framework query
-            employees = await dbContext.Employees!
+            employees = await context.Employees!
                 /* .Where(e => e.Active == true)  */          // Only active employees
                 .Include(e => e.EmpLocation)            // Include location navigation property
                 .Include(e => e.EmpDepartment)          // Include department navigation property
@@ -518,6 +522,20 @@
                 .ThenBy(e => e.EmpDepartment!.DeptName) // Then by department name
                 .ThenBy(e => e.FirstName + e.LastName)  // Finally by full name
                 .ToListAsync();
+
+            // // Load reference data for dropdowns
+            // locations = await dbContext.Locations.OrderBy(l => l.LocNum).ToListAsync();
+            // departments = await dbContext.Departments.ToListAsync();
+
+            // // Load employees with complex Entity Framework query
+            // employees = await dbContext.Employees!
+            //     /* .Where(e => e.Active == true)  */          // Only active employees
+            //     .Include(e => e.EmpLocation)            // Include location navigation property
+            //     .Include(e => e.EmpDepartment)          // Include department navigation property
+            //     .OrderBy(e => e.EmpLocation!.LocName)   // Sort by location name first
+            //     .ThenBy(e => e.EmpDepartment!.DeptName) // Then by department name
+            //     .ThenBy(e => e.FirstName + e.LastName)  // Finally by full name
+            //     .ToListAsync();
         }
         catch (Exception ex)
         {
@@ -542,21 +560,28 @@
     /// <param name="args">Grid command event arguments containing the updated employee</param>
     async Task Update(GridCommandEventArgs args)
     {
-        // Alternative approach (commented out):
-        // var index = employees.FindIndex(item => item.Id.Equals(((Employee)args.Item).Id));
-        // employees[index] = (Employee)args.Item;
+        await using var context = await DbContextFactory.CreateDbContextAsync();
 
         try
         {
             var employee = (Employee)args.Item;
-            var existingEmployee = await dbContext.Employees.FindAsync(employee.Id);
+            var existingEmployee = await context.Employees.FindAsync(employee.Id);
 
             if (existingEmployee != null)
             {
                 // Use Entity Framework to copy values from updated employee to existing entity
-                dbContext.Entry(existingEmployee).CurrentValues.SetValues(employee);
-                await dbContext.SaveChangesAsync();
+                context.Entry(existingEmployee).CurrentValues.SetValues(employee);
+                await context.SaveChangesAsync();
             }
+            // var employee = (Employee)args.Item;
+            // var existingEmployee = await dbContext.Employees.FindAsync(employee.Id);
+
+            // if (existingEmployee != null)
+            // {
+            //     // Use Entity Framework to copy values from updated employee to existing entity
+            //     dbContext.Entry(existingEmployee).CurrentValues.SetValues(employee);
+            //     await dbContext.SaveChangesAsync();
+            // }
         }
         catch (Exception ex)
         {
@@ -571,17 +596,20 @@
     /// <param name="args">Grid command event arguments containing the new employee</param>
     async Task Add(GridCommandEventArgs args)
     {
-        // Alternative approach (commented out):
-        // ((Employee)args.Item).Id = employees.Any() ? employees.Max(item => item.Id) + 1 : 1;
-        // employees.Add((Employee)args.Item);
+        await using var context = await DbContextFactory.CreateDbContextAsync();
 
         try
         {
             var employee = (Employee)args.Item;
             employee.RecordAdd = DateTime.UtcNow;        // Set creation timestamp
-            await dbContext.Employees.AddAsync(employee); // Add to database
-            await dbContext.SaveChangesAsync();           // Save changes
-            employees.Add(employee);                      // Add to local collection
+            await context.Employees.AddAsync(employee); // Add to database
+            await context.SaveChangesAsync();           // Save changes
+            employees.Add(employee);
+            // var employee = (Employee)args.Item;
+            // employee.RecordAdd = DateTime.UtcNow;        // Set creation timestamp
+            // await dbContext.Employees.AddAsync(employee); // Add to database
+            // await dbContext.SaveChangesAsync();           // Save changes
+            // employees.Add(employee);                      // Add to local collection
         }
         catch (Exception ex)
         {
@@ -595,20 +623,28 @@
     /// <param name="args">Grid command event arguments containing the employee to delete</param>
     async Task Delete(GridCommandEventArgs args)
     {
-        // Alternative approach (commented out):
-        // employees.RemoveAll(item => item.Id.Equals(((Employee)args.Item).Id));
+        await using var context = await DbContextFactory.CreateDbContextAsync();
 
         try
         {
             var employee = (Employee)args.Item;
-            var existingEmployee = await dbContext.Employees.FindAsync(employee.Id);
+            var existingEmployee = await context.Employees.FindAsync(employee.Id);
 
             if (existingEmployee != null)
             {
-                dbContext.Employees.Remove(existingEmployee); // Remove from database
-                await dbContext.SaveChangesAsync();           // Save changes
+                context.Employees.Remove(existingEmployee); // Remove from database
+                await context.SaveChangesAsync();           // Save changes
                 employees.Remove(employee);                   // Remove from local collection
             }
+            // var employee = (Employee)args.Item;
+            // var existingEmployee = await dbContext.Employees.FindAsync(employee.Id);
+
+            // if (existingEmployee != null)
+            // {
+            //     dbContext.Employees.Remove(existingEmployee); // Remove from database
+            //     await dbContext.SaveChangesAsync();           // Save changes
+            //     employees.Remove(employee);                   // Remove from local collection
+            // }
         }
         catch (Exception ex)
         {

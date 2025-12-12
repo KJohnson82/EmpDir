@@ -26,7 +26,8 @@
 <PageHeader PageTitle="Locations" CardIcon="@CustomIcons.Factory" />
 
 @* Inject database context for data operations *@
-@inject AppDbContext dbContext
+@* @inject AppDbContext dbContext *@
+    @inject IDbContextFactory<AppDbContext> DbContextFactory
 
 @* ===================================================================== *@
 @* MAIN DATA GRID - Telerik Grid with full CRUD capabilities            *@
@@ -416,10 +417,19 @@
         try
         {
             isLoading = true;
-            locations = await dbContext.Locations!
+
+            // Create a DbContext from the factory
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+
+            locations = await context.Locations!
                 /* .Where(l => l.Active == true) */    // Only active locations
                 .OrderBy(l => l.LocNum)          // Sort by location number
                 .ToListAsync();
+
+            // locations = await dbContext.Locations!
+            //     /* .Where(l => l.Active == true) */    // Only active locations
+            //     .OrderBy(l => l.LocNum)          // Sort by location number
+            //     .ToListAsync();
         }
         catch (Exception ex)
         {
@@ -500,14 +510,16 @@
     {
         try
         {
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+
             var location = (Location)args.Item;
-            var existingLocation = await dbContext.Locations.FindAsync(location.Id);
+            var existingLocation = await context.Locations.FindAsync(location.Id);
 
             if (existingLocation != null)
             {
                 // Use Entity Framework to copy values from updated location to existing entity
-                dbContext.Entry(existingLocation).CurrentValues.SetValues(location);
-                await dbContext.SaveChangesAsync();
+                context.Entry(existingLocation).CurrentValues.SetValues(location);
+                await context.SaveChangesAsync();
 
                 // Update local collection for immediate UI feedback
                 var index = locations.FindIndex(l => l.Id == location.Id);
@@ -516,6 +528,23 @@
                     locations[index] = location;
                 }
             }
+
+            // var location = (Location)args.Item;
+            // var existingLocation = await dbContext.Locations.FindAsync(location.Id);
+
+            // if (existingLocation != null)
+            // {
+            //     // Use Entity Framework to copy values from updated location to existing entity
+            //     dbContext.Entry(existingLocation).CurrentValues.SetValues(location);
+            //     await dbContext.SaveChangesAsync();
+
+            //     // Update local collection for immediate UI feedback
+            //     var index = locations.FindIndex(l => l.Id == location.Id);
+            //     if (index != -1)
+            //     {
+            //         locations[index] = location;
+            //     }
+            // }
         }
         catch (Exception ex)
         {
@@ -532,10 +561,17 @@
     {
         try
         {
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+
             var location = (Location)args.Item;
             location.RecordAdd = DateTime.UtcNow;        // Set creation timestamp
-            await dbContext.Locations.AddAsync(location); // Add to database
-            await dbContext.SaveChangesAsync();           // Save changes
+            await context.Locations.AddAsync(location); // Add to database
+            await context.SaveChangesAsync();           // Save changes
+
+            // var location = (Location)args.Item;
+            // location.RecordAdd = DateTime.UtcNow;        // Set creation timestamp
+            // await dbContext.Locations.AddAsync(location); // Add to database
+            // await dbContext.SaveChangesAsync();           // Save changes
 
             locations.Add(location);                      // Add to local collection
         }
@@ -553,15 +589,27 @@
     {
         try
         {
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+
             var location = (Location)args.Item;
-            var existingLocation = await dbContext.Locations.FindAsync(location.Id);
+            var existingLocation = await context.Locations.FindAsync(location.Id);
 
             if (existingLocation != null)
             {
-                dbContext.Locations.Remove(existingLocation); // Remove from database
-                await dbContext.SaveChangesAsync();           // Save changes
+                context.Locations.Remove(existingLocation); // Remove from database
+                await context.SaveChangesAsync();           // Save changes
                 locations.Remove(location);                   // Remove from local collection
             }
+
+            // var location = (Location)args.Item;
+            // var existingLocation = await dbContext.Locations.FindAsync(location.Id);
+
+            // if (existingLocation != null)
+            // {
+            //     dbContext.Locations.Remove(existingLocation); // Remove from database
+            //     await dbContext.SaveChangesAsync();           // Save changes
+            //     locations.Remove(location);                   // Remove from local collection
+            // }
         }
         catch (Exception ex)
         {

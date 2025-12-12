@@ -129,7 +129,7 @@
     }
 
     /// <summary>
-    /// Determines if the current page is a corporate/home page.
+    /// Determines if the current page is a corporate/ page.
     /// Used to show corporate-style header instead of standard header.
     /// </summary>
     /// <returns>True if current page is corporate or home page</returns>
@@ -139,7 +139,7 @@
         var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).ToLower();
 
         // Check if the current path is home or corporate related
-        // Empty path = root/home, explicit "home", or corporate sections
+        // Empty path = root/, explicit "home", or corporate sections
         return string.IsNullOrEmpty(relativePath) ||
                relativePath == "home" ||
                relativePath.StartsWith("corporate");

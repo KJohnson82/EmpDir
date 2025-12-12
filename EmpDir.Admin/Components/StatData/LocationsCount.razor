@@ -13,7 +13,8 @@
 
 
 @* Inject database context for data operations *@
-@inject AppDbContext dbContext
+@* @inject AppDbContext dbContext *@
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 
 @* ===================================================================== *@
 @* TELERIK DONUT CHART - Location type distribution visualization        *@
@@ -97,8 +98,10 @@
     /// </summary>
     protected override async Task OnInitializedAsync()
     {
+        await using var context = await DbContextFactory.CreateDbContextAsync();
         // LINQ query to aggregate location data by type (excluding corporate)
-        locationsDonut = await dbContext.Locations
+        // locationsDonut = await dbContext.Locations
+        locationsDonut = await context.Locations
             .Where(l => l.Loctype != 1)                    // Exclude corporate locations (Loctype = 1)
             .GroupBy(l => l.Loctype)                       // Group by location type ID
             .Select(g => new LocationsModel                // Project to chart model

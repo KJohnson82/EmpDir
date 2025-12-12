@@ -19,7 +19,8 @@
 @using EmpDir.UI.Layout
 
 @* Inject database context for data operations *@
-@inject AppDbContext dbContext
+@* @inject AppDbContext dbContext *@
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 
 <RequireAuth>
 
@@ -467,16 +468,29 @@
         {
             isLoading = true;
 
+            // Create a DbContext from the factory
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+
             // Load reference data for location dropdown
-            locations = await dbContext.Locations!.ToListAsync();
+            locations = await context.Locations!.ToListAsync();
 
             // Load departments with complex Entity Framework query
-            departments = await dbContext.Departments!
-                /* .Where(d => d.Active == true)  */          // Only active departments
+            departments = await context.Departments!
                 .Include(d => d.DeptLocation)           // Include location navigation property
                 .OrderBy(d => d.DeptLocation!.LocName)  // Sort by location name first
                 .ThenBy(d => d.DeptName)                // Then by department name
                 .ToListAsync();
+
+            // // Load reference data for location dropdown
+            // locations = await dbContext.Locations!.ToListAsync();
+
+            // // Load departments with complex Entity Framework query
+            // departments = await dbContext.Departments!
+            //     /* .Where(d => d.Active == true)  */          // Only active departments
+            //     .Include(d => d.DeptLocation)           // Include location navigation property
+            //     .OrderBy(d => d.DeptLocation!.LocName)  // Sort by location name first
+            //     .ThenBy(d => d.DeptName)                // Then by department name
+            //     .ToListAsync();
         }
         catch (Exception ex)
         {
@@ -501,19 +515,26 @@
     /// <param name="args">Grid command event arguments containing the updated department</param>
     async Task Update(GridCommandEventArgs args)
     {
-        // Alternative approach (commented out):
-        // var index = departments.FindIndex(item => item.Id.Equals(((Department)args.Item).Id));
-        // departments[index] = (Department)args.Item;
+        await using var context = await DbContextFactory.CreateDbContextAsync();
 
         var department = (Department)args.Item;
-        var existingDepartment = await dbContext.Departments.FindAsync(department.Id);
+        var existingDepartment = await context.Departments.FindAsync(department.Id);
 
         if (existingDepartment != null)
         {
-            // Use Entity Framework to copy values from updated department to existing entity
-            dbContext.Entry(existingDepartment).CurrentValues.SetValues(department);
-            await dbContext.SaveChangesAsync();
+            context.Entry(existingDepartment).CurrentValues.SetValues(department);
+            await context.SaveChangesAsync();
         }
+
+        // var department = (Department)args.Item;
+        // var existingDepartment = await dbContext.Departments.FindAsync(department.Id);
+
+        // if (existingDepartment != null)
+        // {
+        //     // Use Entity Framework to copy values from updated department to existing entity
+        //     dbContext.Entry(existingDepartment).CurrentValues.SetValues(department);
+        //     await dbContext.SaveChangesAsync();
+        // }
     }
 
     /// <summary>
@@ -523,15 +544,18 @@
     /// <param name="args">Grid command event arguments containing the new department</param>
     async Task Add(GridCommandEventArgs args)
     {
-        // Alternative approach (commented out):
-        // ((Department)args.Item).Id = departments.Any() ? departments.Max(item => item.Id) + 1 : 1;
-        // departments.Add((Department)args.Item);
-
+        await using var context = await DbContextFactory.CreateDbContextAsync();
         var department = (Department)args.Item;
         department.RecordAdd = DateTime.UtcNow;         // Set creation timestamp
-        await dbContext.Departments.AddAsync(department); // Add to database
-        await dbContext.SaveChangesAsync();               // Save changes
+        await context.Departments.AddAsync(department); // Add to database
+        await context.SaveChangesAsync();               // Save changes
         departments.Add(department);                      // Add to local collection
+        // await using var context = await DbContextFactory.CreateDbContextAsync();
+        // var department = (Department)args.Item;
+        // department.RecordAdd = DateTime.UtcNow;         // Set creation timestamp
+        // await dbContext.Departments.AddAsync(department); // Add to database
+        // await dbContext.SaveChangesAsync();               // Save changes
+        // departments.Add(department);                      // Add to local collection
     }
 
     /// <summary>
@@ -540,18 +564,27 @@
     /// <param name="args">Grid command event arguments containing the department to delete</param>
     async Task Delete(GridCommandEventArgs args)
     {
-        // Alternative approach (commented out):
-        // departments.RemoveAll(item => item.Id.Equals(((Department)args.Item).Id));
+        await using var context = await DbContextFactory.CreateDbContextAsync();
 
         var department = (Department)args.Item;
-        var existingDepartment = await dbContext.Departments.FindAsync(department.Id);
+        var existingDepartment = await context.Departments.FindAsync(department.Id);
 
         if (existingDepartment != null)
         {
-            dbContext.Departments.Remove(existingDepartment); // Remove from database
-            await dbContext.SaveChangesAsync();               // Save changes
+            context.Departments.Remove(existingDepartment); // Remove from database
+            await context.SaveChangesAsync();               // Save changes
             departments.Remove(department);                   // Remove from local collection
         }
+
+        // var department = (Department)args.Item;
+        // var existingDepartment = await dbContext.Departments.FindAsync(department.Id);
+
+        // if (existingDepartment != null)
+        // {
+        //     dbContext.Departments.Remove(existingDepartment); // Remove from database
+        //     await dbContext.SaveChangesAsync();               // Save changes
+        //     departments.Remove(department);                   // Remove from local collection
+        // }
     }
 
     // =====================================================================

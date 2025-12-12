@@ -192,7 +192,7 @@
     /// </summary>
     private IEnumerable<NavItem> DrawerData { get; set; } = new List<NavItem>()
     {
-        new NavItem("Home", CustomIcons.Home, "/Home", "HOME"),
+        new NavItem("Home", CustomIcons.Home, "/", "HOME"),
         new NavItem("Employees", CustomIcons.Face, "/Employees", "EMPLOYEES"),
         new NavItem("Departments", CustomIcons.Domain, "/Departments", "DEPARTMENTS"),
         new NavItem("Locations", CustomIcons.Factory, "/Locations", "LOCATIONS")
@@ -271,7 +271,7 @@
     /// </summary>
     private void SelectDrawerItem()
     {
-        var url = NavManager.Uri.Replace(NavManager.BaseUri, "/Home").ToLowerInvariant();
+        var url = NavManager.Uri.Replace(NavManager.BaseUri, "/").ToLowerInvariant();
         DrawerSelectedItem = DrawerData.FirstOrDefault(x => x.Url.ToLowerInvariant() == url);
     }
 
@@ -283,7 +283,7 @@
     /// <param name="args">Location change event arguments</param>
     private void NavManagerLocationChanged(object? sender, LocationChangedEventArgs args)
     {
-        var url = args.Location.Replace(NavManager.BaseUri, "/Home").ToLowerInvariant();
+        var url = args.Location.Replace(NavManager.BaseUri, "/").ToLowerInvariant();
         DrawerSelectedItem = DrawerData.FirstOrDefault(x => x.Url.ToLowerInvariant() == url);
 
         // Trigger UI refresh to show updated selection

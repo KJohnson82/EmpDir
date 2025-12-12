@@ -1,0 +1,44 @@
+﻿@using EmpDir.Admin.Services
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+@if (isAuthenticated)
+{
+    @ChildContent
+}
+else if (isChecking)
+{
+    <div class="auth-loading">
+        <p>Checking authentication...</p>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private bool isAuthenticated = false;
+    private bool isChecking = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isAuthenticated = await AuthService.IsAuthenticatedAsync();
+
+            if (!isAuthenticated)
+            {
+                Navigation.NavigateTo("/login", true);
+            }
+        }
+        catch
+        {
+            Navigation.NavigateTo("/login", true);
+        }
+        finally
+        {
+            isChecking = false;
+        }
+    }
+}

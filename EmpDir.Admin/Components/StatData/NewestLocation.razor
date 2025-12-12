@@ -14,7 +14,8 @@
 
 
 @* Inject database context for data operations *@
-@inject AppDbContext dbContext
+@* @inject AppDbContext dbContext *@
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 
 @* ===================================================================== *@
 @* CONDITIONAL RENDERING - Handle loading and empty states               *@
@@ -72,7 +73,9 @@ else
     /// </summary>
     protected override async Task OnInitializedAsync()
     {
-        locations = await dbContext.Locations
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        // locations = await dbContext.Locations
+        locations = await context.Locations
             .OrderByDescending(l => l.RecordAdd)    // Sort by creation date, newest first
             .Take(3)                                // Limit to 3 most recent locations
             .ToListAsync();                         // Execute query asynchronously

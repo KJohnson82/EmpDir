@@ -13,7 +13,8 @@
 
 
 @* Inject database context for data operations *@
-@inject AppDbContext dbContext
+@* @inject AppDbContext dbContext *@
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 
 @* ===================================================================== *@
 @* TELERIK BAR CHART - Employee count visualization                       *@
@@ -78,8 +79,10 @@
     /// </summary>
     protected override async Task OnInitializedAsync()
     {
+        await using var context = await DbContextFactory.CreateDbContextAsync();
         // Complex LINQ query to aggregate employee data by department
-        employeeCounts = await dbContext.Departments
+        // employeeCounts = await dbContext.Departments
+        employeeCounts = await context.Departments
     .Include(d => d.Employees.Where(e => e.Active == true))
     .Select(d => new EmployeeCountModel
     {

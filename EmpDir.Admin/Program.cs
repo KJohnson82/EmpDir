@@ -1,22 +1,36 @@
 using EmpDir.Admin.Components;
 using EmpDir.Core.Data.Context;
+using EmpDir.Core.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ===== DATABASE CONFIGURATION =====
-builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+//builder.Services.AddDbContext<AppDbContext>(options =>
+//{
+//    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-    // Use PostgreSQL
-    options.UseNpgsql(connectionString, npgsqlOptions =>
-    {
-        npgsqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 3,
-            maxRetryDelay: TimeSpan.FromSeconds(10),
-            errorCodesToAdd: null);
-    });
+//    // Use PostgreSQL
+//    options.UseNpgsql(connectionString, npgsqlOptions =>
+//    {
+//        npgsqlOptions.EnableRetryOnFailure(
+//            maxRetryCount: 3,
+//            maxRetryDelay: TimeSpan.FromSeconds(10),
+//            errorCodesToAdd: null);
+//    });
+
+//#if DEBUG
+//    options.EnableSensitiveDataLogging();
+//    options.EnableDetailedErrors();
+//#endif
+//});
+
+var connectionString = builder.Configuration.GetConnectionString("DatabaseConnection");
+
+// CHANGE THIS: Use DbContextFactory instead of AddDbContext for Blazor Server
+builder.Services.AddDbContextFactory<AppDbContext>(options =>
+{
+    options.UseNpgsql(connectionString);
 
 #if DEBUG
     options.EnableSensitiveDataLogging();
@@ -27,6 +41,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // ===== UI SERVICES =====
 builder.Services.AddTelerikBlazor();
 builder.Services.AddScoped<EmpDir.Admin.Components.Layout.MainLayout>();
+builder.Services.AddScoped<EmpDir.Admin.Services.IAuthService, EmpDir.Admin.Services.AuthService>();
+
+builder.Services.AddScoped<ExportData>();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
@@ -36,12 +53,14 @@ var app = builder.Build();
 // ===== DATABASE CHECK ON STARTUP =====
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    //var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
     try
     {
         logger.LogInformation("Checking database connection...");
+        await using var context = await contextFactory.CreateDbContextAsync();
 
         if (await context.Database.CanConnectAsync())
         {
