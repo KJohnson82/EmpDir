@@ -1,0 +1,126 @@
+﻿
+
+@inject EmpDir.Core.Services.ISearchService SearchService
+
+@* Horizontal search bar with back button and search input *@
+<TelerikAppBar ThemeColor="@ThemeConstants.AppBar.ThemeColor.Inverse"
+               Height="65px"
+               Class="k-d-flex"
+               Position="AppBarPosition.None">
+
+    @* Back button section *@
+    <AppBarSection Class="k-justify-content-start">
+        <BackButton>
+            <span class="k-font-size-lg k-font-bold">BACK</span>
+        </BackButton>
+    </AppBarSection>
+
+    @* Search input with debounced auto-search *@
+    <AppBarSection class="k-d-flex k-align-items-center k-flex-grow">
+        <TelerikTextBox Rounded="lg"
+                        Class="k-w-full search-input"
+                        Width="100%"
+                        Size="@ThemeConstants.Button.Size.Large"
+                        Placeholder="Search..."
+                        Value="@SearchQuery"
+                        ValueChanged="@OnSearchValueChanged"
+                        ShowClearButton="true"
+                        DebounceDelay="300"
+                        Id="main-search-input" />
+    </AppBarSection>
+</TelerikAppBar>
+
+@* Search results modal overlay *@
+<SearchResultsModal IsVisible="@ShowSearchModal"
+                    IsVisibleChanged="@OnSearchModalVisibilityChanged"
+                    SearchTerm="@CurrentSearchTerm" />
+
+@code {
+    // Current value of search input field
+    private string SearchQuery { get; set; } = string.Empty;
+
+    // The search term submitted for search (passed to modal)
+    private string CurrentSearchTerm { get; set; } = string.Empty;
+
+    // Controls visibility of search results modal
+    private bool ShowSearchModal { get; set; } = false;
+
+    // Handle search input changes with debounced auto-search
+    private async Task OnSearchValueChanged(string newValue)
+    {
+        SearchQuery = newValue;
+
+        // Auto-search for queries with 2+ characters
+        if (!string.IsNullOrWhiteSpace(newValue) && newValue.Length >= 2)
+        {
+            // Debounce to prevent excessive API calls while typing
+            await Task.Delay(100);
+
+            // Only search if query hasn't changed (user stopped typing)
+            if (SearchQuery == newValue)
+            {
+                await PerformSearch();
+            }
+        }
+        else if (string.IsNullOrWhiteSpace(newValue))
+        {
+            // Clear results when input is cleared
+            ShowSearchModal = false;
+            CurrentSearchTerm = string.Empty;
+        }
+    }
+
+    // Execute search and display results in modal
+    private async Task PerformSearch()
+    {
+        if (string.IsNullOrWhiteSpace(SearchQuery))
+            return;
+
+        CurrentSearchTerm = SearchQuery.Trim();
+        ShowSearchModal = true;
+        StateHasChanged();
+    }
+
+    // Handle search modal visibility changes
+    private async Task OnSearchModalVisibilityChanged(bool isVisible)
+    {
+        ShowSearchModal = isVisible;
+
+        if (!isVisible)
+        {
+            // Clear search term when modal closes
+            CurrentSearchTerm = string.Empty;
+        }
+
+        StateHasChanged();
+    }
+}
+
+<style>
+    .k-appbar {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 10px;
+        width: 100%;
+        height: 65px;
+        box-sizing: border-box;
+    }
+
+        .k-appbar > .k-appbar-section:first-child {
+            flex: 0 0 auto;
+        }
+
+        .k-appbar > .k-appbar-section:last-child {
+            padding-right: 2px;
+        }
+
+    .search-input {
+        min-width: 0;
+        flex: 1;
+    }
+
+        .search-input .k-textbox {
+            margin: 0;
+            padding: 0;
+        }
+</style>

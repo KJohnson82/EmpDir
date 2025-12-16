@@ -7,9 +7,7 @@ using Location = EmpDir.Core.Models.Location;
 
 namespace EmpDir.Desktop.Services;
 
-/// <summary>
-/// Service for managing local cache database
-/// </summary>
+// Service for managing local cache database
 public class CacheService : ICacheService
 {
     private readonly LocalCacheContext _context;
@@ -23,16 +21,12 @@ public class CacheService : ICacheService
         _logger = logger;
     }
 
-    // ========== WRITE OPERATIONS ==========
-
+    // Write operations
     public async Task SaveEmployeesAsync(List<Employee> employees)
     {
         try
         {
-            // Clear existing employees
             _context.Employees.RemoveRange(_context.Employees);
-
-            // Add new employees
             await _context.Employees.AddRangeAsync(employees);
             await _context.SaveChangesAsync();
 
@@ -115,8 +109,7 @@ public class CacheService : ICacheService
         }
     }
 
-    // ========== READ OPERATIONS ==========
-
+    // Read operations
     public async Task<List<Employee>> GetEmployeesAsync()
     {
         return await _context.Employees
@@ -166,8 +159,7 @@ public class CacheService : ICacheService
             .FirstOrDefaultAsync(l => l.Id == id);
     }
 
-    // ========== METADATA OPERATIONS ==========
-
+    // Metadata operations
     public async Task<DateTime?> GetLastSyncTimeAsync()
     {
         var metadata = await _context.SyncMetadata

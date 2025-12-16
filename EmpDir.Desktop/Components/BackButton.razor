@@ -1,0 +1,26 @@
+﻿@* Reusable back navigation button that uses browser history *@
+@using Microsoft.JSInterop
+
+
+@inject IJSRuntime JS
+
+<TelerikButton OnClick="@GoBack"
+               Icon="@CustomIcons.LeftArrow"
+               Size="@ThemeConstants.Button.Size.Large"
+               ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
+               Class="k-py-2"
+               FillMode="@ThemeConstants.Button.FillMode.Solid">
+    @ChildContent
+</TelerikButton>
+
+@code {
+    // Content to display inside the button (e.g., "Back" text)
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    // Navigate back using browser history via JavaScript interop
+    private async Task GoBack()
+    {
+        await JS.InvokeVoidAsync("goBack");
+    }
+}

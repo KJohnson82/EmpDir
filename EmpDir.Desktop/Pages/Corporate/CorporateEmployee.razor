@@ -1,89 +1,46 @@
-﻿@* 
-Employee detail page component displaying comprehensive information for a specific corporate employee.
-Features a dark theme design with alternating left/right contact sections and decorative dividers.
-Represents the deepest level in the corporate navigation hierarchy: Corporate > Department > Employee.
-Uses both department and employee IDs for complete navigation context.
-*@
+﻿@page "/corporate/{departmentID:int}/{employeeID:int}"
 
-@* Route definition with two integer parameters for department and employee IDs *@
-@page "/corporate/{departmentID:int}/{employeeID:int}"
-
-@* Required using statements for data models and UI components *@
-@using EmpDir
-@using EmpDir.Core.DTOs
-@using EmpDir.Core.Data.Context
-@using EmpDir.Core.Models
-@using EmpDir.Core.Services
-@using EmpDir.UI.Components
-@using EmpDir.UI.Layout
-@using Telerik.Blazor
-@using Telerik.Blazor.Components
-@using Telerik.SvgIcons
-
-@* Required dependency injections for page functionality *@
 @inject IDirectoryService DirectoryService
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 @inject LayoutState LayoutState
 
-@* Page title for browser tab/window *@
 <PageTitle>Corporate Employee</PageTitle>
 
-@* ===== LOADING STATE ===== *@
-@* Display loading message while employee data is being fetched *@
+@* Loading state *@
 @if (Employee == null)
 {
     <p>Loading employee...</p>
 }
 else
 {
-    @* ===== MAIN CONTENT CONTAINER ===== *@
-    @* 
-    Full-height container with dark theme and decorative borders.
-    Uses Telerik utility classes for border styling.
-    *@
+    @* Employee details with dark theme *@
     <div class="button-page-container k-border-top-2 k-border-bottom-8 k-border-x-0 k-border-solid k-border-dark-subtle">
         <div class="scrollable-wrapper">
             <div class="employee-details">
 
-                @* ===== EMPLOYEE NAME SECTION ===== *@
-                @* 
-                Header section displaying employee name, manager status, and job title.
-                Features centered layout with prominent typography and corporate accent colors.
-                *@
+                @* Employee name header with manager indicator *@
                 <div class="employee-name-section k-mb-2">
-                    @* Employee name with uppercase styling and optional manager indicator *@
                     <h1 class="employee-name">
                         @Employee.FirstName?.ToUpper() @Employee.LastName?.ToUpper()
-                        @* 
-                        Manager indicator: Gold star for employees with management roles.
-                        Only displayed when IsManager flag is true.
-                        *@
                         @if (Employee.IsManager == true)
                         {
                             <span class="manager-star">★</span>
                         }
                     </h1>
-                    @* Employee job title with corporate red accent color *@
                     <p class="job-title">@Employee.JobTitle</p>
                 </div>
 
-                @* ===== CONTACT DETAILS SECTION ===== *@
-                @* 
-                Contact information displayed in alternating left/right sections.
-                Each section features decorative dividers and consistent styling.
-                Uses conditional rendering to only show available contact information.
-                *@
+                @* Contact information in alternating left/right sections *@
                 <div class="contact-details">
 
-                    @* Phone and Extension Information (Left-aligned section) *@
+                    @* Phone and extension *@
                     @if (!string.IsNullOrWhiteSpace(Employee.PhoneNumber) || !string.IsNullOrWhiteSpace(Employee.Extension))
                     {
                         <div class="contact-section section-left">
                             <div class="left-divider">PHONE</div>
                             <div class="contact-value">
                                 @Employee.PhoneNumber
-                                @* Show extension if available, with clear labeling *@
                                 @if (!string.IsNullOrWhiteSpace(Employee.Extension))
                                 {
                                     <span> | EXT: @Employee.Extension</span>
@@ -92,7 +49,7 @@ else
                         </div>
                     }
 
-                    @* Email Information (Right-aligned section) *@
+                    @* Email *@
                     @if (!string.IsNullOrWhiteSpace(Employee.Email))
                     {
                         <div class="contact-section section-right">
@@ -101,7 +58,7 @@ else
                         </div>
                     }
 
-                    @* Cell Phone Information (Left-aligned section) *@
+                    @* Cell phone *@
                     @if (!string.IsNullOrWhiteSpace(Employee.CellNumber))
                     {
                         <div class="contact-section section-left">
@@ -110,7 +67,7 @@ else
                         </div>
                     }
 
-                    @* Network ID Information (Right-aligned section) *@
+                    @* Network ID *@
                     @if (!string.IsNullOrWhiteSpace(Employee.NetworkId))
                     {
                         <div class="contact-section section-right">
@@ -123,280 +80,168 @@ else
         </div>
     </div>
 
-    @* ===== COMPONENT STYLING ===== *@
     <style>
-        /* ===== MAIN CONTAINER STYLING ===== */
-        /* Employee details container with dark theme background */
         .employee-details {
-            background-color: var(--kendo-color-dark); /* Dark theme for employee details */
-            padding: 0; /* No padding - handled by child elements */
+            background-color: var(--kendo-color-dark);
+            padding: 0;
         }
 
-        /* ===== EMPLOYEE NAME SECTION ===== */
-        /* Header section with employee name and job title */
         .employee-name-section {
-            padding: 20px 20px; /* Generous padding for header section */
-            text-align: center; /* Center-align employee name and title */
-            border-bottom: 2px solid var(--kendo-color-primary); /* Primary color bottom border */
+            padding: 20px 20px;
+            text-align: center;
+            border-bottom: 2px solid var(--kendo-color-primary);
         }
 
-        /* Employee name styling with prominent typography */
         .employee-name {
-            color: var(--kendo-color-on-dark); /* High contrast text on dark background */
-            font-size: xx-large; /* Large font size for prominence */
-            font-weight: bold; /* Bold weight for emphasis */
-            margin: 0 0 5px 0; /* Minimal bottom margin */
-            letter-spacing: 2px; /* Wide letter spacing for readability */
+            color: var(--kendo-color-on-dark);
+            font-size: xx-large;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+            letter-spacing: 2px;
         }
 
-        /* Manager star indicator styling */
         .manager-star {
-            color: #ffd700; /* Gold color for star indicator */
-            margin-left: 8px; /* Space between name and star */
+            color: #ffd700;
+            margin-left: 8px;
         }
 
-        /* Job title styling with corporate accent color */
         .job-title {
-            color: #ff6358; /* Corporate red accent color */
-            font-size: large; /* Large but smaller than name */
-            margin: 0; /* No margins */
-            text-transform: uppercase; /* Uppercase for consistency */
-            letter-spacing: 1px; /* Letter spacing for readability */
+            color: #ff6358;
+            font-size: large;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        /* ===== CONTACT DETAILS SECTION ===== */
-        /* Container for all contact information */
         .contact-details {
-            background-color: var(--kendo-color-dark); /* Dark background continuation */
-            padding: 2px; /* Minimal padding */
+            background-color: var(--kendo-color-dark);
+            padding: 2px;
         }
 
-        /* Individual contact section styling */
         .contact-section {
-            padding: 10px 0; /* Vertical padding for sections */
-            position: relative; /* For potential absolute positioning */
+            padding: 10px 0;
+            position: relative;
         }
 
-            /* Remove border from last contact section */
             .contact-section:last-child {
-                border-bottom: none; /* Clean bottom edge */
+                border-bottom: none;
             }
 
-        /* Contact label styling (currently unused but preserved) */
-        .contact-label {
-            color: var(--kendo-color-warning); /* Warning color for labels */
-            font-size: medium; /* Medium font size */
-            font-weight: bold; /* Bold for emphasis */
-            text-transform: uppercase; /* Uppercase labels */
-            letter-spacing: 1px; /* Letter spacing */
-            margin-bottom: 8px; /* Bottom margin */
-            border-bottom: 2px solid var(--kendo-color-tertiary-on-surface); /* Bottom border */
-        }
-
-        /* Contact value styling with responsive typography */
         .contact-value {
-            color: white; /* White text for contrast */
-            font-size: clamp(0.9rem, 2vw + 0.75rem, 1.25rem); /* Responsive font size */
-            line-height: 1; /* Tight line height */
-            letter-spacing: 0.5px; /* Subtle letter spacing */
+            color: white;
+            font-size: clamp(0.9rem, 2vw + 0.75rem, 1.25rem);
+            line-height: 1;
+            letter-spacing: 0.5px;
         }
 
-        /* ===== PAGE LAYOUT CONTAINERS ===== */
-        /* Main page container with calculated height and dark theme */
         .button-page-container {
-            height: calc(100% - 60px); /* Full height minus header/footer space */
+            height: calc(100% - 60px);
             display: flex;
-            flex-direction: column; /* Vertical stacking */
-            background-color: var(--kendo-color-dark); /* Dark theme background */
-            padding-bottom: 10px; /* Bottom padding */
-            padding-top: 10px; /* Top padding */
+            flex-direction: column;
+            background-color: var(--kendo-color-dark);
+            padding-bottom: 10px;
+            padding-top: 10px;
         }
 
-        /* Scrollable content wrapper with hidden scrollbars */
         .scrollable-wrapper {
-            flex: 1; /* Grow to fill space */
-            overflow-y: auto; /* Enable vertical scrolling */
-            padding: 0; /* No padding */
-            scrollbar-width: none; /* Firefox scrollbar hiding */
-            -ms-overflow-style: none; /* IE/Edge scrollbar hiding */
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
 
-            /* Webkit browsers scrollbar hiding */
             .scrollable-wrapper::-webkit-scrollbar {
-                display: none; /* Hide scrollbar completely */
+                display: none;
             }
 
-        /* Footer styling (currently unused) */
-        .footer {
-            border-top: 6px solid red; /* Red top border for footer */
-        }
-
-        /* ===== DECORATIVE DIVIDER STYLING ===== */
-        /* Left-aligned divider with decorative line extending right */
         .left-divider {
-            padding-top: 0.5rem; /* Top padding */
-            padding-bottom: 0.5rem; /* Bottom padding */
-            display: flex; /* Flex layout for alignment */
-            align-items: center; /* Vertical center alignment */
-            font-size: 1.125rem; /* Larger font size */
-            color: #d4af37; /* Gold accent color */
-            font-weight: 600; /* Semi-bold weight */
-            letter-spacing: 1.25px; /* Wide letter spacing */
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            font-size: 1.125rem;
+            color: #d4af37;
+            font-weight: 600;
+            letter-spacing: 1.25px;
         }
 
-            /* Decorative line extending right from left divider */
             .left-divider::after {
-                content: ''; /* Empty content for line */
-                flex: 1; /* Grow to fill space */
-                border-top: 3px solid #4a9eff; /* Blue line */
-                margin-left: 1rem; /* Space from text */
+                content: '';
+                flex: 1;
+                border-top: 3px solid #4a9eff;
+                margin-left: 1rem;
             }
 
-        /* Right-aligned divider with decorative line extending left */
         .right-divider {
-            padding-top: 0.5rem; /* Top padding */
-            padding-bottom: 0.5rem; /* Bottom padding */
-            display: flex; /* Flex layout for alignment */
-            align-items: center; /* Vertical center alignment */
-            font-size: 1.125rem; /* Larger font size */
-            color: #d4af37; /* Gold accent color */
-            font-weight: 600; /* Semi-bold weight */
-            letter-spacing: 1.25px; /* Wide letter spacing */
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            font-size: 1.125rem;
+            color: #d4af37;
+            font-weight: 600;
+            letter-spacing: 1.25px;
         }
 
-            /* Decorative line extending left from right divider */
             .right-divider::before {
-                content: ''; /* Empty content for line */
-                flex: 1; /* Grow to fill space */
-                border-top: 3px solid #4a9eff; /* Blue line */
-                margin-right: 1rem; /* Space from text */
+                content: '';
+                flex: 1;
+                border-top: 3px solid #4a9eff;
+                margin-right: 1rem;
             }
 
-        /* ===== SECTION UTILITIES ===== */
-        /* Vertical divider styling (currently unused) */
-        .divider-vertical {
-            width: 2.5px; /* Thin vertical line */
-            height: 3rem; /* Fixed height */
-            background-color: #4a9eff; /* Blue color */
-            margin: 0 20px; /* Horizontal margins */
-        }
-
-        /* General section styling */
-        .section {
-            position: relative; /* Relative positioning */
-            margin-bottom: 15px; /* Bottom margin */
-        }
-
-        /* Right-aligned section with right padding */
         .section-right {
-            padding-right: 2rem !important; /* Right padding override */
+            padding-right: 2rem !important;
         }
 
-        /* Left-aligned section with left padding */
         .section-left {
-            padding-left: 2rem !important; /* Left padding override */
+            padding-left: 2rem !important;
         }
     </style>
 }
 
 @code {
-    #region Route Parameters
+    // Department ID from URL (maintains navigation context)
+    [Parameter]
+    public int departmentID { get; set; }
 
-    /// <summary>
-    /// Department ID route parameter extracted from the URL.
-    /// Maintains department context for navigation hierarchy.
-    /// Currently not actively used but preserved for context.
-    /// </summary>
-    [Parameter] public int departmentID { get; set; }
+    // Employee ID from URL
+    [Parameter]
+    public int employeeID { get; set; }
 
-    /// <summary>
-    /// Employee ID route parameter extracted from the URL.
-    /// Used to load specific employee data and information.
-    /// Corresponds to Employee.Id in the database.
-    /// </summary>
-    [Parameter] public int employeeID { get; set; }
-
-    #endregion
-
-    #region Private Properties
-
-    /// <summary>
-    /// Department entity (currently unused but preserved for potential future use).
-    /// Could be used for department context or breadcrumb navigation.
-    /// </summary>
+    // Department entity (preserved for potential future use)
     private DepartmentDto? Department;
 
-    /// <summary>
-    /// Employee entity with all personal and contact information.
-    /// Loaded from database using the employeeID route parameter.
-    /// Contains all data displayed on the employee detail page.
-    /// </summary>
+    // Employee entity with all contact information
     private EmployeeDto? Employee;
 
-    /// <summary>
-    /// Header card model configured for employee display.
-    /// Generated using HeaderCardModels.Employee() factory method.
-    /// Contains employee or department name for header display.
-    /// </summary>
+    // Header card model for employee display
     private HeaderCardModels.HeadInfoCardModel? EmployeeInfo;
 
-    /// <summary>
-    /// Footer navigation items configuration for employee section.
-    /// Provides navigation to main application sections but excludes Corporate
-    /// since user is already in corporate section (prevents redundant navigation).
-    /// </summary>
-    private List<FooterNav.FooterItem> FooterNavItems = new()
-    {
-        new FooterNav.FooterItem(CustomIcons.Home, "Home", "/"),
-        // new FooterNav.FooterItem(CustomIcons.Corporate, "Corporate", "/corporate"), // Commented out - already in corporate section
-        new FooterNav.FooterItem(CustomIcons.MetalMart, "Metal Mart", "/metalmart"),
-        new FooterNav.FooterItem(CustomIcons.ServiceCenter, "Service Center", "/servicecenter"),
-        new FooterNav.FooterItem(CustomIcons.Plant, "Plant", "/plant")
-    };
+    private List<FooterNav.FooterItem> FooterNav => FooterNavigation.CorporateSection;
 
-    #endregion
-
-    #region Lifecycle Methods
-
-    /// <summary>
-    /// Parameter change handler called when route parameters change.
-    /// Loads employee data and configures header information.
-    /// Uses Employee factory method for minimal header configuration.
-    /// </summary>
+    // Load employee data and configure header
     protected override async Task OnParametersSetAsync()
     {
-        // Load the specific employee using the employeeID route parameter
         Employee = await DirectoryService.GetEmployeeByIdAsync(employeeID);
 
-        // Create employee header card using factory method for minimal header
         if (Employee != null)
         {
-            // Use the Employee static factory method from HeaderCardModels
-            // Shows department name if available, otherwise falls back to employee name
+            // Show department name if available, otherwise employee name
             EmployeeInfo = HeaderCardModels.Employee(
                 title: Employee.DepartmentName ?? Employee.FirstName + " " + Employee.LastName
-            // Note: Employee factory method only takes title parameter
-            // Other contact details are displayed in page content, not header
             );
         }
     }
 
-    /// <summary>
-    /// Post-render lifecycle method for configuring layout state.
-    /// Sets up employee-specific header and global footer navigation.
-    /// Only executes on first render to avoid unnecessary state updates.
-    /// </summary>
+    // Configure layout state with employee header and footer
     protected override void OnAfterRender(bool firstRender)
     {
         if (firstRender && EmployeeInfo != null)
         {
-            // Configure minimal employee header (just title/department name)
             LayoutState.SetHeader(EmployeeInfo);
-
-            // Set global footer navigation for section-to-section navigation
-            LayoutState.SetFooter(FooterNavItems);
+            LayoutState.SetFooter(FooterNavigation.CorporateSection);
         }
     }
-
-    #endregion
 }

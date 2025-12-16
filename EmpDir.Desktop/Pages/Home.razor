@@ -1,77 +1,20 @@
-﻿@* 
-Home page / application landing page component.
-Displays the main navigation menu with large icon-based buttons for primary application sections.
-Serves as the central hub for accessing Corporate, Metal Mart, Service Center, and Plant sections.
-Features corporate header information and consistent footer navigation setup.
-*@
+﻿@page "/"
 
-@* Route definition for application root *@
-@page "/"
-
-@* Required using statements for services, components, and data models *@
-@using EmpDir
-@using EmpDir.Core.DTOs
-@using EmpDir.Core.Models
-@using EmpDir.Core.Services
-@using EmpDir.UI.Components
-@using EmpDir.UI.Layout
-@using Telerik.Blazor
-@using Telerik.Blazor.Components
-@using Telerik.SvgIcons
-
-@* Required dependency injections for page functionality *@
 @inject IDirectoryService DirectoryService
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 @inject LayoutState LayoutState
 
-@* Page title for browser tab/window *@
 <PageTitle>Employee Directory</PageTitle>
 
-@* ===== LOADING STATE (CURRENTLY DISABLED) ===== *@
-@* 
-Loading state for location types data - currently commented out.
-Preserved for potential future use if dynamic menu generation is needed.
-*@
-@* 
-@if (Loctypes == null)
-{
-    <p>Loading...</p>
-}
-else
-{ 
-*@
-
-@* ===== MAIN NAVIGATION CONTAINER ===== *@
-@* 
-Full-height container with evenly distributed navigation buttons.
-Uses Telerik ListView for consistent rendering and loader support.
-Buttons are sized to fill available space equally.
-*@
+@* Main navigation menu with large icon-based buttons *@
 <div class="button-page-container">
-    @* 
-    Telerik ListView component for main navigation menu.
-    Renders each menu item as a large, prominent navigation button.
-    EnableLoaderContainer provides built-in loading state support.
-    *@
     <TelerikListView Data="@MenuItems" EnableLoaderContainer="true" Class="button-list-container">
         <Template Context="item">
-            @* 
-            Navigation link for each main application section.
-            Uses Blazor NavLink for SPA navigation with large button styling.
-            Features icon and label for clear section identification.
-            *@
             <NavLink href="@item.Path" class="button-link">
-                @* 
-                Large navigation button with corporate styling.
-                Combines extra-large icon with prominent text labeling.
-                Features hover effects and elevation for interactive feedback.
-                *@
                 <div class="menu-item k-elevation-1 hover:shadow-lg">
                     <span class="k-text-uppercase k-text-white" style="font-size: x-large; font-weight: bold;">
-                        @* Extra-large section icon for visual identification *@
                         <TelerikSvgIcon Icon="@item.Icon" Size="@ThemeConstants.SvgIcon.Size.ExtraExtraLarge" Class="k-pb-2 k-pl-2 k-me-2" />
-                        @* Section label text *@
                         @item.Label
                     </span>
                 </div>
@@ -80,152 +23,89 @@ Buttons are sized to fill available space equally.
     </TelerikListView>
 </div>
 
-@* ===== COMPONENT STYLING ===== *@
 <style>
-    /* ===== PAGE LAYOUT CONTAINER ===== */
-    /* Main container filling full height with flex layout */
     .button-page-container {
-        height: 100%; /* Full viewport height */
+        height: 100%;
         display: flex;
-        flex-direction: column; /* Vertical stacking */
-        background-color: var(--kendo-color-secondary-emphasis); /* Theme-aware background */
-        border-bottom-width: 4px; /* Bottom border accent */
+        flex-direction: column;
+        background-color: var(--kendo-color-secondary-emphasis);
+        border-bottom-width: 4px;
     }
 
-    /* ===== BUTTON LIST CONTAINER ===== */
-    /* ListView container with evenly distributed buttons */
     .button-list-container {
-        background-color: transparent !important; /* Override default ListView background */
-        flex: 1; /* Grow to fill available space */
+        background-color: transparent !important;
+        flex: 1;
         display: flex;
-        flex-direction: column; /* Vertical arrangement */
-        justify-content: space-evenly; /* Even distribution of buttons */
+        flex-direction: column;
+        justify-content: space-evenly;
     }
 
-    /* ===== NAVIGATION LINK STYLING ===== */
-    /* Individual navigation link wrapper */
     .button-link {
-        flex: 1; /* Equal height distribution */
-        display: flex; /* Flex container for button */
-        text-decoration: none; /* Remove underline from links */
-        margin: 2px 2px; /* Small margins between buttons */
+        flex: 1;
+        display: flex;
+        text-decoration: none;
+        margin: 2px 2px;
     }
 
-    /* ===== MENU ITEM BUTTON STYLING ===== */
-    /* Large navigation button with corporate styling */
     .menu-item {
-        background-color: #ff6358; /* Corporate red background */
-        border-radius: 0.25rem; /* Rounded corners */
-        padding: 32px 25px; /* Generous padding for touch targets */
-        flex: 1; /* Fill available space */
-        display: flex; /* Flex container for content */
-        margin: 3px 8px; /* Spacing between items */
-        box-sizing: unset; /* Default box sizing */
+        background-color: #ff6358;
+        border-radius: 0.25rem;
+        padding: 32px 25px;
+        flex: 1;
+        display: flex;
+        margin: 3px 8px;
+        box-sizing: unset;
     }
 
-        /* Menu item hover effects for interactive feedback */
         .menu-item:hover {
-            transition: transform 0.2s ease-in, opacity 0.2s ease-in; /* Smooth transitions */
-            transform: translateY(0) scale(0.95); /* Subtle scale-down effect */
-            background-color: #FA574B; /* Slightly different shade on hover */
+            transition: transform 0.2s ease-in, opacity 0.2s ease-in;
+            transform: translateY(0) scale(0.95);
+            background-color: #FA574B;
         }
 
-    /* ===== TELERIK LISTVIEW OVERRIDES ===== */
-    /* Override default ListView styling for transparent appearance */
     .k-listview {
-        background-color: transparent; /* Transparent ListView background */
+        background-color: transparent;
     }
 
-    /* ListView item styling with minimal padding */
     .k-listview-item {
-        padding: 4px 0; /* Small vertical padding */
+        padding: 4px 0;
     }
 </style>
 
 @code {
-    #region Data Properties
-
-    /// <summary>
-    /// Collection of location types (currently unused but preserved).
-    /// Could be used for dynamic menu generation based on available location types.
-    /// Kept for potential future enhancement of navigation structure.
-    /// </summary>
+    // Collection of location types (preserved for potential future use)
     private List<Loctype> Loctypes { get; set; } = new();
 
-    #endregion
-
-    #region Layout Configuration
-
-    /// <summary>
-    /// Post-render lifecycle method for configuring layout state.
-    /// Sets up corporate header information and main navigation footer.
-    /// Called after every render to ensure layout state is properly configured.
-    /// </summary>
+    // Configure layout state with corporate header and footer
     protected override void OnAfterRender(bool firstRender)
     {
-        // Configure corporate header with company information
         LayoutState.SetHeader(CorporateHeadCard);
-
-        // Set main navigation footer (same as main menu for consistency)
         LayoutState.SetFooter(FooterNav);
     }
 
-    /// <summary>
-    /// Corporate header card configuration for home page.
-    /// Contains company headquarters information and primary contact details.
-    /// Used to provide consistent corporate branding on the main landing page.
-    /// </summary>
+    // Corporate header configuration for home page
     private HeaderCardModels.HeadInfoCardModel CorporateHeadCard = new()
     {
-        Title = "Employee Directory",               // Application title
-        Address = "1500 Hamilton Rd",               // Corporate headquarters address
+        Title = "Employee Directory",
+        Address = "1500 Hamilton Rd",
         City = "Bossier City",
         State = "LA",
         Zip = "71111",
-        Subtitle1 = "Corp. Phone",                  // Label for main corporate number
-        Phone = "(888) 245-3696",                   // Main corporate phone number
-        Subtitle2 = "Corp. Email",                  // Label for corporate email
-        Email = "info@mcelroymetal.com",            // Corporate contact email
-        Subtitle3 = "IT Help Desk",                 // Label for IT support
-        Phone2 = "(866) 634-5111"                   // IT help desk phone number
+        Subtitle1 = "Corp. Phone",
+        Phone = "(888) 245-3696",
+        Subtitle2 = "Corp. Email",
+        Email = "info@mcelroymetal.com",
+        Subtitle3 = "IT Help Desk",
+        Phone2 = "(866) 634-5111"
     };
 
-    #endregion
-
-    #region Navigation Data Models
-
-    /// <summary>
-    /// Data model for main navigation menu items.
-    /// Contains icon, label, and path information for each navigation button.
-    /// Used to generate the primary navigation interface on the home page.
-    /// </summary>
+    // Data model for main navigation menu items
     private class MenuItem
     {
-        /// <summary>
-        /// SVG icon representing the navigation section.
-        /// Uses custom icons for visual identification of each area.
-        /// </summary>
         public ISvgIcon Icon { get; set; }
-
-        /// <summary>
-        /// Display label for the navigation button.
-        /// Shown prominently below the icon for section identification.
-        /// </summary>
         public string Label { get; set; }
-
-        /// <summary>
-        /// Navigation path/URL for the section.
-        /// Used by NavLink for SPA routing to the appropriate section.
-        /// </summary>
         public string Path { get; set; }
 
-        /// <summary>
-        /// Constructor for creating menu items with all required properties.
-        /// Ensures consistent initialization of navigation items.
-        /// </summary>
-        /// <param name="icon">The SVG icon for the section</param>
-        /// <param name="label">The display label for the section</param>
-        /// <param name="path">The navigation path for the section</param>
         public MenuItem(ISvgIcon icon, string label, string path)
         {
             Icon = icon;
@@ -234,33 +114,14 @@ Buttons are sized to fill available space equally.
         }
     }
 
-    /// <summary>
-    /// Main navigation menu items collection.
-    /// Defines the primary application sections available from the home page.
-    /// Note: Home navigation is commented out since user is already on home page.
-    /// </summary>
+    // Primary application sections available from home page
     private IEnumerable<MenuItem> MenuItems = new List<MenuItem>()
     {
-        // new(CustomIcons.Home, "Home", "/"),                     // Commented out - already on home page
-        new(CustomIcons.Corporate, "Corporate", "/corporate"),      // Corporate departments and employees
-        new(CustomIcons.MetalMart, "Metal Mart", "/metalmart"),     // Metal Mart retail locations
-        new(CustomIcons.ServiceCenter, "Service Center", "/servicecenter"), // Service center locations
-        new(CustomIcons.Plant, "Plant", "/plant")                   // Manufacturing plant locations
+        new(CustomIcons.Corporate, "Corporate", "/corporate"),
+        new(CustomIcons.MetalMart, "Metal Mart", "/metalmart"),
+        new(CustomIcons.ServiceCenter, "Service Center", "/servicecenter"),
+        new(CustomIcons.Plant, "Plant", "/plant")
     };
 
-    /// <summary>
-    /// Footer navigation items configuration.
-    /// Mirrors the main menu items for consistent navigation across the application.
-    /// Provides persistent navigation access from any page in the application.
-    /// </summary>
-    private List<FooterNav.FooterItem> FooterNav = new()
-    {
-        // new(CustomIcons.Home, "Home", "/"),                     // Commented out - already on home page
-        new(CustomIcons.Corporate, "Corporate", "/corporate"),      // Corporate section access
-        new(CustomIcons.MetalMart, "Metal Mart", "/metalmart"),     // Metal Mart section access
-        new(CustomIcons.ServiceCenter, "Service Center", "/servicecenter"), // Service Center section access
-        new(CustomIcons.Plant, "Plant", "/plant")                   // Plant section access
-    };
-
-    #endregion
+    private List<FooterNav.FooterItem> FooterNav => FooterNavigation.HomeSection;
 }

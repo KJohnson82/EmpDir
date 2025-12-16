@@ -1,73 +1,28 @@
-﻿@* 
-Service Center locations directory page component.
-Displays a scrollable list of all Service Center locations as navigation buttons.
-Features area management hierarchy in header with operations manager information.
-Serves as the main landing page for Service Center section with territorial management display.
-*@
+﻿@page "/servicecenter"
 
-@* Route definition for Service Center section root *@
-@page "/servicecenter"
-
-@* Required using statements for data models and UI components *@
-@using EmpDir
-@using EmpDir.Core.DTOs
-@using EmpDir.Core.Data.Context
-@using EmpDir.Core.Models
-@using EmpDir.Core.Services
-@using EmpDir.UI.Components
-@using EmpDir.UI.Layout
-@using Telerik.Blazor
-@using Telerik.Blazor.Components
-@using Telerik.SvgIcons
-
-@* Required dependency injections for page functionality *@
 @inject IDirectoryService DirectoryService
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 @inject LayoutState LayoutState
 
-@* Page title for browser tab/window *@
 <PageTitle>Service Center</PageTitle>
 
-@* ===== LOADING STATE ===== *@
-@* Display loading message while Service Center locations data is being fetched *@
+@* Loading state *@
 @if (Locations == null || Locations.Count == 0)
 {
     <p>Loading Service Centers...</p>
 }
 else
 {
-    @* ===== MAIN CONTENT CONTAINER ===== *@
-    @* 
-    Full-height container with scrollable Service Center locations list.
-    Uses flexible layout to fill available space minus header/footer.
-    Inherits styling from parent components for consistency across sections.
-    *@
+    @* Scrollable list of Service Center locations *@
     <div class="button-page-container">
         <div class="scrollable-wrapper">
-            @* 
-            Telerik ListView component for Service Center location navigation.
-            Renders each location as a clickable navigation button.
-            Simple template without pagination for continuous scrolling experience.
-            *@
             <TelerikListView Data="@Locations" Class="button-list-container">
                 <Template Context="loc">
-                    @* 
-                    Navigation link for each Service Center location.
-                    Routes to individual service center detail pages.
-                    Uses Blazor NavLink for SPA navigation with clean, consistent styling.
-                    *@
                     <NavLink class="text-decoration-none text-uppercase"
                              href="@($"/servicecenter/{loc.Id}")">
-                        @* 
-                        Location button with Service Center-specific styling.
-                        Features location name and city/state information for easy identification.
-                        Uses inline styles for specific typography requirements and letter spacing.
-                        *@
                         <div class="menu-item py-3 px-4 my-2 rounded-3 k-text-white tracking-wider k-font-size-lg" style="font-size: medium; font-weight: bold; letter-spacing: 2px;">
-                            @* Primary service center name display *@
                             <div class="k-align-items-center">@loc.LocName</div>
-                            @* Secondary location information: city and state for geographic context *@
                             <div class="k-color-dark k-font-bold k-font-size-sm">@loc.City, @loc.State</div>
                         </div>
                     </NavLink>
@@ -78,90 +33,47 @@ else
 }
 
 @code {
-    #region Private Properties
-
-    /// <summary>
-    /// Header card model configured for Service Center section display.
-    /// Generated using HeaderCardModels.AreaManagers() factory method.
-    /// Contains area management hierarchy and operations management for Service Center operations.
-    /// </summary>
+    // Header model with Service Center area management hierarchy
     private HeaderCardModels.HeadInfoCardModel? StoreInfo;
 
-    /// <summary>
-    /// Collection of Service Center locations loaded from the database.
-    /// Filtered by location type "service center" and sorted alphabetically by name.
-    /// Used to generate navigation buttons for each service center location.
-    /// </summary>
+    // Service Center locations sorted alphabetically by name
     private List<LocationDto> Locations = new();
 
-    /// <summary>
-    /// Footer navigation items configuration for Service Center section.
-    /// Provides navigation to main application sections but excludes Service Center
-    /// since user is already in Service Center section (prevents redundant navigation).
-    /// </summary>
-    private List<FooterNav.FooterItem> FooterNavItems = new()
-    {
-        new FooterNav.FooterItem(CustomIcons.Home, "Home", "/"),
-        new FooterNav.FooterItem(CustomIcons.Corporate, "Corporate", "/corporate"),
-        new FooterNav.FooterItem(CustomIcons.MetalMart, "Metal Mart", "/metalmart"),
-        // new FooterNav.FooterItem(CustomIcons.ServiceCenter, "Service Center", "/servicecenter"), // Commented out - already in Service Center section
-        new FooterNav.FooterItem(CustomIcons.Plant, "Plant", "/plant")
-    };
+    private List<FooterNav.FooterItem> FooterNav => FooterNavigation.ServiceCenterSection;
 
-    #endregion
-
-    #region Lifecycle Methods
-
-    /// <summary>
-    /// Component initialization method called when page loads.
-    /// Fetches all Service Center locations and configures area management header.
-    /// Locations are sorted alphabetically by name for intuitive navigation.
-    /// </summary>
+    // Load Service Center locations and configure area management header
     protected override async Task OnInitializedAsync()
     {
-        // Fetch all locations of type "service center" from the database
         Locations = await DirectoryService.GetLocationsByTypeAsync("service center");
 
-        // Sort locations alphabetically by name for predictable, user-friendly ordering
-        // Note: Different from Metal Mart which sorts by location number
+        // Sort alphabetically by name (unlike Metal Mart which sorts by location number)
         Locations = Locations.OrderBy(l => l.LocName).ToList();
 
-        // Create Service Center header card using AreaManagers factory method
-        // Displays area management hierarchy and operations management structure
+        // Create header with area management hierarchy
         StoreInfo = HeaderCardModels.AreaManagers(
-            title: "Service Center",                // Main section title
-            subtitle1: "Area Manager",              // First area manager role label
-            tmanager1: "Rickie Furr",               // First area manager name
-            subtitle2: "Area Manager",              // Second area manager role label
-            tmanager2: "Mark Rollins",              // Second area manager name
-            subtitle3: "Area Manager",              // Third area manager role label
-            tmanager3: "John Carter",               // Third area manager name
-            subtitle4: "Area Manager",              // Fourth area manager role label
-            tmanager4: "Shaun Steinmen",            // Fourth area manager name
-            subtitle5: "Area Manager",              // Fifth area manager role label
-            tmanager5: "Matthew Snudden",           // Fifth area manager name
-            subtitle6: "SC Ops Manager",            // Operations manager role label (different from others)
-            tmanager6: "Jeff Harrington"            // Service Center Operations manager name
+            title: "Service Center",
+            subtitle1: "Area Manager",
+            tmanager1: "Rickie Furr",
+            subtitle2: "Area Manager",
+            tmanager2: "Mark Rollins",
+            subtitle3: "Area Manager",
+            tmanager3: "John Carter",
+            subtitle4: "Area Manager",
+            tmanager4: "Shaun Steinmen",
+            subtitle5: "Area Manager",
+            tmanager5: "Matthew Snudden",
+            subtitle6: "SC Ops Manager",
+            tmanager6: "Jeff Harrington"
         );
     }
 
-    /// <summary>
-    /// Post-render lifecycle method for configuring layout state.
-    /// Sets up Service Center-specific header with area management and global footer navigation.
-    /// Only executes on first render to avoid unnecessary state updates.
-    /// </summary>
+    // Configure layout state with Service Center header and footer
     protected override void OnAfterRender(bool firstRender)
     {
         if (firstRender && StoreInfo != null)
         {
-            // Configure Service Center header with area management hierarchy
-            // Uses territory table layout to display area manager and operations structure
             LayoutState.SetHeader(StoreInfo);
-
-            // Set global footer navigation for section-to-section navigation
-            LayoutState.SetFooter(FooterNavItems);
+            LayoutState.SetFooter(FooterNavigation.ServiceCenterSection);
         }
     }
-
-    #endregion
 }

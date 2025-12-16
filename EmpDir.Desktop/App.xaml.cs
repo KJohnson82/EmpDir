@@ -31,32 +31,6 @@ namespace EmpDir.Desktop
             var windowState = SavedWindowState.Load();
             windowState.ApplyToWindow(appWindow);
 
-            //#if WINDOWS
-            //            // Configure Windows-specific window behavior
-            //            appWindow.Created += (s, e) =>
-            //            {
-            //                var handle = WinRT.Interop.WindowNative.GetWindowHandle(appWindow);
-            //                var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(handle);
-            //                var appWindowForId = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
-
-            //                if (appWindowForId?.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
-            //                {
-            //                    // Completely prevent maximizing
-            //                    presenter.IsMaximizable = false;
-            //                    presenter.IsResizable = false; // This prevents double-click maximize too!
-
-            //                    // Keep minimize button enabled
-            //                    presenter.IsMinimizable = true;
-            //                }
-
-            //                // Optional: Customize title bar
-            //                if (appWindowForId?.TitleBar != null)
-            //                {
-            //                    appWindowForId.TitleBar.ExtendsContentIntoTitleBar = false;
-            //                }
-            //            };
-            //#endif
-
             // Save window state on position/size changes
             appWindow.SizeChanged += (_, _) =>
             {
@@ -153,31 +127,6 @@ namespace EmpDir.Desktop
             Width = window.Width;
             Height = window.Height;
         }
-
-        // Constructor for loading saved state
-        //public SavedWindowState()
-        //{
-        //    try
-        //    {
-        //        if (File.Exists(SettingsFilePath))
-        //        {
-        //            var json = File.ReadAllText(SettingsFilePath);
-        //            var loaded = System.Text.Json.JsonSerializer.Deserialize<SavedWindowState>(json);
-
-        //            if (loaded != null)
-        //            {
-        //                X = loaded.X;
-        //                Y = loaded.Y;
-        //                Width = loaded.Width;
-        //                Height = loaded.Height;
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        System.Diagnostics.Debug.WriteLine($"Error loading window state: {ex.Message}");
-        //    }
-        //}
 
         // Parameterless constructor for deserialization - DO NOT load here!
         public SavedWindowState()

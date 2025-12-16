@@ -6,10 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EmpDir.Desktop.Services;
 
-/// <summary>
-/// Implementation of IDirectoryService that reads from local cache
-/// Used by EmpDir.Desktop UI components
-/// </summary>
+// IDirectoryService implementation that reads from local cache for EmpDir.Desktop
 public class CachedDirectoryService : IDirectoryService
 {
     private readonly LocalCacheContext _context;
@@ -61,7 +58,7 @@ public class CachedDirectoryService : IDirectoryService
             .Include(l => l.Departments)
             .Include(l => l.Employees)
             .Where(l => l.LocationType != null
-                && l.LocationType.LoctypeName.ToLower() == loctypeName.ToLower()  // ✅ Case-insensitive!
+                && l.LocationType.LoctypeName.ToLower() == loctypeName.ToLower()
                 && l.Active == true)
             .OrderBy(l => l.LocName)
             .AsNoTracking()
@@ -102,7 +99,7 @@ public class CachedDirectoryService : IDirectoryService
             .AsNoTracking()
             .FirstOrDefaultAsync(l => l.Id == id
                 && l.LocationType != null
-                && l.LocationType.LoctypeName.ToLower() == loctypeName.ToLower());  // ✅ Case-insensitive!
+                && l.LocationType.LoctypeName.ToLower() == loctypeName.ToLower());
 
         return location?.ToDto(includeRelated: true);
     }

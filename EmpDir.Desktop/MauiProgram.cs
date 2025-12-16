@@ -28,7 +28,6 @@ public static class MauiProgram
     {
         // ===== STEP 1: Initialize SQLite provider FIRST =====
         SQLitePCL.Batteries_V2.Init();
-        //SQLitePCL.raw.SetProvider(new SQLite3Provider_e_sqlite3());
 
         // ===== STEP 2: Setup database path and CREATE the empty database file =====
         // This MUST happen before any EF Core registration
@@ -79,13 +78,6 @@ public static class MauiProgram
         var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5000";
         var apiKey = builder.Configuration["ApiSettings:ApiKey"] ?? "maui-app-key-2025";
         var timeoutSeconds = int.Parse(builder.Configuration["ApiSettings:TimeoutSeconds"] ?? "5");
-
-        //builder.Services.AddHttpClient("EmpDirApi", client =>
-        //{
-        //    client.BaseAddress = new Uri(apiBaseUrl);
-        //    client.DefaultRequestHeaders.Add("X-Api-Key", apiKey);
-        //    client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
-        //});
 
         builder.Services.AddHttpClient("EmpDirApi", client =>
         {
@@ -161,9 +153,9 @@ public static class MauiProgram
         _databasePath = Path.Combine(basePath, "empdir_cache.db");
         _connectionString = $"Data Source={_databasePath};Pooling=False";
 
-        System.Diagnostics.Debug.WriteLine($"=== Database Setup ===");
-        System.Diagnostics.Debug.WriteLine($"Base path: {basePath}");
-        System.Diagnostics.Debug.WriteLine($"Database path: {_databasePath}");
+        //System.Diagnostics.Debug.WriteLine($"=== Database Setup ===");
+        //System.Diagnostics.Debug.WriteLine($"Base path: {basePath}");
+        //System.Diagnostics.Debug.WriteLine($"Database path: {_databasePath}");
 
         // CRITICAL: Ensure directory exists
         try
@@ -220,15 +212,10 @@ public static class MauiProgram
             }
         }
 
-        // REMOVE THIS LINE - It's causing the crash
-        // SqliteConnection.ClearAllPools();
-
         System.Diagnostics.Debug.WriteLine($"=== Database Setup Complete ===");
     }
 
-    /// <summary>
     /// Gets the appropriate database directory based on the platform.
-    /// </summary>
     private static string GetDatabaseDirectory()
     {
 
@@ -240,25 +227,6 @@ public static class MauiProgram
 
         System.Diagnostics.Debug.WriteLine($"Using database directory: {basePath}");
         return basePath;
-        //try
-        //{
-        //    // For MSIX packaged apps, use the WinRT ApplicationData API
-        //    // This provides the correct virtualized LocalState folder
-        //    var localFolder = ApplicationData.Current.LocalFolder.Path;
-        //    System.Diagnostics.Debug.WriteLine($"Using Windows ApplicationData.LocalFolder: {localFolder}");
-        //    return localFolder;
-        //}
-        //catch (Exception ex)
-        //{
-        //    System.Diagnostics.Debug.WriteLine($"ApplicationData.Current.LocalFolder failed: {ex.Message}");
-
-        //    // Fallback for unpackaged Windows apps
-        //    var fallbackPath = Path.Combine(
-        //        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        //        "EmpDir");
-        //    System.Diagnostics.Debug.WriteLine($"Using fallback path: {fallbackPath}");
-        //    return fallbackPath;
-        //}
     }
 
     private static IConfiguration LoadConfiguration()
@@ -289,10 +257,8 @@ public static class MauiProgram
         return configBuilder.Build();
     }
 
-    /// <summary>
     /// Initializes the database schema using EF Core.
     /// Called after the app is built and services are registered.
-    /// </summary>
     private static void InitializeDatabaseSchema(IServiceProvider services)
     {
         System.Diagnostics.Debug.WriteLine("=== Initializing Database Schema ===");
@@ -303,8 +269,6 @@ public static class MauiProgram
             var context = scope.ServiceProvider.GetRequiredService<LocalCacheContext>();
 
             // EnsureCreated will create the tables if they don't exist
-            // Since we already created the database file in SetupDatabase(),
-            // this should just add the tables
             context.Database.EnsureCreated();
 
             System.Diagnostics.Debug.WriteLine("Database schema initialized successfully");

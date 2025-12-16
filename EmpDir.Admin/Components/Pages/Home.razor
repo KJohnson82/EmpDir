@@ -1,143 +1,92 @@
-﻿@* ===================================================================== *@
-@* HOME PAGE - DASHBOARD COMPONENT                                       *@
-@* Main landing page displaying key statistics and recent data           *@
-@* Route: / (accessible from navigation)                             *@
-@* ===================================================================== *@
-
-@* Define the route for this page component *@
-@rendermode InteractiveServer
+﻿@rendermode InteractiveServer
 @page "/"
 
-@* Import necessary namespaces for Telerik components and application data models *@
-@using Telerik.Blazor
-@using Telerik.Blazor.Components
-@using Telerik.SvgIcons
-@using EmpDir
-@using EmpDir.Core.Models
-@using EmpDir.Core.Data.Context
-@using EmpDir.UI.Components
-@using EmpDir.UI.Layout
-@using EmpDir.Admin.Services
-
-
-@* Set the browser page title *@
 <PageTitle>Home</PageTitle>
 
 <RequireAuth>
-@* ===================================================================== *@
-@* PAGE HEADER - Consistent header with title and icon                   *@
-@* ===================================================================== *@
-<PageHeader PageTitle="Directory Manager" CardIcon="@CustomIcons.Waving_Hand" />
+    <PageHeader PageTitle="Directory Manager" CardIcon="@CustomIcons.Waving_Hand" />
 
-@* ===================================================================== *@
-@* DASHBOARD TILE LAYOUT - Main content area with statistical widgets    *@
-@* ===================================================================== *@
-<div>
-    @* Telerik Tile Layout provides a flexible dashboard-style grid *@
-    <TelerikTileLayout Columns="3"  
-                       ColumnSpacing="15"  
-                       Reorderable="false" 
-                       Resizable="false">
-        @* Users cannot resize tiles *@
+    @* Dashboard with statistical widgets *@
+    <div>
+        <TelerikTileLayout Columns="3"
+                           ColumnSpacing="15"
+                           Reorderable="false"
+                           Resizable="false">
+            <TileLayoutItems>
+                @* Recently added employees *@
+                <TileLayoutItem>
+                    <HeaderTemplate>
+                        <div class="tile-header">Newest Employees</div>
+                    </HeaderTemplate>
+                    <Content>
+                        <EmpDir.Admin.Components.StatData.NewestEmployee />
+                    </Content>
+                </TileLayoutItem>
 
-        <TileLayoutItems>
-            @* ============================================================= *@
-            @* TOP ROW - Recent additions widgets (1x1 tiles)              *@
-            @* ============================================================= *@
+                @* Recently added departments *@
+                <TileLayoutItem>
+                    <HeaderTemplate>
+                        <div class="tile-header">Newest Departments</div>
+                    </HeaderTemplate>
+                    <Content>
+                        <EmpDir.Admin.Components.StatData.NewestDepartment />
+                    </Content>
+                </TileLayoutItem>
 
-            @* Tile 1: Recently added employees *@
-            <TileLayoutItem>
-                <HeaderTemplate>
-                    <div class="tile-header">Newest Employees</div>
-                </HeaderTemplate>
-                <Content>
-                    <EmpDir.Admin.Components.StatData.NewestEmployee/>
-                </Content>
-            </TileLayoutItem>
+                @* Recently added locations *@
+                <TileLayoutItem>
+                    <HeaderTemplate>
+                        <div class="tile-header">Newest Locations</div>
+                    </HeaderTemplate>
+                    <Content>
+                        <EmpDir.Admin.Components.StatData.NewestLocation />
+                    </Content>
+                </TileLayoutItem>
 
-            @* Tile 2: Recently added departments *@
-            <TileLayoutItem>
-                <HeaderTemplate>
-                    <div class="tile-header">Newest Departments</div>
-                </HeaderTemplate>
-                <Content>
-                    <EmpDir.Admin.Components.StatData.NewestDepartment />
-                </Content>
-            </TileLayoutItem>
+                @* Location count widget (spans 2 rows) *@
+                <TileLayoutItem RowSpan="2">
+                    <HeaderTemplate>
+                        <div class="tile-header">Location Count</div>
+                    </HeaderTemplate>
+                    <Content>
+                        <EmpDir.Admin.Components.StatData.LocationsCount />
+                    </Content>
+                </TileLayoutItem>
 
-            @* Tile 3: Recently added locations *@
-            <TileLayoutItem>
-                <HeaderTemplate>
-                    <div class="tile-header">Newest Locations</div>
-                </HeaderTemplate>
-                <Content>
-                    <EmpDir.Admin.Components.StatData.NewestLocation />
-                </Content>
-            </TileLayoutItem>
-
-            @* ============================================================= *@
-            @* BOTTOM AREA - Larger statistical widgets with custom spans   *@
-            @* ============================================================= *@
-
-            @* Tile 4: Location count widget (spans 2 rows vertically) *@
-            <TileLayoutItem RowSpan="2">
-                <HeaderTemplate>
-                    <div class="tile-header">Location Count</div>
-                </HeaderTemplate>
-                <Content>
-                    <EmpDir.Admin.Components.StatData.LocationsCount />
-                </Content>
-            </TileLayoutItem>
-
-            @* Tile 5: Employee distribution chart (spans 2 columns and 2 rows) *@
-            <TileLayoutItem ColSpan="2" RowSpan="2">
-                <HeaderTemplate>
-                    <div class="tile-header">Employee Count Per Department</div>
-                </HeaderTemplate>
-                <Content>
-                    <EmpDir.Admin.Components.StatData.EmployeeDepartmentCount />
-                </Content>
-            </TileLayoutItem>
-        </TileLayoutItems>
-    </TelerikTileLayout>
-</div>
-    @* <div class="alert alert-success">
-        <h4>✅ You're logged in!</h4>
-        <p>You now have full access to the application.</p>
-    </div> *@
+                @* Employee distribution chart (spans 2 columns and 2 rows) *@
+                <TileLayoutItem ColSpan="2" RowSpan="2">
+                    <HeaderTemplate>
+                        <div class="tile-header">Employee Count Per Department</div>
+                    </HeaderTemplate>
+                    <Content>
+                        <EmpDir.Admin.Components.StatData.EmployeeDepartmentCount />
+                    </Content>
+                </TileLayoutItem>
+            </TileLayoutItems>
+        </TelerikTileLayout>
+    </div>
 </RequireAuth>
 
-@* ===================================================================== *@
-@* COMPONENT STYLES - Dashboard and tile styling                         *@
-@* ===================================================================== *@
 <style>
-    /* Main home page container styling */
     #home-page {
-        margin-left: auto; /* Center horizontally */
-        margin-right: auto; /* Center horizontally */
-        max-width: max-content; /* Fit content width */
-        text-align: center; /* Center text alignment */
-        font-size: var(--kendo-font-size-xl); /* Use Telerik XL font size */
+        margin-left: auto;
+        margin-right: auto;
+        max-width: max-content;
+        text-align: center;
+        font-size: var(--kendo-font-size-xl);
     }
 
-    /* Responsive design for larger screens */
-    /* Only apply vertical centering when there's enough screen height */
     @@media (min-height: calc(56px + 50px + 400px)) {
-        /* Calculation: header height + footer height + minimum content height */
-        #home-page
-
-    {
-        /* Center the page vertically within the available space */
-        /* 40% viewport height minus half of header/footer heights minus half content height */
-        margin-top: calc(40vh - 28px - 25px - 200px);
+        #home-page {
+            margin-top: calc(40vh - 28px - 25px - 200px);
+        }
     }
 
-    }
-
-    /* Tile header styling for consistent appearance */
     .tile-header {
-        text-transform: uppercase; /* All caps for emphasis */
-        font-weight: 700; /* Bold font weight */
-        letter-spacing: 1px; /* Slight letter spacing for readability */
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+
     }
 </style>

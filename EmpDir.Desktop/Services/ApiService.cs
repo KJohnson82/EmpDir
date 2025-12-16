@@ -7,9 +7,7 @@ using System.Text.Json;
 
 namespace EmpDir.Desktop.Services;
 
-/// <summary>
-/// Service for communicating with EmpDir.Api
-/// </summary>
+// Service for communicating with EmpDir.Api
 public class ApiService : IApiService
 {
     private readonly IHttpClientFactory _httpClientFactory;
@@ -76,7 +74,6 @@ public class ApiService : IApiService
         }
         catch (IOException ex)
         {
-            // This catches socket disconnections and connection resets
             _logger.LogWarning(ex, "I/O error when calling API - connection may have been closed");
             return null;
         }
@@ -103,7 +100,7 @@ public class ApiService : IApiService
         {
             var client = _httpClientFactory.CreateClient("EmpDirApi");
 
-            // Use a shorter timeout for health checks
+            // Use shorter timeout for health checks
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
             var response = await client.GetAsync("/health", cts.Token);
 
@@ -111,32 +108,26 @@ public class ApiService : IApiService
         }
         catch (HttpRequestException)
         {
-            // Server not available - this is expected when offline
             return false;
         }
         catch (TaskCanceledException)
         {
-            // Timeout or cancellation
             return false;
         }
         catch (IOException)
         {
-            // Connection issues
             return false;
         }
         catch (SocketException)
         {
-            // Network issues
             return false;
         }
         catch (OperationCanceledException)
         {
-            // Cancelled
             return false;
         }
         catch (Exception ex)
         {
-            // Log unexpected errors but don't crash
             System.Diagnostics.Debug.WriteLine($"Health check unexpected error: {ex.GetType().Name} - {ex.Message}");
             return false;
         }

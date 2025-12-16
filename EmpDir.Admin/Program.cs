@@ -5,26 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ===== DATABASE CONFIGURATION =====
-//builder.Services.AddDbContext<AppDbContext>(options =>
-//{
-//    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-//    // Use PostgreSQL
-//    options.UseNpgsql(connectionString, npgsqlOptions =>
-//    {
-//        npgsqlOptions.EnableRetryOnFailure(
-//            maxRetryCount: 3,
-//            maxRetryDelay: TimeSpan.FromSeconds(10),
-//            errorCodesToAdd: null);
-//    });
-
-//#if DEBUG
-//    options.EnableSensitiveDataLogging();
-//    options.EnableDetailedErrors();
-//#endif
-//});
-
 var connectionString = builder.Configuration.GetConnectionString("DatabaseConnection");
 
 // CHANGE THIS: Use DbContextFactory instead of AddDbContext for Blazor Server
@@ -40,7 +20,7 @@ builder.Services.AddDbContextFactory<AppDbContext>(options =>
 
 // ===== UI SERVICES =====
 builder.Services.AddTelerikBlazor();
-builder.Services.AddScoped<EmpDir.Admin.Components.Layout.MainLayout>();
+//builder.Services.AddScoped<EmpDir.Admin.Components.Layout.MainLayout>();
 builder.Services.AddScoped<EmpDir.Admin.Services.IAuthService, EmpDir.Admin.Services.AuthService>();
 
 builder.Services.AddScoped<ExportData>();
@@ -53,7 +33,6 @@ var app = builder.Build();
 // ===== DATABASE CHECK ON STARTUP =====
 using (var scope = app.Services.CreateScope())
 {
-    //var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
@@ -106,37 +85,3 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
-
-
-//using EmpDir.Admin.Components;
-
-//var builder = WebApplication.CreateBuilder(args);
-
-//builder.Services.AddTelerikBlazor();
-//builder.Services.AddScoped<EmpDir.Admin.Components.Layout.MainLayout>();
-
-
-//// Add services to the container.
-//builder.Services.AddRazorComponents()
-//    .AddInteractiveServerComponents();
-
-//var app = builder.Build();
-
-//// Configure the HTTP request pipeline.
-//if (!app.Environment.IsDevelopment())
-//{
-//    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-//    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-//    app.UseHsts();
-//}
-
-//app.UseHttpsRedirection();
-
-//app.MapStaticAssets();
-//app.UseAntiforgery();
-
-
-//app.MapRazorComponents<App>()
-//    .AddInteractiveServerRenderMode();
-
-//app.Run();

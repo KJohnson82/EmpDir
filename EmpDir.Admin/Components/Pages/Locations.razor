@@ -7,18 +7,6 @@
 @* Define the route for this page component *@
 @page "/Locations"
 
-@* Import necessary namespaces for Entity Framework, Telerik components, and data models *@
-@using Microsoft.EntityFrameworkCore
-@using Telerik.Blazor
-@using Telerik.Blazor.Components
-@using Telerik.SvgIcons
-@using EmpDir
-@using EmpDir.Core.Models
-@using EmpDir.Core.Data.Context
-@using EmpDir.UI.Components
-@using EmpDir.UI.Layout
-
-
 <RequireAuth>
 @* ===================================================================== *@
 @* PAGE HEADER - Consistent header with locations icon                   *@
@@ -26,7 +14,6 @@
 <PageHeader PageTitle="Locations" CardIcon="@CustomIcons.Factory" />
 
 @* Inject database context for data operations *@
-@* @inject AppDbContext dbContext *@
     @inject IDbContextFactory<AppDbContext> DbContextFactory
 
 @* ===================================================================== *@

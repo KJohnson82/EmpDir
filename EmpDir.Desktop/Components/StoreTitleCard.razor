@@ -1,0 +1,244 @@
+﻿@using Telerik.Blazor.Components
+@using Telerik.Blazor
+
+@inject NavigationManager NavManager
+
+@* Store-specific header card with management information *@
+@if (StoreInfo is not null)
+{
+    <div class="store-card-wrapper">
+        <TelerikGridLayout RowSpacing="1" ColumnSpacing="0" Class="store-grid-layout">
+            <GridLayoutColumns>
+                <GridLayoutColumn Width="1fr" />
+            </GridLayoutColumns>
+            <GridLayoutRows>
+                <GridLayoutRow Height="@GetTitleHeight()" />
+                <GridLayoutRow Height="2px" />
+                <GridLayoutRow Height="@GetContentHeight()" />
+                <GridLayoutRow Height="50px" />
+            </GridLayoutRows>
+            <GridLayoutItems>
+
+                @* Store title with dynamic font sizing *@
+                <GridLayoutItem Row="1" Column="1" Class="store-title-item">
+                    <div class="store-title">
+                        <span class="title-text" style="font-size: @GetOptimalFontSize()">
+                            @StoreInfo.Title
+                        </span>
+                    </div>
+                </GridLayoutItem>
+
+                @* Visual divider (not used for store styling) *@
+                <GridLayoutItem Row="2" Column="1">
+                </GridLayoutItem>
+
+                @* Store and area manager information *@
+                <GridLayoutItem Row="3" Column="1" Class="store-content-item">
+                    <div class="info-section">
+                        @* Store manager section - right-aligned *@
+                        @if (!string.IsNullOrWhiteSpace(StoreInfo.StoreManager))
+                        {
+                            <div class="contact-section-1">
+                                <div class="section-subtitle">STORE MANAGER</div>
+                                <div class="section-border"></div>
+                                <div class="section-text">@StoreInfo.StoreManager.ToUpper()</div>
+                            </div>
+                        }
+
+                        @* Area manager section - left-aligned *@
+                        @if (!string.IsNullOrWhiteSpace(StoreInfo.AreaManager))
+                        {
+                            <div class="contact-section-2">
+                                <div class="section-subtitle">AREA MANAGER</div>
+                                <div class="section-border"></div>
+                                <div class="section-text">@StoreInfo.AreaManager.ToUpper()</div>
+                            </div>
+                        }
+                    </div>
+                </GridLayoutItem>
+
+                @* Search section *@
+                <GridLayoutItem Row="4" Column="1" RowSpan="2" Class="search-section-item">
+                    <SearchBar />
+                </GridLayoutItem>
+            </GridLayoutItems>
+        </TelerikGridLayout>
+    </div>
+}
+
+@code {
+    // Store information containing title and management data
+    [Parameter]
+    public StoreTitleCardModel? StoreInfo { get; set; }
+
+    // Determines if current page is home page
+    private bool IsHomePage
+    {
+        get
+        {
+            var relativePath = NavManager.ToBaseRelativePath(NavManager.Uri);
+            return relativePath == "" || relativePath.Equals("home", StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    // Calculate title section height based on title length
+    private string GetTitleHeight()
+    {
+        if (StoreInfo?.Title?.Length > 20)
+            return "55px";
+        return "50px";
+    }
+
+    // Calculate content section height to fill remaining space
+    private string GetContentHeight()
+    {
+        if (StoreInfo?.Title?.Length > 20)
+            return "148px";
+        return "153px";
+    }
+
+    // Determine optimal font size based on title length
+    private string GetOptimalFontSize()
+    {
+        if (StoreInfo?.Title == null) return "28px";
+
+        int titleLength = StoreInfo.Title.Length;
+
+        return titleLength switch
+        {
+            > 30 => "19px",
+            > 25 => "20px",
+            > 20 => "23px",
+            > 15 => "26px",
+            > 10 => "30px",
+            _ => "34px"
+        };
+    }
+
+    // Simplified data model for store title card display
+    public class StoreTitleCardModel
+    {
+        public string Title { get; set; } = string.Empty;
+        public string StoreManager { get; set; } = string.Empty;
+        public string AreaManager { get; set; } = string.Empty;
+    }
+}
+
+<style>
+    :root {
+        --store-card-bg: #FF6666;
+        --store-card-text: white;
+        --divider-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .store-card-wrapper {
+        width: 100%;
+        background-color: var(--kendo-color-primary);
+        color: var(--store-card-text);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .store-grid-layout {
+        height: 100%;
+        background-color: var(--kendo-color-primary);
+    }
+
+    .store-title-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--kendo-color-primary);
+        height: 100%;
+    }
+
+    .store-title {
+        width: 100%;
+        text-align: center;
+    }
+
+    .title-text {
+        font-weight: bold;
+        text-transform: uppercase;
+        color: var(--store-card-text);
+        line-height: 1.1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        padding: 0 8px;
+        display: inline-block;
+        letter-spacing: 0.02em;
+    }
+
+    .divider {
+        width: 100%;
+        height: 2px;
+        border-bottom: solid 2px var(--kendo-color-primary-subtle);
+        opacity: 0.25;
+    }
+
+    .store-content-item {
+        padding: 4px 0;
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        align-items: flex-start;
+    }
+
+    .info-section {
+        padding-top: 0.5rem;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .contact-section-1 {
+        margin-inline-end: 7rem;
+        margin-top: 0;
+        white-space: nowrap;
+        text-align: right;
+    }
+
+    .contact-section-2 {
+        margin-inline-start: 7rem;
+        margin-top: 0.75rem;
+        white-space: nowrap;
+        text-align: left;
+    }
+
+    .section-subtitle {
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 500;
+        padding-inline-start: 1px;
+        margin-bottom: -0.5rem;
+        padding-bottom: 0.375rem;
+        color: var(--store-card-text);
+    }
+
+    .section-border {
+        border-bottom: 2px solid rgba(226, 232, 240, 0.45);
+        margin: 0;
+        border-left: 0;
+        border-right: 0;
+    }
+
+    .section-text {
+        margin-top: -6px;
+        text-transform: uppercase;
+        letter-spacing: normal;
+        font-weight: normal;
+        padding-top: 0.375rem;
+        padding-inline-start: 1px;
+        color: var(--store-card-text);
+    }
+
+    .search-section-item {
+        background-color: rgba(0, 0, 0, 0.08);
+        border-top: 1px solid var(--divider-color);
+        height: 100%;
+        align-items: center;
+    }
+</style>

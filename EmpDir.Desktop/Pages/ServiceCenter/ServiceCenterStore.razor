@@ -1,75 +1,26 @@
-﻿@* 
-Service Center store detail page component displaying comprehensive information for a specific service center location.
-Features the same dark theme design and intelligent layout switching as Metal Mart stores.
-Uses alternating left/right information sections with decorative dividers for professional presentation.
-Represents the detail level in Service Center navigation hierarchy: Service Center Directory > Store Details.
-*@
+﻿@page "/servicecenter/{storeID:int}"
 
-@* Route definition with store ID parameter for specific Service Center location *@
-@page "/servicecenter/{storeID:int}"
-
-@* Required using statements for data models and UI components *@
-@using EmpDir
-@using EmpDir.Core.DTOs
-@using EmpDir.Core.Data.Context
-@using EmpDir.Core.Models
-@using EmpDir.Core.Services
-@using EmpDir.UI.Components
-@using EmpDir.UI.Layout
-@using Telerik.Blazor
-@using Telerik.Blazor.Components
-@using Telerik.SvgIcons
-
-@* Required dependency injections for page functionality *@
 @inject IDirectoryService DirectoryService
 @inject NavigationManager NavigationManager
 @inject LayoutState LayoutState
 
-@* Page title for browser tab/window *@
 <PageTitle>Service Center Detail</PageTitle>
 
-@* ===== LOADING STATE ===== *@
-@* Display loading message while service center data is being fetched *@
+@* Loading state *@
 @if (Store == null)
 {
     <p>Loading store...</p>
 }
 else
 {
-    @* ===== MAIN CONTENT CONTAINER ===== *@
-    @* 
-    Full-height container with dark theme and decorative borders.
-    Uses Telerik utility classes for border styling consistent with other detail pages.
-    *@
+    @* Service Center details with dark theme *@
     <div class="button-page-container k-border-top-2 k-border-bottom-8 k-border-x-0 k-border-solid k-border-dark-subtle">
         <div class="scrollable-wrapper">
-
-            @* ===== STORE NAME SECTION (MOVED TO HEADER) ===== *@
-            @* 
-            Original store name section moved to header for consistency.
-            Preserved for potential future use or alternative layout.
-            *@
-            @* 
-            <div class="store-name-section">
-                <h1 class="store-name">
-                    @Store.LocName?.ToUpper()
-                </h1>
-            </div> 
-            *@
-
-            @* ===== SERVICE CENTER DETAILS SECTION ===== *@
-            @* 
-            Main content area with service center information in alternating layout sections.
-            Uses conditional rendering to show only available information.
-            Features intelligent layout switching between single and two-column formats.
-            *@
             <div class="store-details">
 
-                @* ===== STORE NUMBER AND HOURS SECTION ===== *@
-                @* Two-column layout with service center number and operating hours *@
+                @* Store number and hours - two-column layout *@
                 <div class="section">
                     <div class="two-column">
-                        @* Service center number display (right-aligned column) *@
                         @if (Store.LocNum.HasValue)
                         {
                             <div class="column">
@@ -78,10 +29,8 @@ else
                             </div>
                         }
 
-                        @* Vertical divider between columns *@
                         <div class="divider-vertical"></div>
 
-                        @* Service center hours display (left-aligned column) *@
                         @if (!string.IsNullOrWhiteSpace(Store.Hours))
                         {
                             <div class="column">
@@ -92,8 +41,7 @@ else
                     </div>
                 </div>
 
-                @* ===== ADDRESS SECTION ===== *@
-                @* Left-aligned section with complete service center address information *@
+                @* Address information *@
                 @if (!string.IsNullOrWhiteSpace(Store.Address))
                 {
                     <div class="section section-left">
@@ -105,18 +53,12 @@ else
                     </div>
                 }
 
-                @* ===== PHONE AND FAX SECTION ===== *@
-                @* 
-                Intelligent layout switching for contact information:
-                - Two-column layout when both phone and fax are available
-                - Single right-aligned layout when only phone is available
-                *@
+                @* Phone and fax - switches between two-column and single-column layout *@
                 @if (!string.IsNullOrWhiteSpace(Store.PhoneNumber) || !string.IsNullOrWhiteSpace(Store.FaxNumber))
                 {
                     <div class="section">
                         @if (!string.IsNullOrWhiteSpace(Store.FaxNumber))
                         {
-                            @* Two-column layout when fax number exists *@
                             <div class="two-column">
                                 @if (!string.IsNullOrWhiteSpace(Store.PhoneNumber))
                                 {
@@ -125,7 +67,6 @@ else
                                         <div class="section-content">@Store.PhoneNumber</div>
                                     </div>
                                 }
-                                @* Vertical divider between phone and fax *@
                                 <div class="divider-vertical"></div>
                                 <div class="column">
                                     <div class="left-divider">FAX</div>
@@ -135,7 +76,6 @@ else
                         }
                         else
                         {
-                            @* Single column layout when no fax number available *@
                             @if (!string.IsNullOrWhiteSpace(Store.PhoneNumber))
                             {
                                 <div class="section section-right">
@@ -147,8 +87,7 @@ else
                     </div>
                 }
 
-                @* ===== EMAIL SECTION ===== *@
-                @* Left-aligned section with service center email address *@
+                @* Email address *@
                 @if (!string.IsNullOrWhiteSpace(Store.Email))
                 {
                     <div class="section section-left">
@@ -156,134 +95,59 @@ else
                         <div class="section-content section-content-email" style="text-align: start;">@Store.Email</div>
                     </div>
                 }
-
-                @* ===== MANAGEMENT INFORMATION (MOVED TO HEADER) ===== *@
-                @* 
-                Store and area manager information moved to header card for consistency.
-                Preserved here for reference but no longer displayed in main content.
-                *@
-                @* 
-                @if (!string.IsNullOrWhiteSpace(Store.StoreManager))
-                {
-                    <div class="detail-section">
-                        <div class="detail-label">STORE MANAGER</div>
-                        <div class="detail-value">@Store.StoreManager</div>
-                    </div>
-                }
-
-                @if (!string.IsNullOrWhiteSpace(Store.AreaManager))
-                {
-                    <div class="detail-section">
-                        <div class="detail-label">AREA MANAGER</div>
-                        <div class="detail-value">@Store.AreaManager</div>
-                    </div>
-                } 
-                *@
             </div>
         </div>
     </div>
 }
 
 @code {
-    #region Route Parameters
-
-    /// <summary>
-    /// Store ID route parameter extracted from the URL.
-    /// Used to load specific Service Center store data and information.
-    /// Corresponds to Location.Id in the database.
-    /// </summary>
+    // Service Center store ID from URL route parameter
     [Parameter]
     public int storeID { get; set; }
 
-    #endregion
-
-    #region Private Properties
-
-    /// <summary>
-    /// Service Center store location entity with all store information.
-    /// Loaded from database using the storeID route parameter.
-    /// Contains all data displayed on the service center detail page.
-    /// </summary>
+    // Service Center store location entity with all store information
     private LocationDto? Store;
 
-    /// <summary>
-    /// Header card model configured for Service Center store display.
-    /// Generated using HeaderCardModels.Store() factory method.
-    /// Contains store name and management information for header display.
-    /// </summary>
+    // Header card model for service center store display
     private HeaderCardModels.HeadInfoCardModel? StoreInfo;
 
-    /// <summary>
-    /// Footer navigation items configuration for Service Center store section.
-    /// Provides navigation to main application sections but excludes Service Center
-    /// since user is already in Service Center section (prevents redundant navigation).
-    /// </summary>
-    private List<FooterNav.FooterItem> FooterNavItems = new()
-    {
-        new FooterNav.FooterItem(CustomIcons.Home, "Home", "/"),
-        new FooterNav.FooterItem(CustomIcons.Corporate, "Corporate", "/corporate"),
-        new FooterNav.FooterItem(CustomIcons.MetalMart, "Metal Mart", "/metalmart"),
-        new FooterNav.FooterItem(CustomIcons.Plant, "Plant", "/plant")  // Fixed: Use Plant icon instead of ServiceCenter
-    };
+    private List<FooterNav.FooterItem> FooterNav => FooterNavigation.ServiceCenterSection;
 
-    #endregion
-
-    #region Lifecycle Methods
-
-    /// <summary>
-    /// Parameter change handler called when route parameters change.
-    /// Loads Service Center store data and configures header information.
-    /// Uses Store factory method for management information display.
-    /// </summary>
+    // Load store data and configure header when parameters change
     protected override async Task OnParametersSetAsync()
     {
-        // Load the specific Service Center store using store ID and type filter
         Store = await DirectoryService.GetLocationByIdAsync("service center", storeID);
 
-        // Create service center header card using Store factory method
         if (Store != null)
         {
-            // Use the Store static factory method from HeaderCardModels
-            // Displays store name and management hierarchy in header
+            // Create store header with name and management information
             StoreInfo = HeaderCardModels.Store(
-                title: Store.LocName ?? "Service Center",        // Fixed: Use "Service Center" instead of "Metal Mart Store"
-                subtitle1: "Store Manager",                      // Label for store manager
-                storemanager: Store.StoreManager ?? "",          // Store manager name
-                subtitle2: "Area Manager",                       // Label for area manager
-                areamanager: Store.AreaManager ?? ""             // Area manager name
+                title: Store.LocName ?? "Service Center",
+                subtitle1: "Store Manager",
+                storemanager: Store.StoreManager ?? "",
+                subtitle2: "Area Manager",
+                areamanager: Store.AreaManager ?? ""
             );
         }
     }
 
-    /// <summary>
-    /// Post-render lifecycle method for configuring layout state.
-    /// Sets up Service Center store-specific header and global footer navigation.
-    /// Only executes on first render to avoid unnecessary state updates.
-    /// </summary>
+    // Configure layout state with service center header and footer
     protected override void OnAfterRender(bool firstRender)
     {
         if (firstRender && StoreInfo != null)
         {
-            // Configure service center header with name and management information
             LayoutState.SetHeader(StoreInfo);
-
-            // Set global footer navigation for section-to-section navigation
-            LayoutState.SetFooter(FooterNavItems);
+            LayoutState.SetFooter(FooterNavigation.ServiceCenterSection);
         }
     }
-
-    #endregion
 }
 
-@* ===== COMPONENT STYLING ===== *@
 <style>
-    /* ===== SERVICE CENTER DETAILS CONTAINER ===== */
     .store-details {
         background-color: var(--kendo-color-dark);
         padding: 30px 0;
     }
 
-    /* ===== PAGE LAYOUT CONTAINERS ===== */
     .button-page-container {
         height: calc(100% - 60px);
         display: flex;
@@ -308,7 +172,6 @@ else
             display: none;
         }
 
-    /* ===== SECTION LAYOUT UTILITIES ===== */
     .section {
         position: relative;
         margin-bottom: 15px;
@@ -322,7 +185,6 @@ else
         padding-left: 2rem !important;
     }
 
-    /* ===== CONTENT STYLING ===== */
     .section-content {
         font-size: clamp(0.9rem, 2vw + 0.75rem, 1.25rem);
         line-height: 1;
@@ -335,7 +197,6 @@ else
         letter-spacing: 1px;
     }
 
-    /* ===== TWO-COLUMN LAYOUT ===== */
     .two-column {
         display: flex;
         align-items: center;
@@ -345,7 +206,6 @@ else
         flex: 1;
     }
 
-    /* ===== VERTICAL DIVIDER ===== */
     .divider-vertical {
         width: 2.5px;
         height: 3rem;
@@ -353,7 +213,6 @@ else
         margin: 0 20px;
     }
 
-    /* ===== COLUMN ALIGNMENT ===== */
     .column:first-child {
         text-align: right;
     }
@@ -362,12 +221,10 @@ else
         text-align: left;
     }
 
-    /* ===== ADDRESS-SPECIFIC STYLING ===== */
     .address-text {
         line-height: 1.3;
     }
 
-    /* ===== DECORATIVE DIVIDER STYLING ===== */
     .left-divider {
         padding-top: 0.5rem;
         padding-bottom: 0.5rem;

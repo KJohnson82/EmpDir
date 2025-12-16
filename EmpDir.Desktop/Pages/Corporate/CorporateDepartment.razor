@@ -1,75 +1,29 @@
-﻿@* 
-Department detail page component displaying employees within a specific corporate department.
-Takes a department ID route parameter and shows a scrollable list of department employees.
-Features manager indicators, employee navigation, and department-specific header configuration.
-Part of the corporate section navigation hierarchy: Corporate > Department > Employee.
-*@
+﻿@page "/corporate/{departmentID:int}"
 
-@* Route definition with integer parameter for department ID *@
-@page "/corporate/{departmentID:int}"
-
-@* Required using statements for data models and UI components *@
-@using EmpDir
-@using EmpDir.Core.DTOs
-@using EmpDir.Core.Data.Context
-@using EmpDir.Core.Models
-@using EmpDir.Core.Services
-@using EmpDir.UI.Components
-@using EmpDir.UI.Layout
-@using Telerik.Blazor
-@using Telerik.Blazor.Components
-@using Telerik.SvgIcons
-
-@* Required dependency injections for page functionality *@
 @inject IDirectoryService DirectoryService
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 @inject LayoutState LayoutState
 
-@* Page title for browser tab/window *@
 <PageTitle>Department</PageTitle>
 
-@* ===== LOADING/ERROR STATE ===== *@
-@* Display message when department data is not available *@
+@* Loading/error state *@
 @if (Department == null)
 {
     <p>No Data Available...</p>
 }
 else
 {
-    @* ===== MAIN CONTENT CONTAINER ===== *@
-    @* 
-    Full-height container with scrollable employee list.
-    Uses flexible layout to fill available space minus header/footer.
-    *@
+    @* Scrollable list of department employees *@
     <div class="button-page-container">
         <div class="scrollable-wrapper">
-            @* 
-            Telerik ListView component for employee navigation.
-            Renders each employee as a clickable navigation button.
-            Disabled pagination for continuous scrolling experience.
-            *@
             <TelerikListView Data="@Department.Employees" EnableLoaderContainer="true" Class="button-list-container" Pageable="false">
                 <Template Context="emp">
-                    @* 
-                    Navigation link for each employee.
-                    Routes to individual employee detail pages within department context.
-                    Uses Blazor NavLink for SPA navigation with clean styling.
-                    *@
                     <NavLink href="@($"/corporate/{departmentID}/{emp.Id}")" class="text-decoration-none k-text-uppercase">
-                        @* 
-                        Employee button with department-specific styling.
-                        Features employee name, job title, and manager indicator.
-                        Uses inline styles for specific font weight and letter spacing.
-                        *@
                         <div class="menu-item py-3 px-4 my-2 rounded-3 k-text-white tracking-wider k-font-size-lg" style="font-size: medium; font-weight: bold; letter-spacing: 2px;">
-                            @* Employee name with optional manager star indicator *@
+                            @* Employee name with manager star indicator *@
                             <div class="k-align-items-center">
                                 @emp.FirstName @emp.LastName
-                                @* 
-                                Manager indicator: Display gold star icon for managers.
-                                Only shown when IsManager flag is true.
-                                *@
                                 @if (emp.IsManager == true)
                                 {
                                     <span class="k-color-warning ps-1">
@@ -77,7 +31,7 @@ else
                                     </span>
                                 }
                             </div>
-                            @* Employee job title with smaller, darker styling *@
+                            @* Employee job title *@
                             <div class="k-color-dark k-font-bold k-font-size-sm">@emp.JobTitle</div>
                         </div>
                     </NavLink>
@@ -87,108 +41,55 @@ else
     </div>
 }
 
-@* ===== COMPONENT STYLING ===== *@
-@* Currently no custom styles - relies on parent Corporate page styles and Telerik utility classes *@
 <style>
-
 </style>
 
 @code {
-    #region Route Parameters
-
-    /// <summary>
-    /// Department ID route parameter extracted from the URL.
-    /// Used to load specific department data and employees.
-    /// Corresponds to Department.Id in the database.
-    /// </summary>
+    // Department ID from URL route parameter
     [Parameter]
     public int departmentID { get; set; }
 
-    #endregion
-
-    #region Private Properties
-
-    /// <summary>
-    /// Department entity with associated employees loaded from the database.
-    /// Nullable to handle loading state and invalid department IDs.
-    /// Contains all employee information for the specified department.
-    /// </summary>
+    // Department entity with associated employees
     private DepartmentDto? Department;
 
-    /// <summary>
-    /// Header card model configured for department display.
-    /// Generated using HeaderCardModels.ForDepartment() factory method.
-    /// Contains department name, contact information, and manager details.
-    /// </summary>
+    // Header card model for department display
     private HeaderCardModels.HeadInfoCardModel? DepartmentInfo;
 
-    /// <summary>
-    /// Footer navigation items configuration for department section.
-    /// Provides navigation to main application sections but excludes Corporate
-    /// since user is already in corporate section (prevents redundant navigation).
-    /// </summary>
-    private List<FooterNav.FooterItem> FooterNavItems = new()
-    {
-        new FooterNav.FooterItem(CustomIcons.Home, "Home", "/"),
-        // new FooterNav.FooterItem(CustomIcons.Corporate, "Corporate", "/corporate"), // Commented out - already in corporate section
-        new FooterNav.FooterItem(CustomIcons.MetalMart, "Metal Mart", "/metalmart"),
-        new FooterNav.FooterItem(CustomIcons.ServiceCenter, "Service Center", "/servicecenter"),
-        new FooterNav.FooterItem(CustomIcons.Plant, "Plant", "/plant")
-    };
+    private List<FooterNav.FooterItem> FooterNav => FooterNavigation.CorporateSection;
 
-    #endregion
-
-    #region Lifecycle Methods
-
-    /// <summary>
-    /// Parameter change handler called when route parameters change.
-    /// Loads department data and configures header information.
-    /// Handles employee sorting for consistent presentation.
-    /// </summary>
+    // Load department data and configure header when parameters change
     protected override async Task OnParametersSetAsync()
     {
-        // Load the department with all associated employees from database
         Department = await DirectoryService.GetDepartmentWithEmployeesAsync(departmentID);
 
-        // Sort employees alphabetically by first name, then last name for consistent presentation
+        // Sort employees alphabetically by first name, then last name
         if (Department?.Employees != null)
         {
             Department.Employees = Department.Employees
-                .OrderBy(e => e.FirstName)      // Primary sort by first name
-                .ThenBy(e => e.LastName)        // Secondary sort by last name
+                .OrderBy(e => e.FirstName)
+                .ThenBy(e => e.LastName)
                 .ToList();
         }
 
-        // Create department header card using factory method for consistent formatting
+        // Create department header using factory method
         if (Department != null)
         {
-            // Use the ForDepartment static factory method from HeaderCardModels
-            // This ensures consistent department header structure across the application
             DepartmentInfo = HeaderCardModels.ForDepartment(
-                title: Department.DeptName ?? "Department",    // Department name as title
-                phone: Department.DeptPhone,                   // Department phone number
-                email: Department.DeptEmail,                   // Department email address
-                manager: Department.DeptManager                // Department manager name
+                title: Department.DeptName ?? "Department",
+                phone: Department.DeptPhone,
+                email: Department.DeptEmail,
+                manager: Department.DeptManager
             );
         }
     }
 
-    /// <summary>
-    /// Post-render lifecycle method for configuring layout state.
-    /// Sets up department-specific header and global footer navigation.
-    /// Only executes on first render to avoid unnecessary state updates.
-    /// </summary>
+    // Configure layout state with department header and footer
     protected override void OnAfterRender(bool firstRender)
     {
         if (firstRender && DepartmentInfo != null)
         {
-            // Configure department header with contact information and management details
             LayoutState.SetHeader(DepartmentInfo);
-
-            // Set global footer navigation for section-to-section navigation
-            LayoutState.SetFooter(FooterNavItems);
+            LayoutState.SetFooter(FooterNavigation.CorporateSection);
         }
     }
-
-    #endregion
 }

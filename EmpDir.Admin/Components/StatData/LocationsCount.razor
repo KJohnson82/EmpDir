@@ -6,6 +6,7 @@
 
 @* Import necessary namespaces for Entity Framework, Telerik components, and data models *@
 @using EmpDir.Core.Data.Context
+@using EmpDir.Core.EmpDir.Core.Extensions
 @using Microsoft.EntityFrameworkCore
 @using Telerik.Blazor
 @using Telerik.Blazor.Components
@@ -99,22 +100,31 @@
     protected override async Task OnInitializedAsync()
     {
         await using var context = await DbContextFactory.CreateDbContextAsync();
-        // LINQ query to aggregate location data by type (excluding corporate)
-        // locationsDonut = await dbContext.Locations
-        locationsDonut = await context.Locations
-            .Where(l => l.Loctype != 1)                    // Exclude corporate locations (Loctype = 1)
-            .GroupBy(l => l.Loctype)                       // Group by location type ID
-            .Select(g => new LocationsModel                // Project to chart model
-            {
-                // Convert location type ID to human-readable name using ternary operators
-                TypeName = g.Key == 2 ? "Metal Mart" :     // Loctype 2 = Metal Mart (retail)
-                          g.Key == 3 ? "Service Center" :  // Loctype 3 = Service Center
-                          "Plant",                          // Loctype 4 or other = Plant (manufacturing)
+        
+        var locData = await context.Locations
+    .Where(l => l.Loctype != (int)LocationType.Corporate)
+    .GroupBy(l => l.Loctype)
+    .Select(g => new
+    {
+        Loctype = g.Key,
+        Count = g.Count()
+    })
+    .ToListAsync();  // <-- Data is now in memory
 
-                // Count locations of this type
-                LocationValue = g.Count()
+        // Step 2: Transform in memory (C# handles this, not SQL)
+        locationsDonut = locData
+            .Select(g => new LocationsModel
+            {
+                TypeName = (LocationType)g.Loctype switch
+                {
+                    LocationType.MetalMart => "Metal Mart",
+                    LocationType.ServiceCenter => "Service Center",
+                    LocationType.Plant => "Plant",
+                    _ => "Unknown"
+                },
+                LocationValue = g.Count
             })
-            .ToListAsync();                                // Execute query asynchronously
+            .ToList();
 
         // =====================================================================
         // LEGACY MANUAL DATA CREATION (commented out for reference)

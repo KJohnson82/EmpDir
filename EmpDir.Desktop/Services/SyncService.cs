@@ -4,9 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace EmpDir.Desktop.Services;
 
-/// <summary>
-/// Service for syncing data from API to local cache
-/// </summary>
+// Service for syncing data from API to local cache
 public class SyncService : ISyncService
 {
     private readonly IApiService _apiService;
@@ -48,7 +46,7 @@ public class SyncService : ISyncService
         {
             _logger.LogInformation("Starting directory sync...");
 
-            // Check if API is available
+            // Check API availability
             var apiAvailable = await _apiService.HealthCheckAsync();
 
             if (!apiAvailable)
@@ -59,7 +57,7 @@ public class SyncService : ISyncService
 
                 return new SyncResult
                 {
-                    Success = true, // Still successful - we have cache
+                    Success = true,
                     Message = lastSync.HasValue
                         ? $"Offline - using cache from {lastSync.Value:g}"
                         : "Offline - no cached data available",
@@ -68,9 +66,8 @@ public class SyncService : ISyncService
                 };
             }
 
-            // Get data from API
+            // Fetch data from API
             var syncData = await _apiService.GetFullDirectoryAsync();
-
 
             if (syncData == null)
             {
@@ -84,36 +81,33 @@ public class SyncService : ISyncService
                 };
             }
 
-            // Convert DTOs to Models and save to cache
+            // Convert DTOs to models
             var employees = syncData.Employees.Select(dto => dto.ToModel()).ToList();
             var departments = syncData.Departments.Select(dto => dto.ToModel()).ToList();
             var locations = syncData.Locations.Select(dto => dto.ToModel()).ToList();
             var locationTypes = syncData.LocationTypes.Select(dto => dto.ToModel()).ToList();
 
-            // Fix Locations (Break link to Loctype)
+            // Break navigation property links to avoid EF tracking issues
             foreach (var loc in locations)
             {
-                loc.LocationType = null; // Keep loc.Loctype (the int ID)
+                loc.LocationType = null;
             }
 
-            // Fix Departments (Break link to Location)
             foreach (var dept in departments)
             {
-                dept.DeptLocation = null; // Keep dept.Location (the int ID)
+                dept.DeptLocation = null;
             }
 
-            // Fix Employees (Break links to Dept and Location)
             foreach (var emp in employees)
             {
-                emp.EmpLocation = null;    // Keep emp.Location (the int ID)
-                emp.EmpDepartment = null;  // Keep emp.Department (the int ID)
+                emp.EmpLocation = null;
+                emp.EmpDepartment = null;
             }
 
-            // Since MauiProgram no longer deletes the DB, we must wipe tables here
-            // before inserting the fresh data.
+            // Clear existing cache before inserting fresh data
             await _cacheService.ClearAllDataAsync();
 
-            // Save to cache
+            // Save to cache in dependency order
             await _cacheService.SaveLocationTypesAsync(locationTypes);
             await _cacheService.SaveLocationsAsync(locations);
             await _cacheService.SaveDepartmentsAsync(departments);

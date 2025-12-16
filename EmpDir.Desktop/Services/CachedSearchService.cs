@@ -7,10 +7,7 @@ using Location = EmpDir.Core.Models.Location;
 
 namespace EmpDir.Desktop.Services;
 
-/// <summary>
-/// Desktop implementation of ISearchService that searches the local SQLite cache.
-/// Mirrors the functionality of the server-side SearchService but uses LocalCacheContext.
-/// </summary>
+// Desktop implementation of ISearchService that searches the local SQLite cache
 public class CachedSearchService : ISearchService
 {
     private readonly LocalCacheContext _context;
@@ -24,9 +21,7 @@ public class CachedSearchService : ISearchService
         _logger = logger;
     }
 
-    /// <summary>
-    /// Performs a comprehensive search across all cached entities (Employees, Departments, Locations).
-    /// </summary>
+    // Performs comprehensive search across employees, departments, and locations
     public async Task<SearchResults> SearchAllAsync(string searchTerm)
     {
         if (string.IsNullOrWhiteSpace(searchTerm))

@@ -1,142 +1,76 @@
-@* ===================================================================== *@
-@* EMPLOYEES PAGE - EMPLOYEE MANAGEMENT COMPONENT                        *@
-@* Full CRUD interface for managing McElroy Metal employees             *@
-@* Route: /Employees (accessible from navigation)                        *@
-@* ===================================================================== *@
-
-@* Define the route for this page component *@
 @page "/Employees"
-
-@* Import necessary namespaces for Entity Framework, Telerik components, and data models *@
-@using Microsoft.EntityFrameworkCore
-@using Telerik.Blazor
-@using Telerik.Blazor.Components
-@using Telerik.SvgIcons
-@using EmpDir
-@using EmpDir.Core.Models
-@using EmpDir.Core.Data.Context
-@using EmpDir.UI.Components
-@using EmpDir.UI.Layout
-
-
-@* Inject database context for data operations *@
-@* @inject AppDbContext dbContext *@
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 
 <RequireAuth>
-@* ===================================================================== *@
-@* PAGE HEADER - Consistent header with employee icon                    *@
-@* ===================================================================== *@
-<PageHeader PageTitle="Employees" CardIcon="@CustomIcons.Face" />
+    <PageHeader PageTitle="Employees" CardIcon="@CustomIcons.Face" />
 
-@* ===================================================================== *@
-@* MAIN DATA GRID - Telerik Grid with full CRUD capabilities            *@
-@* ===================================================================== *@
-@* Configure Telerik Grid with pagination and CRUD capabilities *@
-<TelerikGrid Data="@employees"
-             Pageable="true"
-             PageSize="15"
-             Sortable="true"
-             SortMode="@SortMode.Single"
-             Size="@ThemeConstants.Grid.Size.Small"
-             Resizable="true"
-             Groupable="true"
-             SelectionMode="GridSelectionMode.Single"
-             Class="grid-text"
-             AutoGenerateColumns="false"
-             EditMode="@GridEditMode.Popup"
-             ConfirmDelete="true"
-             OnUpdate="@Update"
-             OnCreate="@Add"
-             OnDelete="@Delete"
-             OnRowRender="@OnEmployeeRowRender"
-             >
-    @* Delete event handler *@
+    @* Employees grid with full CRUD capabilities *@
+    <TelerikGrid Data="@employees"
+                 Pageable="true"
+                 PageSize="15"
+                 Sortable="true"
+                 SortMode="@SortMode.Single"
+                 Size="@ThemeConstants.Grid.Size.Small"
+                 Resizable="true"
+                 Groupable="true"
+                 SelectionMode="GridSelectionMode.Single"
+                 Class="grid-text"
+                 AutoGenerateColumns="false"
+                 EditMode="@GridEditMode.Popup"
+                 ConfirmDelete="true"
+                 OnUpdate="@Update"
+                 OnCreate="@Add"
+                 OnDelete="@Delete"
+                 OnRowRender="@OnEmployeeRowRender">
 
-    @* ================================================================= *@
-    @* GRID CONFIGURATION - Popup edit settings                         *@
-    @* ================================================================= *@
-    <GridSettings>
-        <GridPopupEditSettings MaxHeight="700px"
-                               MaxWidth="700px"
-                               Title="Edit Employee"></GridPopupEditSettings> 
-        <GridPopupEditFormSettings Columns="2" 
-                                   ColumnSpacing="15px" 
-                                   Orientation="@FormOrientation.Horizontal" 
-                                   ButtonsLayout="FormButtonsLayout.End">
-            @* Buttons aligned to end *@
-        </GridPopupEditFormSettings>
-    </GridSettings>
+        <GridSettings>
+            <GridPopupEditSettings MaxHeight="700px"
+                                   MaxWidth="700px"
+                                   Title="Edit Employee"></GridPopupEditSettings>
+            <GridPopupEditFormSettings Columns="2"
+                                       ColumnSpacing="15px"
+                                       Orientation="@FormOrientation.Horizontal"
+                                       ButtonsLayout="FormButtonsLayout.End">
+            </GridPopupEditFormSettings>
+        </GridSettings>
 
-    @* ================================================================= *@
-    @* GRID TOOLBAR - Search and add functionality                      *@
-    @* ================================================================= *@
-    <GridToolBarTemplate>
-        @* Global search box with debounced input *@
-        <GridSearchBox Placeholder="Search..."
-                       DebounceDelay="300"
-                       Fields="@SearchableFields"></GridSearchBox>
-        @* Add new employee button *@
-        <GridCommandButton Command="Add" Icon="SvgIcon.Plus">Add</GridCommandButton>
-    </GridToolBarTemplate>
+        <GridToolBarTemplate>
+            <GridSearchBox Placeholder="Search..."
+                           DebounceDelay="300"
+                           Fields="@SearchableFields"></GridSearchBox>
+            <GridCommandButton Command="Add" Icon="SvgIcon.Plus">Add</GridCommandButton>
+        </GridToolBarTemplate>
 
-    @* ================================================================= *@
-    @* GRID COLUMNS - Employee data fields and custom templates         *@
-    @* ================================================================= *@
-    <GridColumns>
-        @* Basic personal information columns *@
-        <GridColumn Field="@nameof(Employee.FirstName)" Title="First Name" Sortable="true" Filterable="false" />
-        <GridColumn Field="LastName" Title="Last Name" Sortable="true" Filterable="false" />
-        <GridColumn Field="JobTitle" Title="Job Title" Sortable="false" />
+        <GridColumns>
+            <GridColumn Field="@nameof(Employee.FirstName)" Title="First Name" Sortable="true" Filterable="false" />
+            <GridColumn Field="LastName" Title="Last Name" Sortable="true" Filterable="false" />
+            <GridColumn Field="JobTitle" Title="Job Title" Sortable="false" />
 
-        @* Manager status with custom visual indicator *@
-        <GridColumn Field="IsManager" Title="Manager" Sortable="true" Width="75px" Filterable="false" TextAlign="@ColumnTextAlign.Center">
-            <Template Context="employee">
-                @{
-                    var isManager = ((Employee)employee).IsManager ?? false;
-                }
-                @if (isManager)
-                {
-                    @* Display star icon for managers *@
-                    <TelerikSvgIcon Icon="@CustomIcons.Star"
-                                    Size="@ThemeConstants.SvgIcon.Size.ExtraLarge"
-                                    ThemeColor="@ThemeConstants.SvgIcon.ThemeColor.Primary"
-                                    Class="" />
-                }
-                else
-                {
-                    @* No icon for non-managers *@
-                }
-            </Template>
-        </GridColumn>
-
-        @* Contact information columns (some hidden by default) *@
-        <GridColumn Field="PhoneNumber" Title="Phone #" Filterable="false" Sortable="false" Visible="false" />
-        <GridColumn Field="CellNumber" Title="Alt #" Filterable="false" Sortable="false" Visible="false" />
-        <GridColumn Field="Extension" Width="75px" Title="Ext" Filterable="false" Sortable="false" />
-        <GridColumn Field="Email" Title="Email" Sortable="false" Visible="false" />
-
-        @* System and organizational information *@
-        <GridColumn Field="NetworkId" Title="Network Id" Sortable="false" />
-            <GridColumn Field="EmpAvatar" Title="Employee Avatar" Sortable="false" Filterable="false" Visible="true" TextAlign="@ColumnTextAlign.Center">
-                @* <Template>
+            @* Manager indicator with star icon *@
+            <GridColumn Field="IsManager" Title="Manager" Sortable="true" Width="75px" Filterable="false" TextAlign="@ColumnTextAlign.Center">
+                <Template Context="employee">
                     @{
-                        var employee = (Employee)context;
-                        var initials = GetInitials(employee.FirstName, employee.LastName);
+                        var isManager = ((Employee)employee).IsManager ?? false;
                     }
-                    @if (!string.IsNullOrEmpty(employee.EmpAvatar))
+                    @if (isManager)
                     {
-                        <TelerikAvatar Type="AvatarType.Image" Size="md">
-                            <img src="@employee.EmpAvatar" alt="@employee.FirstName @employee.LastName" />
-                        </TelerikAvatar>
+                        <TelerikSvgIcon Icon="@CustomIcons.Star"
+                                        Size="@ThemeConstants.SvgIcon.Size.ExtraLarge"
+                                        ThemeColor="@ThemeConstants.SvgIcon.ThemeColor.Primary"
+                                        Class="" />
                     }
-                    else
-                    {
-                        <TelerikAvatar Type="AvatarType.Text" Size="md">
-                            @initials
-                        </TelerikAvatar>
-                    }
-                </Template> *@
+                </Template>
+            </GridColumn>
+
+            <GridColumn Field="PhoneNumber" Title="Phone #" Filterable="false" Sortable="false" Visible="false" />
+            <GridColumn Field="CellNumber" Title="Alt #" Filterable="false" Sortable="false" Visible="false" />
+            <GridColumn Field="Extension" Width="75px" Title="Ext" Filterable="false" Sortable="false" />
+            <GridColumn Field="Email" Title="Email" Sortable="false" Visible="false" />
+
+            <GridColumn Field="NetworkId" Title="Network Id" Sortable="false" />
+
+            @* Employee avatar with initials *@
+            <GridColumn Field="EmpAvatar" Title="Employee Avatar" Sortable="false" Filterable="false" Visible="true" TextAlign="@ColumnTextAlign.Center">
                 <Template>
                     @{
                         var employee = (Employee)context;
@@ -147,163 +81,131 @@
                     </TelerikAvatar>
                 </Template>
             </GridColumn>
-        
 
-        @* Navigation property columns (commented out) - replaced with lookup approach *@
-        @* <GridColumn Field="EmpLocation.LocName" Title="Location" Sortable="true" Filterable="false" />
-        <GridColumn Field="EmpDepartment.DeptName" Title="Department" Sortable="true" Filterable="false" /> *@
+            @* Location assignment with dropdown editor *@
+            <GridColumn Field="@nameof(Employee.Location)" Title="Location">
+                <Template>
+                    @{
+                        var employee = (Employee)context;
+                        var locationName = locations.FirstOrDefault(l => l.Id == employee.Location)?.LocName;
+                    }
+                    @locationName
+                </Template>
+                <EditorTemplate>
+                    @{
+                        var employee = (Employee)context;
+                    }
+                    <TelerikDropDownList Data="@locations"
+                                         @bind-Value="@employee.Location"
+                                         ValueField="Id"
+                                         TextField="LocName"
+                                         DefaultText="Select Location..."
+                                         OnChange="@((object newValue) => OnLocationChanged(employee, newValue))" />
+                </EditorTemplate>
+            </GridColumn>
 
-        @* Location assignment with dropdown editor *@
-        <GridColumn Field="@nameof(Employee.Location)" Title="Location">
-            <Template>
-                @{
-                    var employee = (Employee)context;
-                    // Look up location name from ID using locations list
-                    var locationName = locations.FirstOrDefault(l => l.Id == employee.Location)?.LocName;
-                }
-                @locationName
-            </Template>
-            <EditorTemplate>
-                @{
-                    var employee = (Employee)context;
-                }
-                @* Dropdown for selecting employee location *@
-                <TelerikDropDownList Data="@locations"
-                                     @bind-Value="@employee.Location"
-                                     ValueField="Id" 
-                                     TextField="LocName" 
-                                     DefaultText="Select Location..."
-                                     OnChange="@((object newValue) => OnLocationChanged(employee, newValue))"
-                                     /> 
-            </EditorTemplate>
-        </GridColumn>
-
-        @* Department assignment with dropdown editor *@
-        <GridColumn Field="@nameof(Employee.Department)" Title="Department">
-            <Template>
-                @{
-                    var employee = (Employee)context;
-                    // Look up department name from ID using departments list
-                    var departmentName = departments.FirstOrDefault(d => d.Id == employee.Department)?.DeptName;
-                }
-                @departmentName
-            </Template>
-            <EditorTemplate>
+            @* Department assignment filtered by location *@
+            <GridColumn Field="@nameof(Employee.Department)" Title="Department">
+                <Template>
+                    @{
+                        var employee = (Employee)context;
+                        var departmentName = departments.FirstOrDefault(d => d.Id == employee.Department)?.DeptName;
+                    }
+                    @departmentName
+                </Template>
+                <EditorTemplate>
                     @{
                         var employee = (Employee)context;
                         var locDepartments = GetDepartmentsByLoc(employee.Location);
                     }
-                @* Dropdown for selecting employee department *@
-                <TelerikDropDownList Data="@locDepartments"
-                                     @bind-Value="@employee.Department"
-                                     ValueField="Id" 
-                                     TextField="DeptName" 
-                                     DefaultText="Select Department..."
-                                     
-                                     /> 
-            </EditorTemplate>
-        </GridColumn>
-        @* Add this column before the RecordAdd column in Employees.razor *@
-        <GridColumn Field="@nameof(Employee.Active)" Title="Status" Width="100px" Sortable="true" TextAlign="@ColumnTextAlign.Center">
-            <Template>
-                @{
-                    var employee = (Employee)context;
-                    var isActive = employee.Active ?? true;
-                }
-                <span class="status-badge @(isActive ? "status-active" : "status-inactive")">
-                    @(isActive ? "Active" : "Inactive")
-                </span>
-            </Template>
-            <EditorTemplate>
-                @{
-                    var employee = (Employee)context;
-                }
-                <div class="active-toggle-container">
-                    <label class="toggle-label">Employee Status:</label>
-                    <TelerikSwitch @bind-Value="employee.Active"
-                                   OnLabel="Active"
-                                   OffLabel="Inactive"
-                                   Width="100px" />
-                </div>
-            </EditorTemplate>
-        </GridColumn>
+                    <TelerikDropDownList Data="@locDepartments"
+                                         @bind-Value="@employee.Department"
+                                         ValueField="Id"
+                                         TextField="DeptName"
+                                         DefaultText="Select Department..." />
+                </EditorTemplate>
+            </GridColumn>
 
-        @* Metadata column (non-editable, hidden) *@
-        <GridColumn Field="RecordAdd" Sortable="true" Filterable="false" Visible="false" Editable="false" />
+            @* Active/Inactive status badge *@
+            <GridColumn Field="@nameof(Employee.Active)" Title="Status" Width="100px" Sortable="true" TextAlign="@ColumnTextAlign.Center">
+                <Template>
+                    @{
+                        var employee = (Employee)context;
+                        var isActive = employee.Active ?? true;
+                    }
+                    <span class="status-badge @(isActive ? "status-active" : "status-inactive")">
+                        @(isActive ? "Active" : "Inactive")
+                    </span>
+                </Template>
+                <EditorTemplate>
+                    @{
+                        var employee = (Employee)context;
+                    }
+                    <div class="active-toggle-container">
+                        <label class="toggle-label">Employee Status:</label>
+                        <TelerikSwitch @bind-Value="employee.Active"
+                                       OnLabel="Active"
+                                       OffLabel="Inactive"
+                                       Width="100px" />
+                    </div>
+                </EditorTemplate>
+            </GridColumn>
 
-        @* ============================================================= *@
-        @* COMMAND COLUMN - Action buttons for each employee row        *@
-        @* ============================================================= *@
-        <GridCommandColumn Width="300px" Title="Employee Admin">
-            @* Custom info button to show employee details modal *@
-            <GridCommandButton Command="Info"
-                               OnClick="() => ShowEmployeeInfo((Employee)context)"
-                               Icon="@CustomIcons.Emoji_People">Info</GridCommandButton>
-            @* Standard CRUD operation buttons *@
-            <GridCommandButton Command="Edit" Icon="SvgIcon.Pencil">Edit</GridCommandButton>
-            <GridCommandButton Command="Save" Icon="SvgIcon.Save" ShowInEdit="true">Save</GridCommandButton>
-            <GridCommandButton Command="Cancel" Icon="SvgIcon.Cancel" ShowInEdit="true">Cancel</GridCommandButton>
-            <GridCommandButton Command="Delete" Icon="SvgIcon.Trash">Delete</GridCommandButton>
-        </GridCommandColumn>
-    </GridColumns>
-</TelerikGrid>
+            <GridColumn Field="RecordAdd" Sortable="true" Filterable="false" Visible="false" Editable="false" />
+
+            @* Action buttons for each employee *@
+            <GridCommandColumn Width="300px" Title="Employee Admin">
+                <GridCommandButton Command="Info"
+                                   OnClick="() => ShowEmployeeInfo((Employee)context)"
+                                   Icon="@CustomIcons.Emoji_People">Info</GridCommandButton>
+                <GridCommandButton Command="Edit" Icon="SvgIcon.Pencil">Edit</GridCommandButton>
+                <GridCommandButton Command="Save" Icon="SvgIcon.Save" ShowInEdit="true">Save</GridCommandButton>
+                <GridCommandButton Command="Cancel" Icon="SvgIcon.Cancel" ShowInEdit="true">Cancel</GridCommandButton>
+                <GridCommandButton Command="Delete" Icon="SvgIcon.Trash">Delete</GridCommandButton>
+            </GridCommandColumn>
+        </GridColumns>
+    </TelerikGrid>
 </RequireAuth>
 
-@* ===================================================================== *@
-@* EMPLOYEE DETAILS MODAL - Reference to employee details component      *@
-@* ===================================================================== *@
 <EmployeeCard @ref="EmployeeCardRef" Locations="@locations" Departments="@departments" />
 
-@* ===================================================================== *@
-@* LOADING INDICATOR - Show while data is being loaded                   *@
-@* ===================================================================== *@
 @if (isLoading)
 {
     <p>Loading...</p>
 }
 
-@* ===================================================================== *@
-@* COMPONENT STYLES - Grid and window styling                            *@
-@* ===================================================================== *@
 <style>
-    /* Main grid text styling */
     .grid-text {
-        font-family: Roboto; /* Consistent font family */
-        overflow: hidden; /* Hide overflow */
-        text-overflow: ellipsis; /* Show "..." for long text */
-        white-space: nowrap; /* Prevent text wrapping */
+        font-family: Roboto;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
-    /* Employee table styling (currently unused) */
     .employee-table {
-        display: grid; /* Grid layout */
-        border-collapse: collapse; /* Collapsed table borders */
-        margin: 25px 0; /* Vertical margins */
-        font-size: 0.9em; /* Slightly smaller font */
-        min-width: 400px; /* Minimum table width */
+        display: grid;
+        border-collapse: collapse;
+        margin: 25px 0;
+        font-size: 0.9em;
+        min-width: 400px;
     }
 
-    /* Modal window title bar styling */
     .k-window-titlebar {
-        background-color: var(--kendo-color-primary); /* Primary color background */
-        color: white; /* White text */
-        font-weight: 700; /* Bold font */
-        font-size: 2em; /* Large font size */
-        padding: 10px; /* Internal padding */
-        text-align: center; /* Center text */
-        text-transform: uppercase; /* All caps */
-        letter-spacing: 1px; /* Letter spacing */
+        background-color: var(--kendo-color-primary);
+        color: white;
+        font-weight: 700;
+        font-size: 2em;
+        padding: 10px;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
 
-    /* Employee table header styling */
     .employee-table thead tr {
-        background-color: var(--kendo-color-primary); /* Primary color background */
-        display: flex; /* Flexbox layout */
+        background-color: var(--kendo-color-primary);
+        display: flex;
     }
 
-    /* Add this CSS to the style section of each grid page */
-
-    /* Status badge styling */
     .status-badge {
         padding: 4px 8px;
         border-radius: 12px;
@@ -325,7 +227,6 @@
         border: 1px solid #f5c6cb;
     }
 
-    /* Active toggle container in edit mode */
     .active-toggle-container {
         display: flex;
         flex-direction: column;
@@ -344,7 +245,6 @@
         font-size: 0.9em;
     }
 
-    /* Inactive row styling - gray out entire row */
     .k-grid tr.inactive-row {
         opacity: 0.5;
         background-color: #f8f9fa !important;
@@ -358,7 +258,6 @@
             color: #6c757d !important;
         }
 
-    /* Alternative styling for stricter graying out */
     .k-grid tr.inactive-row {
         filter: grayscale(60%);
         opacity: 0.6;
@@ -371,58 +270,19 @@
 </style>
 
 @code {
-    // =====================================================================
-    // COMPONENT STATE PROPERTIES
-    // =====================================================================
-
-    /// <summary>
-    /// List of locations for dropdown selections and lookups
-    /// Loaded once during component initialization
-    /// </summary>
     public List<Location> locations { get; set; } = new List<Location>();
-
-    /// <summary>
-    /// List of departments for dropdown selections and lookups
-    /// Loaded once during component initialization
-    /// </summary>
     private List<Department> departments { get; set; } = new List<Department>();
-
-    /// <summary>
-    /// List of employees to display in the grid
-    /// Populated from database with complex sorting and includes
-    /// </summary>
     private List<Employee> employees { get; set; } = new List<Employee>();
-
-    /// <summary>
-    /// Loading state indicator for UI feedback
-    /// </summary>
     private bool isLoading = true;
-
-    /// <summary>
-    /// Reference to popup component (currently unused)
-    /// </summary>
     private TelerikPopup? PopupRef { get; set; }
-
-    /// <summary>
-    /// Currently selected employee for details display
-    /// </summary>
     private Employee? SelectedEmployee { get; set; }
-
-    /// <summary>
-    /// Reference to employee info window (currently unused)
-    /// </summary>
     private TelerikWindow? EmpInfoWindow { get; set; }
-
-    /// <summary>
-    /// Controls visibility of employee details window
-    /// </summary>
     private bool WindowVisible { get; set; }
-
-    /// <summary>
-    /// Reference to the EmployeeCard component for showing employee details
-    /// </summary>
     private EmployeeCard? EmployeeCardRef { get; set; }
+    private List<Department> filteredDepartments = new List<Department>();
+    private int? currentLocationFilter = null;
 
+    // Apply CSS class to inactive employee rows
     private void OnEmployeeRowRender(GridRowRenderEventArgs args)
     {
         var employee = (Employee)args.Item;
@@ -434,27 +294,12 @@
         }
     }
 
-    // =====================================================================
-    // USER INTERACTION METHODS
-    // =====================================================================
-
-    /// <summary>
-    /// Shows employee details modal for the specified employee
-    /// Delegates to EmployeeCard component
-    /// </summary>
-    /// <param name="employee">Employee to display details for</param>
+    // Show employee details modal
     public void ShowEmployeeInfo(Employee employee)
     {
-        // Alternative approach (commented out):
-        // SelectedEmployee = employee;
-        // OpenWindow();
         EmployeeCardRef.ShowEmployeeInfo(employee);
     }
 
-    /// <summary>
-    /// Generates dynamic window title for employee details
-    /// </summary>
-    /// <returns>Formatted title string</returns>
     private string GetWindowTitle()
     {
         return SelectedEmployee != null
@@ -462,18 +307,11 @@
             : "Employee Information";
     }
 
-    /// <summary>
-    /// Opens the employee details window
-    /// </summary>
     private void OpenWindow()
     {
         WindowVisible = true;
     }
 
-    /// <summary>
-    /// Shows popup for employee details (alternative approach)
-    /// </summary>
-    /// <param name="employee">Employee to show in popup</param>
     private void ShowPopup(Employee? employee)
     {
         if (employee != null)
@@ -483,65 +321,34 @@
         }
     }
 
-    // =====================================================================
-    // COMPONENT LIFECYCLE METHODS
-    // =====================================================================
-
-    /// <summary>
-    /// Component initialization - loads all required data from database
-    /// </summary>
+    // Load employee, location, and department data from database
     protected override async Task OnInitializedAsync()
     {
         await LoadDataAsync();
         await base.OnInitializedAsync();
     }
 
-    /// <summary>
-    /// Loads employee data with related entities and complex sorting
-    /// Also loads reference data for locations and departments
-    /// </summary>
     private async Task LoadDataAsync()
     {
         try
         {
             isLoading = true;
-
-            // Create a DbContext from the factory
             await using var context = await DbContextFactory.CreateDbContextAsync();
 
-            // Load reference data for dropdowns
             locations = await context.Locations.OrderBy(l => l.LocNum).ToListAsync();
             departments = await context.Departments.ToListAsync();
 
-            // Load employees with complex Entity Framework query
             employees = await context.Employees!
-                /* .Where(e => e.Active == true)  */          // Only active employees
-                .Include(e => e.EmpLocation)            // Include location navigation property
-                .Include(e => e.EmpDepartment)          // Include department navigation property
-                .OrderBy(e => e.EmpLocation!.LocName)   // Sort by location name first
-                .ThenBy(e => e.EmpDepartment!.DeptName) // Then by department name
-                .ThenBy(e => e.FirstName + e.LastName)  // Finally by full name
+                .Include(e => e.EmpLocation)
+                .Include(e => e.EmpDepartment)
+                .OrderBy(e => e.EmpLocation!.LocName)
+                .ThenBy(e => e.EmpDepartment!.DeptName)
+                .ThenBy(e => e.FirstName + e.LastName)
                 .ToListAsync();
-
-            // // Load reference data for dropdowns
-            // locations = await dbContext.Locations.OrderBy(l => l.LocNum).ToListAsync();
-            // departments = await dbContext.Departments.ToListAsync();
-
-            // // Load employees with complex Entity Framework query
-            // employees = await dbContext.Employees!
-            //     /* .Where(e => e.Active == true)  */          // Only active employees
-            //     .Include(e => e.EmpLocation)            // Include location navigation property
-            //     .Include(e => e.EmpDepartment)          // Include department navigation property
-            //     .OrderBy(e => e.EmpLocation!.LocName)   // Sort by location name first
-            //     .ThenBy(e => e.EmpDepartment!.DeptName) // Then by department name
-            //     .ThenBy(e => e.FirstName + e.LastName)  // Finally by full name
-            //     .ToListAsync();
         }
         catch (Exception ex)
         {
-            // Log error and handle gracefully
             Console.Error.WriteLine($"An error occurred while loading data: {ex.Message}");
-            // Could set error message for UI display here
         }
         finally
         {
@@ -549,15 +356,7 @@
         }
     }
 
-    // =====================================================================
-    // CRUD OPERATION METHODS
-    // =====================================================================
-
-    /// <summary>
-    /// Updates an existing employee in the database
-    /// Uses Entity Framework change tracking for efficient updates
-    /// </summary>
-    /// <param name="args">Grid command event arguments containing the updated employee</param>
+    // Update existing employee
     async Task Update(GridCommandEventArgs args)
     {
         await using var context = await DbContextFactory.CreateDbContextAsync();
@@ -569,19 +368,9 @@
 
             if (existingEmployee != null)
             {
-                // Use Entity Framework to copy values from updated employee to existing entity
                 context.Entry(existingEmployee).CurrentValues.SetValues(employee);
                 await context.SaveChangesAsync();
             }
-            // var employee = (Employee)args.Item;
-            // var existingEmployee = await dbContext.Employees.FindAsync(employee.Id);
-
-            // if (existingEmployee != null)
-            // {
-            //     // Use Entity Framework to copy values from updated employee to existing entity
-            //     dbContext.Entry(existingEmployee).CurrentValues.SetValues(employee);
-            //     await dbContext.SaveChangesAsync();
-            // }
         }
         catch (Exception ex)
         {
@@ -589,11 +378,7 @@
         }
     }
 
-    /// <summary>
-    /// Adds a new employee to the database and local collection
-    /// Sets the record creation timestamp
-    /// </summary>
-    /// <param name="args">Grid command event arguments containing the new employee</param>
+    // Add new employee
     async Task Add(GridCommandEventArgs args)
     {
         await using var context = await DbContextFactory.CreateDbContextAsync();
@@ -601,15 +386,10 @@
         try
         {
             var employee = (Employee)args.Item;
-            employee.RecordAdd = DateTime.UtcNow;        // Set creation timestamp
-            await context.Employees.AddAsync(employee); // Add to database
-            await context.SaveChangesAsync();           // Save changes
+            employee.RecordAdd = DateTime.UtcNow;
+            await context.Employees.AddAsync(employee);
+            await context.SaveChangesAsync();
             employees.Add(employee);
-            // var employee = (Employee)args.Item;
-            // employee.RecordAdd = DateTime.UtcNow;        // Set creation timestamp
-            // await dbContext.Employees.AddAsync(employee); // Add to database
-            // await dbContext.SaveChangesAsync();           // Save changes
-            // employees.Add(employee);                      // Add to local collection
         }
         catch (Exception ex)
         {
@@ -617,10 +397,7 @@
         }
     }
 
-    /// <summary>
-    /// Deletes an employee from the database and local collection
-    /// </summary>
-    /// <param name="args">Grid command event arguments containing the employee to delete</param>
+    // Delete employee
     async Task Delete(GridCommandEventArgs args)
     {
         await using var context = await DbContextFactory.CreateDbContextAsync();
@@ -632,19 +409,10 @@
 
             if (existingEmployee != null)
             {
-                context.Employees.Remove(existingEmployee); // Remove from database
-                await context.SaveChangesAsync();           // Save changes
-                employees.Remove(employee);                   // Remove from local collection
+                context.Employees.Remove(existingEmployee);
+                await context.SaveChangesAsync();
+                employees.Remove(employee);
             }
-            // var employee = (Employee)args.Item;
-            // var existingEmployee = await dbContext.Employees.FindAsync(employee.Id);
-
-            // if (existingEmployee != null)
-            // {
-            //     dbContext.Employees.Remove(existingEmployee); // Remove from database
-            //     await dbContext.SaveChangesAsync();           // Save changes
-            //     employees.Remove(employee);                   // Remove from local collection
-            // }
         }
         catch (Exception ex)
         {
@@ -652,26 +420,12 @@
         }
     }
 
-    // =====================================================================
-    // UTILITY METHODS
-    // =====================================================================
-
-    /// <summary>
-    /// Displays manager status as text (alternative to icon approach)
-    /// </summary>
-    /// <param name="employee">Employee to check manager status for</param>
-    /// <returns>Text representation of manager status</returns>
     private string ManagerDisplay(Employee employee)
     {
         return employee.IsManager ?? false ? "Manager" : " ";
     }
 
-    /// <summary>
-    /// Generates initials from first and last names
-    /// </summary>
-    /// <param name="firstName">Employee's first name</param>
-    /// <param name="lastName">Employee's last name</param>
-    /// <returns>Two-character initials string</returns>
+    // Generate initials from first and last names
     private string GetInitials(string? firstName, string? lastName)
     {
         var first = !string.IsNullOrEmpty(firstName) ? firstName[0].ToString().ToUpper() : "";
@@ -679,45 +433,33 @@
         return $"{first}{last}";
     }
 
-    // =====================================================================
-    // SEARCH CONFIGURATION
-    // =====================================================================
-
-    /// <summary>
-    /// Fields that are searchable through the global search box
-    /// Includes key employee identification fields
-    /// </summary>
+    // Fields searchable through global search box
     private List<string> SearchableFields = new List<string>
     {
-        nameof(Employee.FirstName),  // First name
-        nameof(Employee.LastName),   // Last name
-        nameof(Employee.JobTitle),   // Job title
-        nameof(Employee.Extension)   // Phone extension
+        nameof(Employee.FirstName),
+        nameof(Employee.LastName),
+        nameof(Employee.JobTitle),
+        nameof(Employee.Extension)
     };
 
-    //Filter Location Departments
-    private List<Department> filteredDepartments = new List<Department>();
-    private int? currentLocationFilter = null;
-
+    // Filter departments by selected location
     private List<Department> GetDepartmentsByLoc(int? locationID)
     {
         if (locationID == null || locationID == 0)
         {
-            return departments; //returns all departments if no location is selected
+            return departments;
         }
         return departments.Where(d => d.Location == locationID).ToList();
-    
     }
 
-private void OnLocationChanged(Employee employee, object newValue)
-{
     // Reset department when location changes
-    if (employee.Location != currentLocationFilter)
+    private void OnLocationChanged(Employee employee, object newValue)
     {
-        employee.Department = null;
-        currentLocationFilter = employee.Location;
-        StateHasChanged(); // Force UI refresh
+        if (employee.Location != currentLocationFilter)
+        {
+            employee.Department = null;
+            currentLocationFilter = employee.Location;
+            StateHasChanged();
+        }
     }
-}
-
 }

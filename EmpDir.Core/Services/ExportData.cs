@@ -14,28 +14,34 @@ namespace EmpDir.Core.Services
     
     public class ExportData
     {
-        private readonly AppDbContext _context;
+        //private readonly AppDbContext _context;
 
-        
+
         /// Initializes a new instance of the ExportData class.
-        
+
         /// <param name="context">The database context to be used for data operations.</param>
-        public ExportData(AppDbContext context)
+        //public ExportData(AppDbContext context)
+        //{
+        //    _context = context;
+        //}
+        private readonly IDbContextFactory<AppDbContext> _contextFactory;
+
+        public ExportData(IDbContextFactory<AppDbContext> contextFactory)
         {
-            _context = context;
+            _contextFactory = contextFactory;
         }
 
-        
         /// Fetches a structured list of active locations of a specific type, including their active departments and employees.
         /// This is the primary data retrieval method, designed to be reusable for all location types.
         /// The query eagerly loads and filters related departments and employees.
-        
+
         /// <param name="locationType">The type of location to fetch (e.g., Corporate, Plant).</param>
         /// <returns>A dictionary containing a list of fully populated Location objects.</returns>
         public async Task<Dictionary<string, List<Location>>> FetchLocationsByTypeAsync(LocationType locationType)
         {
+            await using var context = await _contextFactory.CreateDbContextAsync();
             // Query the database for locations matching the specified type and active status.
-            var locations = await _context.Locations
+            var locations = await context.Locations
                 .Where(l => l.Loctype == (int)locationType && l.Active == true)
                 // Project the results into new Location objects to avoid over-fetching.
                 .Select(l => new Location

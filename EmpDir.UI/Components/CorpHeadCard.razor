@@ -1,14 +1,4 @@
 ﻿@* 
-Corporate header card component with enhanced visual separation.
-Features a prominent visual divider between title and content sections for corporate emphasis.
-This is the corporate version with MORE visual elements, unlike HeadTitleCard which has cleaner minimal styling.
-Supports two main display modes:
-1. Territory Table Mode: For corporate organizational charts with structured role/manager data
-2. Regular Info Mode: For corporate contact information with prominent visual dividers
-Uses Telerik Grid Layout for precise positioning and responsive design.
-*@
-
-@* Required using statements for Telerik components and data models *@
 @using Telerik.Blazor.Components
 @using Telerik.Blazor
 @using EmpDir.Core.Models
@@ -16,20 +6,14 @@ Uses Telerik Grid Layout for precise positioning and responsive design.
 @using EmpDir
 @using EmpDir.UI.Components
 
-@* Inject navigation manager for URL-based logic *@
+
 @inject NavigationManager NavManager
 
-@* Only render content if corporate header information is provided *@
+
 @if (Info is not null)
 {
     <div class="header-wrapper">
-        @* 
-        Telerik Grid Layout provides structured positioning with 4 rows:
-        1. Title section (dynamic height based on title length)
-        2. Divider section (2px fixed with ACTIVE divider for corporate emphasis)
-        3. Content section (dynamic height to fill remaining space)
-        4. Search section (50px fixed)
-        *@
+
         <TelerikGridLayout RowSpacing="1" ColumnSpacing="0" Class="header-grid-layout">
             <GridLayoutColumns>
                 <GridLayoutColumn Width="1fr" />  
@@ -42,41 +26,30 @@ Uses Telerik Grid Layout for precise positioning and responsive design.
             </GridLayoutRows>
             <GridLayoutItems>
 
-                @* ===== TITLE SECTION ===== *@
+
                 <GridLayoutItem Row="1" Column="1" Class="header-title-item">
                     <div class="header-title">
-                        @* Dynamic font sizing based on title length for optimal readability *@
+
                         <span class="title-text" style="font-size: @GetOptimalFontSize()">
                             @Info.Title
                         </span>
                     </div>
                 </GridLayoutItem>
 
-                @* ===== VISUAL DIVIDER (CORPORATE EMPHASIS) ===== *@
                 <GridLayoutItem Row="2" Column="1">
-                    @* 
-                    Corporate styling: ACTIVE visual divider between title and content
-                    This creates prominent visual separation for corporate hierarchy emphasis
-                    Key difference from HeadTitleCard which has this divider commented out
-                    *@
+
                     <div class="divider"></div>
-                    @* Alternative divider style (commented out): *@
-                    @* <div style="border-bottom: solid 2px var(--kendo-color-primary-subtle)"></div> *@
+
                 </GridLayoutItem>
 
-                @* ===== CONTENT SECTION - CONDITIONAL LAYOUT ===== *@
+
                 <GridLayoutItem Row="3" Column="1" Class="header-content-item">
-                    @* 
-                    Conditional rendering based on content type:
-                    - Territory Table: For complex corporate organizational structures
-                    - Regular Info: For corporate contact information with additional visual dividers
-                    *@
+
                     @if (ShowTerritoryTable)
                     {
-                        @* ===== TERRITORY TABLE MODE ===== *@
-                        @* Used for corporate organizational charts and management hierarchies *@
+
                         <div class="content-container">
-                            @* Optional corporate headquarters address display *@
+
                             @if (!string.IsNullOrWhiteSpace(Info.Address))
                             {
                                 <div class="info-item address-item compact">
@@ -84,20 +57,14 @@ Uses Telerik Grid Layout for precise positioning and responsive design.
                                 </div>
                             }
 
-                            @* Structured table showing corporate divisions/roles to manager mappings *@
                             <div class="territory-table compact">
-                                @* Table header with territory/division and manager columns *@
+  
                                 <div class="territory-header">
                                     <div class="territory-header-cell">TERRITORY</div>
                                     <div class="territory-header-cell">MANAGER</div>
                                 </div>
 
-                                @* 
-                                Dynamic rows based on available corporate TManager data
-                                Each row shows a division/territory (Subtitle) paired with manager name (TManager)
-                                Only renders rows where both subtitle and manager are present
-                                Supports up to 6 corporate management levels
-                                *@
+
                                 @if (!string.IsNullOrWhiteSpace(Info.TManager1) && !string.IsNullOrWhiteSpace(Info.Subtitle1))
                                 {
                                     <div class="territory-row">
@@ -105,7 +72,7 @@ Uses Telerik Grid Layout for precise positioning and responsive design.
                                         <div class="territory-cell" style="text-align: left">@Info.TManager1</div>
                                     </div>
                                 }
-                                @* Corporate management hierarchy rows 2-6 *@
+  
                                 @if (!string.IsNullOrWhiteSpace(Info.TManager2) && !string.IsNullOrWhiteSpace(Info.Subtitle2))
                                 {
                                     <div class="territory-row">
@@ -146,10 +113,10 @@ Uses Telerik Grid Layout for precise positioning and responsive design.
                     }
                     else
                     {
-                        @* ===== REGULAR CORPORATE INFO MODE ===== *@
-                        @* Used for corporate contact information with enhanced visual separation *@
+
+
                         <div class="content-container">
-                            @* Corporate headquarters address with additional visual divider *@
+
                             @if (!string.IsNullOrWhiteSpace(Info.Address))
                             {
                                 <div class="info-item address-item">
@@ -158,17 +125,9 @@ Uses Telerik Grid Layout for precise positioning and responsive design.
                                 </div>
                             }
 
-                            @* Additional divider options (commented out) *@
-                            @* <div class="divider"></div> *@
-                            @* <div style="border-bottom: solid 2px var(--kendo-color-primary-subtle)"></div> *@
-
-                            @* 
-                            Corporate information grid showing label/value pairs
-                            Displays corporate contact information and key personnel
-                            Enhanced with multiple visual separation elements
-                            *@
+   
                             <div class="info-grid">
-                                @* Primary corporate contact (typically main phone) *@
+
                                 @if (!string.IsNullOrWhiteSpace(Info.Subtitle1) && !string.IsNullOrWhiteSpace(Info.Phone))
                                 {
                                     <div class="info-item">
@@ -176,7 +135,7 @@ Uses Telerik Grid Layout for precise positioning and responsive design.
                                         <span class="info-value">@Info.Phone</span>
                                     </div>
                                 }
-                                @* Corporate email contact *@
+
                                 @if (!string.IsNullOrWhiteSpace(Info.Subtitle2) && !string.IsNullOrWhiteSpace(Info.Email))
                                 {
                                     <div class="info-item">
@@ -184,7 +143,7 @@ Uses Telerik Grid Layout for precise positioning and responsive design.
                                         <span class="info-value email-value">@Info.Email</span>
                                     </div>
                                 }
-                                @* Additional corporate contact (IT help desk, secondary phone, etc.) *@
+
                                 @if (!string.IsNullOrWhiteSpace(Info.Subtitle3) && !string.IsNullOrWhiteSpace(Info.Phone2))
                                 {
                                     <div class="info-item">
@@ -192,7 +151,7 @@ Uses Telerik Grid Layout for precise positioning and responsive design.
                                         <span class="info-value">@Info.Phone2</span>
                                     </div>
                                 }
-                                @* Additional phone number if available *@
+
                                 @if (!string.IsNullOrWhiteSpace(Info.Phone3))
                                 {
                                     <div class="info-item">
@@ -200,7 +159,7 @@ Uses Telerik Grid Layout for precise positioning and responsive design.
                                         <span class="info-value">@Info.Phone3</span>
                                     </div>
                                 }
-                                @* Corporate management information (if using store manager fields) *@
+
                                 @if (!string.IsNullOrWhiteSpace(Info.StoreManager))
                                 {
                                     <div class="info-item">
@@ -220,17 +179,15 @@ Uses Telerik Grid Layout for precise positioning and responsive design.
                     }
                 </GridLayoutItem>
 
-                @* ===== SEARCH SECTION ===== *@
-                @* Fixed-height section containing the search bar component *@
+
                 <GridLayoutItem Row="4" Column="1" RowSpan="2" Class="search-section-item">
-                    @* SearchBar component for corporate-wide search functionality *@
-                    @* Note: Back button logic commented out for corporate pages *@
+
                     <SearchBar />
                 </GridLayoutItem>
             </GridLayoutItems>
         </TelerikGridLayout>
     </div>
-}
+} *@
 
 @code {
     #region Parameters
@@ -240,8 +197,8 @@ Uses Telerik Grid Layout for precise positioning and responsive design.
     /// Nullable to handle cases where no corporate header information is provided.
     /// This corporate version features enhanced visual separation compared to HeadTitleCard.
     /// </summary>
-    [Parameter]
-    public HeaderCardModels.HeadInfoCardModel? Info { get; set; }
+    // [Parameter]
+    // public HeaderCardModels.HeadInfoCardModel? Info { get; set; }
 
     #endregion
 
@@ -252,25 +209,25 @@ Uses Telerik Grid Layout for precise positioning and responsive design.
     /// Territory table is shown when any TManager fields contain data.
     /// Used for corporate organizational charts and management hierarchies.
     /// </summary>
-    private bool ShowTerritoryTable => !string.IsNullOrWhiteSpace(Info?.TManager1) ||
-                                      !string.IsNullOrWhiteSpace(Info?.TManager2) ||
-                                      !string.IsNullOrWhiteSpace(Info?.TManager3) ||
-                                      !string.IsNullOrWhiteSpace(Info?.TManager4) ||
-                                      !string.IsNullOrWhiteSpace(Info?.TManager5) ||
-                                      !string.IsNullOrWhiteSpace(Info?.TManager6);
+    // private bool ShowTerritoryTable => !string.IsNullOrWhiteSpace(Info?.TManager1) ||
+    //                                   !string.IsNullOrWhiteSpace(Info?.TManager2) ||
+    //                                   !string.IsNullOrWhiteSpace(Info?.TManager3) ||
+    //                                   !string.IsNullOrWhiteSpace(Info?.TManager4) ||
+    //                                   !string.IsNullOrWhiteSpace(Info?.TManager5) ||
+    //                                   !string.IsNullOrWhiteSpace(Info?.TManager6);
 
     /// <summary>
     /// Determines if the current page is the corporate home page.
     /// Used for conditional display logic (currently not actively used).
     /// </summary>
-    private bool IsHomePage
-    {
-        get
-        {
-            var relativePath = NavManager.ToBaseRelativePath(NavManager.Uri);
-            return relativePath == "" || relativePath.Equals("home", StringComparison.OrdinalIgnoreCase);
-        }
-    }
+    // private bool IsHomePage
+    // {
+    //     get
+    //     {
+    //         var relativePath = NavManager.ToBaseRelativePath(NavManager.Uri);
+    //         return relativePath == "" || relativePath.Equals("home", StringComparison.OrdinalIgnoreCase);
+    //     }
+    // }
 
     #endregion
 
@@ -281,13 +238,13 @@ Uses Telerik Grid Layout for precise positioning and responsive design.
     /// Longer corporate titles get more vertical space to prevent truncation.
     /// </summary>
     /// <returns>CSS height value for the title row</returns>
-    private string GetTitleHeight()
-    {
-        // Longer corporate titles need more vertical space for proper display
-        if (Info?.Title?.Length > 20)
-            return "55px";
-        return "50px";
-    }
+    // private string GetTitleHeight()
+    // {
+    //     // Longer corporate titles need more vertical space for proper display
+    //     if (Info?.Title?.Length > 20)
+    //         return "55px";
+    //     return "50px";
+    // }
 
     /// <summary>
     /// Calculates content section height to fill remaining space.
@@ -295,14 +252,14 @@ Uses Telerik Grid Layout for precise positioning and responsive design.
     /// Total layout calculation: ~250px total - title - divider - search = content height
     /// </summary>
     /// <returns>CSS height value for the content row</returns>
-    private string GetContentHeight()
-    {
-        // Calculate remaining height for corporate content section
-        // Total: ~250px - Title (50-55px) - Divider (2px) - Search (50px) = ~143-148px
-        if (Info?.Title?.Length > 20)
-            return "148px";  // Less space when title takes more room
-        return "153px";      // More space when title is compact
-    }
+    // private string GetContentHeight()
+    // {
+    //     // Calculate remaining height for corporate content section
+    //     // Total: ~250px - Title (50-55px) - Divider (2px) - Search (50px) = ~143-148px
+    //     if (Info?.Title?.Length > 20)
+    //         return "148px";  // Less space when title takes more room
+    //     return "153px";      // More space when title is compact
+    // }
 
     /// <summary>
     /// Determines optimal font size for the corporate title based on character length.
@@ -310,24 +267,24 @@ Uses Telerik Grid Layout for precise positioning and responsive design.
     /// Optimized for typical header widths (~400px) and corporate branding emphasis.
     /// </summary>
     /// <returns>CSS font-size value</returns>
-    private string GetOptimalFontSize()
-    {
-        if (Info?.Title == null) return "28px";
+    // private string GetOptimalFontSize()
+    // {
+    //     if (Info?.Title == null) return "28px";
 
-        int titleLength = Info.Title.Length;
+    //     // int titleLength = Info.Title.Length;
 
-        // Progressive font scaling based on corporate title length
-        // Longer titles get smaller fonts to prevent overflow while maintaining corporate prominence
-        return titleLength switch
-        {
-            > 30 => "19px",  // Very long corporate titles - smallest font
-            > 25 => "20px",  // Long corporate titles
-            > 20 => "23px",  // Medium-long corporate titles
-            > 15 => "26px",  // Medium corporate titles
-            > 10 => "30px",  // Short-medium corporate titles
-            _ => "34px"      // Short corporate titles - largest font
-        };
-    }
+    //     // Progressive font scaling based on corporate title length
+    //     // Longer titles get smaller fonts to prevent overflow while maintaining corporate prominence
+    //     // return titleLength switch
+    //     // {
+    //     //     > 30 => "19px",  // Very long corporate titles - smallest font
+    //     //     > 25 => "20px",  // Long corporate titles
+    //     //     > 20 => "23px",  // Medium-long corporate titles
+    //     //     > 15 => "26px",  // Medium corporate titles
+    //     //     > 10 => "30px",  // Short-medium corporate titles
+    //     //     _ => "34px"      // Short corporate titles - largest font
+    //     // };
+    // }
 
     #endregion
 }
