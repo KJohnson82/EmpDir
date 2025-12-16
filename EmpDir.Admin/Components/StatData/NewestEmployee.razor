@@ -1,11 +1,4 @@
-﻿@* ===================================================================== *@
-@* NEWEST EMPLOYEE COMPONENT                                             *@
-@* Displays the 3 most recently added employees                         *@
-@* Used in: Home dashboard (top row tile component)                     *@
-@* ===================================================================== *@
-
-@* Import necessary namespaces for Entity Framework, Telerik components, and data models *@
-@using EmpDir.Core.Data.Context
+﻿@using EmpDir.Core.Data.Context
 @using EmpDir.Core.Models
 @using Microsoft.EntityFrameworkCore
 @using Telerik.Blazor
@@ -14,13 +7,9 @@
 
 
 @* Inject database context for data operations *@
-@* @inject AppDbContext dbContext *@
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 
-@* ===================================================================== *@
 @* CONDITIONAL RENDERING - Handle loading and empty states               *@
-@* ===================================================================== *@
-
 @* Loading state - shown while data is being fetched from database *@
 @if (employees == null)
 {
@@ -34,9 +23,7 @@ else if (!employees.Any())
 @* Data display state - shown when employees are successfully loaded *@
 else
 {
-    @* ================================================================= *@
     @* EMPLOYEE LIST - Ordered list of recently added employees         *@
-    @* ================================================================= *@
     <ol>
         @foreach (var employee in employees)
         {
@@ -51,89 +38,24 @@ else
 }
 
 @code {
-    // =====================================================================
     // COMPONENT STATE PROPERTIES
-    // =====================================================================
 
-    /// <summary>
     /// List of the most recently added employees
     /// Initialized as empty list but set to null during loading for state detection
     /// Populated with top 3 newest employees from database
-    /// </summary>
     private List<Employee> employees { get; set; } = new List<Employee>();
 
-    // =====================================================================
     // COMPONENT LIFECYCLE METHODS
-    // =====================================================================
 
-    /// <summary>
     /// Component initialization - loads the 3 most recently added employees
     /// Orders employees by creation date (newest first) and takes top 3
     /// Simple query without navigation properties for fast loading
-    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         await using var context = await DbContextFactory.CreateDbContextAsync();
-        // employees = await dbContext.Employees
         employees = await context.Employees
             .OrderByDescending(e => e.RecordAdd)    // Sort by creation date, newest first
             .Take(3)                                // Limit to 3 most recent employees
             .ToListAsync();                         // Execute query asynchronously
     }
-
-    // =====================================================================
-    // COMPONENT FUNCTIONALITY NOTES
-    // =====================================================================
-
-    /*
-    COMPONENT PURPOSE:
-    - Provides quick visibility into recently hired employees
-    - Helps track hiring activity and workforce growth
-    - Part of executive dashboard showing recent activity
-    - Useful for monitoring new employee onboarding trends
-
-    DATA DISPLAY:
-    - Shows employee full name (FirstName + LastName)
-    - Displays hire/creation date for temporal context
-    - Limited to 3 items to fit dashboard tile space
-    - Uses ordered list for numbered presentation
-
-    BUSINESS APPLICATIONS:
-    - HR dashboard for recent hiring activity
-    - Management oversight of workforce expansion
-    - Onboarding team awareness of new employees
-    - Historical tracking of hiring patterns
-
-    QUERY CHARACTERISTICS:
-    - Simple query without joins for optimal performance
-    - RecordAdd field represents when employee record was created
-    - No navigation properties needed (unlike department component)
-    - Could be enhanced with filtering for active employees only
-
-    POTENTIAL ENHANCEMENTS:
-    1. Add employee department or location for context
-    2. Include job title for additional information
-    3. Add click functionality to view employee details
-    4. Filter for active employees only (.Where(e => e.Active == true))
-    5. Add loading spinner instead of plain text
-    6. Consider showing profile pictures if available
-
-    COMPARISON WITH SIMILAR COMPONENTS:
-    - NewestDepartment: Shows departments with location context
-    - NewestLocation: Shows locations with type information
-    - This component: Focuses purely on employee names and dates
-
-    HR AND MANAGEMENT VALUE:
-    - Tracks hiring velocity and patterns
-    - Provides visibility into recent workforce additions
-    - Supports onboarding and integration planning
-    - Helps identify busy hiring periods
-    - Quick reference for new team member awareness
-
-    PERFORMANCE CONSIDERATIONS:
-    - Lightweight query with minimal data transfer
-    - No complex joins or navigation properties
-    - Suitable for frequent dashboard refreshes
-    - Consider caching for high-traffic scenarios
-    */
 }

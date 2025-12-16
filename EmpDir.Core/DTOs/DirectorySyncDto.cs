@@ -6,9 +6,7 @@ using System.Threading.Tasks;
 
 namespace EmpDir.Core.DTOs
 {
-    /// <summary>
     /// Container for full directory sync response from API
-    /// </summary>
     public class DirectorySyncDto
     {
         public List<EmployeeDto> Employees { get; set; } = new();

@@ -1,24 +1,12 @@
-@* ===================================================================== *@
-@* LOCATIONS PAGE - LOCATION MANAGEMENT COMPONENT                        *@
-@* Full CRUD interface for managing McElroy Metal locations             *@
-@* Route: /Locations (accessible from navigation)                        *@
-@* ===================================================================== *@
-
-@* Define the route for this page component *@
 @page "/Locations"
 
 <RequireAuth>
-@* ===================================================================== *@
-@* PAGE HEADER - Consistent header with locations icon                   *@
-@* ===================================================================== *@
+
 <PageHeader PageTitle="Locations" CardIcon="@CustomIcons.Factory" />
 
 @* Inject database context for data operations *@
     @inject IDbContextFactory<AppDbContext> DbContextFactory
 
-@* ===================================================================== *@
-@* MAIN DATA GRID - Telerik Grid with full CRUD capabilities            *@
-@* ===================================================================== *@
 @* Configure Telerik Grid with pagination and CRUD capabilities *@
 <TelerikGrid @ref="GridRef"
              Data="@locations"
@@ -39,11 +27,8 @@
              OnRowRender="@OnLocationRowRender"
              ConfirmDelete="true"
              >
-    @* Delete event handler *@
 
-    @* ================================================================= *@
     @* GRID CONFIGURATION - Popup edit settings                         *@
-    @* ================================================================= *@
     <GridSettings>
         <GridPopupEditSettings MaxHeight="700px"
                                MaxWidth="700px"
@@ -56,9 +41,8 @@
         </GridPopupEditFormSettings>
     </GridSettings>
 
-    @* ================================================================= *@
+
     @* GRID TOOLBAR - Search and add functionality                      *@
-    @* ================================================================= *@
     <GridToolBarTemplate>
         @* Global search box with debounced input *@
         <GridSearchBox Placeholder="Search..."
@@ -68,13 +52,10 @@
         <GridCommandButton Command="Add" Icon="SvgIcon.Plus">Add</GridCommandButton>
     </GridToolBarTemplate>
 
-    @* ================================================================= *@
     @* GRID COLUMNS - Location data fields and custom templates         *@
-    @* ================================================================= *@
     <GridColumns>
         @* Basic location information columns *@
         <GridColumn Field="@nameof(Location.LocName)" Title="Location Name" Sortable="true" />
-
         @* Location number with custom numeric editor *@
         <GridColumn Field="@nameof(Location.LocNum)" Title="Loc. # " Sortable="true" Width="100px">
             <Template>
@@ -163,9 +144,7 @@
         @* Metadata column (non-editable, hidden) *@
         <GridColumn Field="@nameof(Location.RecordAdd)" Editable="false" Visible="false" />
 
-        @* ============================================================= *@
         @* COMMAND COLUMN - Action buttons for each location row        *@
-        @* ============================================================= *@
         <GridCommandColumn Width="300px" Title="Location Admin">
             @* Custom info button to show location details modal *@
             <GridCommandButton Command="Info"
@@ -181,22 +160,17 @@
 </TelerikGrid>
 </RequireAuth>
 
-@* ===================================================================== *@
 @* LOCATION DETAILS MODAL - Reference to location details component      *@
-@* ===================================================================== *@
 <LocationCard @ref="LocationCardRef" />
 
-@* ===================================================================== *@
+
 @* LOADING INDICATOR - Show while data is being loaded                   *@
-@* ===================================================================== *@
 @if (isLoading)
 {
     <p>Loading...</p>
 }
 
-@* ===================================================================== *@
 @* COMPONENT STYLES - Grid and window styling                            *@
-@* ===================================================================== *@
 <style>
     /* Main grid text styling */
     .grid-text {
@@ -303,54 +277,35 @@
 </style>
 
 @code {
-    // =====================================================================
-    // COMPONENT STATE PROPERTIES
-    // =====================================================================
 
-    /// <summary>
+    // COMPONENT STATE PROPERTIES
+
     /// List of locations to display in the grid
     /// Populated from database on component initialization
-    /// </summary>
     public List<Location> locations { get; set; } = new List<Location>();
 
-    /// <summary>
     /// Reference to the Telerik Grid component for programmatic control
-    /// </summary>
     private TelerikGrid<Location> GridRef { get; set; }
 
-    /// <summary>
     /// Currently selected location for details display
-    /// </summary>
     private Location? SelectedLocation { get; set; }
 
-    /// <summary>
     /// Reference to the location info window (currently unused)
-    /// </summary>
     private TelerikWindow? LocInfoWindow { get; set; }
 
-    /// <summary>
     /// Controls visibility of location details window
-    /// </summary>
     private bool WindowVisible { get; set; }
 
-    /// <summary>
     /// Reference to the LocationCard component for showing location details
-    /// </summary>
     private LocationCard? LocationCardRef { get; set; }
 
-    /// <summary>
     /// Selected location type value for form processing
-    /// </summary>
     private int LocTypeValue { get; set; }
 
-    /// <summary>
     /// Loading state indicator for UI feedback
-    /// </summary>
     private bool isLoading = true;
 
-    /// <summary>
     /// Applies conditional CSS classes to grid rows based on location active status
-    /// </summary>
     private void OnLocationRowRender(GridRowRenderEventArgs args)
     {
         var location = (Location)args.Item;
@@ -362,14 +317,10 @@
         }
     }
 
-    // =====================================================================
     // LOCATION TYPE DEFINITIONS - Static reference data
-    // =====================================================================
 
-    /// <summary>
     /// Predefined location types for McElroy Metal facilities
     /// Used in dropdown for location type selection
-    /// </summary>
     private List<KeyValuePair<int, string>> LocationTypes = new List<KeyValuePair<int, string>>()
     {
         new KeyValuePair<int, string>(1, "Corporate"),      // Corporate headquarters/offices
@@ -378,27 +329,19 @@
         new KeyValuePair<int, string>(4, "Plant")           // Manufacturing plants
     };
 
-    // =====================================================================
     // COMPONENT LIFECYCLE METHODS
-    // =====================================================================
-
-    /// <summary>
     /// Component initialization - loads location data from database
-    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         await LoadDataAsync();
         await base.OnInitializedAsync();
     }
 
-    // =====================================================================
-    // DATA MANAGEMENT METHODS
-    // =====================================================================
 
-    /// <summary>
+    // DATA MANAGEMENT METHODS
+
     /// Loads location data from database with error handling
     /// Filters for active locations only and orders by location number
-    /// </summary>
     private async Task LoadDataAsync()
     {
         try
@@ -412,11 +355,6 @@
                 /* .Where(l => l.Active == true) */    // Only active locations
                 .OrderBy(l => l.LocNum)          // Sort by location number
                 .ToListAsync();
-
-            // locations = await dbContext.Locations!
-            //     /* .Where(l => l.Active == true) */    // Only active locations
-            //     .OrderBy(l => l.LocNum)          // Sort by location number
-            //     .ToListAsync();
         }
         catch (Exception ex)
         {
@@ -430,23 +368,17 @@
         }
     }
 
-    // =====================================================================
-    // USER INTERACTION METHODS
-    // =====================================================================
 
-    /// <summary>
+    // USER INTERACTION METHODS
+
     /// Shows location details modal for the specified location
     /// Delegates to LocationCard component
-    /// </summary>
-    /// <param name="location">Location to display details for</param>
     public void ShowLocationInfo(Location location)
     {
         LocationCardRef.ShowLocationInfo(location);
     }
 
-    /// <summary>
     /// Generates dynamic window title for location details
-    /// </summary>
     /// <returns>Formatted title string</returns>
     private string GetWindowTitle()
     {
@@ -455,22 +387,14 @@
             : "Location Information";
     }
 
-    /// <summary>
     /// Opens the location details window
-    /// </summary>
     private void OpenWindow()
     {
         WindowVisible = true;
     }
 
-    // =====================================================================
-    // FORM EVENT HANDLERS
-    // =====================================================================
-
-    /// <summary>
     /// Handles location number field changes with validation
     /// Ensures numeric input for location number
-    /// </summary>
     /// <param name="location">Location being edited</param>
     /// <param name="e">Change event arguments</param>
     private async Task OnLocNumChange(Location location, ChangeEventArgs e)
@@ -485,13 +409,9 @@
         }
     }
 
-    // =====================================================================
     // CRUD OPERATION METHODS
-    // =====================================================================
 
-    /// <summary>
     /// Updates an existing location in the database and local collection
-    /// </summary>
     /// <param name="args">Grid command event arguments containing the updated location</param>
     async Task Update(GridCommandEventArgs args)
     {
@@ -515,23 +435,6 @@
                     locations[index] = location;
                 }
             }
-
-            // var location = (Location)args.Item;
-            // var existingLocation = await dbContext.Locations.FindAsync(location.Id);
-
-            // if (existingLocation != null)
-            // {
-            //     // Use Entity Framework to copy values from updated location to existing entity
-            //     dbContext.Entry(existingLocation).CurrentValues.SetValues(location);
-            //     await dbContext.SaveChangesAsync();
-
-            //     // Update local collection for immediate UI feedback
-            //     var index = locations.FindIndex(l => l.Id == location.Id);
-            //     if (index != -1)
-            //     {
-            //         locations[index] = location;
-            //     }
-            // }
         }
         catch (Exception ex)
         {
@@ -539,10 +442,8 @@
         }
     }
 
-    /// <summary>
     /// Adds a new location to the database and local collection
     /// Sets the record creation timestamp
-    /// </summary>
     /// <param name="args">Grid command event arguments containing the new location</param>
     async Task Add(GridCommandEventArgs args)
     {
@@ -555,11 +456,6 @@
             await context.Locations.AddAsync(location); // Add to database
             await context.SaveChangesAsync();           // Save changes
 
-            // var location = (Location)args.Item;
-            // location.RecordAdd = DateTime.UtcNow;        // Set creation timestamp
-            // await dbContext.Locations.AddAsync(location); // Add to database
-            // await dbContext.SaveChangesAsync();           // Save changes
-
             locations.Add(location);                      // Add to local collection
         }
         catch (Exception ex)
@@ -568,9 +464,7 @@
         }
     }
 
-    /// <summary>
     /// Deletes a location from the database and local collection
-    /// </summary>
     /// <param name="args">Grid command event arguments containing the location to delete</param>
     async Task Delete(GridCommandEventArgs args)
     {
@@ -587,16 +481,6 @@
                 await context.SaveChangesAsync();           // Save changes
                 locations.Remove(location);                   // Remove from local collection
             }
-
-            // var location = (Location)args.Item;
-            // var existingLocation = await dbContext.Locations.FindAsync(location.Id);
-
-            // if (existingLocation != null)
-            // {
-            //     dbContext.Locations.Remove(existingLocation); // Remove from database
-            //     await dbContext.SaveChangesAsync();           // Save changes
-            //     locations.Remove(location);                   // Remove from local collection
-            // }
         }
         catch (Exception ex)
         {
@@ -605,13 +489,10 @@
         }
     }
 
-    // =====================================================================
-    // UTILITY METHODS
-    // =====================================================================
 
-    /// <summary>
+    // UTILITY METHODS
+
     /// Generic save method for both new and existing locations
-    /// </summary>
     /// <param name="item">Location to save</param>
     /// <param name="isNew">Whether this is a new location</param>
     private async Task SaveItem(Location item, bool isNew)
@@ -627,9 +508,7 @@
         await ClosePopup();
     }
 
-    /// <summary>
     /// Closes the edit popup by clearing the grid's edit state
-    /// </summary>
     private async Task ClosePopup()
     {
         var state = GridRef?.GetState();
@@ -643,10 +522,8 @@
         }
     }
 
-    /// <summary>
     /// Static utility method to convert location type ID to readable name
     /// Alternative to the LocationTypes lookup
-    /// </summary>
     /// <param name="location">Location containing type ID</param>
     /// <returns>Human-readable location type name</returns>
     public static string locTypeList(Location location)
@@ -660,14 +537,10 @@
         };
     }
 
-    // =====================================================================
     // SEARCH CONFIGURATION
-    // =====================================================================
 
-    /// <summary>
     /// Fields that are searchable through the global search box
     /// Includes key location identification and contact fields
-    /// </summary>
     private List<string> SearchableFields = new List<string>
     {
         nameof(Location.LocName),      // Location name

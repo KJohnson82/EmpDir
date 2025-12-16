@@ -1,11 +1,4 @@
-﻿@* ===================================================================== *@
-@* NEWEST DEPARTMENT COMPONENT                                           *@
-@* Displays the 3 most recently added departments                       *@
-@* Used in: Home dashboard (top row tile component)                     *@
-@* ===================================================================== *@
-
-@* Import necessary namespaces for Entity Framework, Telerik components, and data models *@
-@using EmpDir.Core.Data.Context
+﻿@using EmpDir.Core.Data.Context
 @using EmpDir.Core.Models
 @using Microsoft.EntityFrameworkCore
 @using Telerik.Blazor
@@ -14,12 +7,9 @@
 
 
 @* Inject database context for data operations *@
-@* @inject AppDbContext dbContext *@
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 
-@* ===================================================================== *@
 @* CONDITIONAL RENDERING - Handle loading and empty states               *@
-@* ===================================================================== *@
 
 @* Loading state - shown while data is being fetched from database *@
 @if (departments == null)
@@ -29,14 +19,12 @@
 @* Empty state - shown when no departments exist in database *@
 else if (!departments.Any())
 {
-    <p>No departments found.</p>  @* Note: Message says "employees" but should say "departments" *@
+    <p>No departments found.</p> 
 }
 @* Data display state - shown when departments are successfully loaded *@
 else
 {
-    @* ================================================================= *@
     @* DEPARTMENT LIST - Ordered list of recently added departments      *@
-    @* ================================================================= *@
     <ol>
         @foreach (var department in departments)
         {
@@ -51,74 +39,24 @@ else
 }
 
 @code {
-    // =====================================================================
     // COMPONENT STATE PROPERTIES
-    // =====================================================================
 
-    /// <summary>
     /// List of the most recently added departments
     /// Initialized as null to enable loading state detection
     /// Populated with top 3 newest departments from database
-    /// </summary>
     private List<Department> departments { get; set; }
 
-    // =====================================================================
     // COMPONENT LIFECYCLE METHODS
-    // =====================================================================
 
-    /// <summary>
     /// Component initialization - loads the 3 most recently added departments
     /// Orders departments by creation date (newest first) and takes top 3
     /// Includes location navigation property for display purposes
-    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         await using var context = await DbContextFactory.CreateDbContextAsync();
-        // departments = await dbContext.Departments
         departments = await context.Departments
             .OrderByDescending(d => d.RecordAdd)    // Sort by creation date, newest first
             .Take(3)                                // Limit to 3 most recent departments
             .ToListAsync();                         // Execute query asynchronously
     }
-
-    // =====================================================================
-    // COMPONENT FUNCTIONALITY NOTES
-    // =====================================================================
-
-    /*
-    COMPONENT PURPOSE:
-    - Provides quick visibility into recently created departments
-    - Helps track organizational growth and restructuring
-    - Part of executive dashboard showing recent activity
-    - Useful for monitoring new department creation trends
-
-    DATA DISPLAY:
-    - Shows department name and associated location
-    - Displays creation date for temporal context
-    - Limited to 3 items to fit dashboard tile space
-    - Uses ordered list for numbered presentation
-
-    NAVIGATION PROPERTY USAGE:
-    - Uses DeptLocation?.LocName for location display
-    - Null-conditional operator prevents errors if location is missing
-    - May require .Include(d => d.DeptLocation) for efficient loading
-
-    POTENTIAL IMPROVEMENTS:
-    1. Add .Include(d => d.DeptLocation) to query for better performance
-    2. Fix error message to say "departments" instead of "employees"
-    3. Consider adding loading spinner instead of plain text
-    4. Add click functionality to navigate to department details
-
-    BUSINESS VALUE:
-    - Tracks organizational changes and growth
-    - Provides management with visibility into new departments
-    - Supports decision-making about organizational structure
-    - Shows recent expansion or restructuring activity
-
-    QUERY EXPLANATION:
-    - RecordAdd field contains department creation timestamp
-    - OrderByDescending ensures newest departments appear first
-    - Take(3) limits results for dashboard display
-    - Could be filtered for active departments only if needed
-    */
 }

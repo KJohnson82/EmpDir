@@ -6,9 +6,7 @@ using System.Threading.Tasks;
 
 namespace EmpDir.Core.DTOs
 {
-    /// <summary>
     /// Data Transfer Object for Location Type - used for API communication
-    /// </summary>
     public class LoctypeDto
     {
         public int Id { get; set; }

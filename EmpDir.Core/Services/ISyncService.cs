@@ -6,36 +6,24 @@ using System.Threading.Tasks;
 
 namespace EmpDir.Core.Services
 {
-    /// <summary>
     /// Service for syncing data from API to local cache
     /// Implemented in EmpDir.Desktop
-    /// </summary>
     public interface ISyncService
     {
-        /// <summary>
         /// Perform full sync from API to cache (called on app launch)
-        /// </summary>
         Task<SyncResult> SyncOnLaunchAsync();
 
-        /// <summary>
         /// Check if API is available without syncing
-        /// </summary>
         Task<bool> IsApiAvailableAsync();
 
-        /// <summary>
         /// Get the last successful sync time
-        /// </summary>
         DateTime? LastSyncTime { get; }
 
-        /// <summary>
         /// Check if app is currently syncing
-        /// </summary>
         bool IsSyncing { get; }
     }
 
-    /// <summary>
     /// Result of a sync operation
-    /// </summary>
     public class SyncResult
     {
         public bool Success { get; set; }

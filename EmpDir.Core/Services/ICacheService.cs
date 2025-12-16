@@ -7,10 +7,8 @@ using System.Threading.Tasks;
 
 namespace EmpDir.Core.Services
 {
-    /// <summary>
     /// Service for managing local cache database
     /// Implemented in EmpDir.Desktop
-    /// </summary>
     public interface ICacheService
     {
         // Write operations

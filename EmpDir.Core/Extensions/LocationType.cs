@@ -5,7 +5,6 @@
 
         /// Location types in the McElroy directory system
         /// Maps to the Loctype field in the database
-
         public enum LocationType
         {
             Corporate = 1,
@@ -14,14 +13,10 @@
             Plant = 4
         }
 
-
         /// Extension methods for LocationType enum
-
         public static class LocationTypeExtensions
         {
-
             /// Get display name for location type
-
             public static string GetDisplayName(this LocationType locationType)
             {
                 return locationType switch
@@ -34,9 +29,7 @@
                 };
             }
 
-
             /// Get JSON key name (matches your existing ExportData format)
-
             public static string GetJsonKey(this LocationType locationType)
             {
                 return locationType switch
@@ -49,9 +42,7 @@
                 };
             }
 
-
             /// Parse location type from integer
-
             public static LocationType FromInt(int value)
             {
                 return value switch

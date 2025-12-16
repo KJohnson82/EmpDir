@@ -9,24 +9,17 @@ namespace EmpDir.Core.Services;
 /// Service class that provides comprehensive search functionality across multiple entity types.
 /// Searches through Employees, Departments, and Locations using case-insensitive string matching.
 /// Uses Entity Framework Core for data access and includes extensive debugging capabilities.
-
 public class SearchService : ISearchService
 {
     #region Fields
-
-    
     /// Entity Framework database context for accessing application data.
     /// Injected via dependency injection to enable testability and proper lifetime management.
-    
     private readonly AppDbContext _context;
 
     #endregion
 
     #region Constructor
-
-    
     /// Initializes a new instance of the SearchService with the provided database context.
-    
     /// <param name="context">The Entity Framework database context</param>
     public SearchService(AppDbContext context)
     {
@@ -36,12 +29,9 @@ public class SearchService : ISearchService
     #endregion
 
     #region Public Methods
-
-    
     /// Performs a comprehensive search across all searchable entities (Employees, Departments, Locations).
     /// Returns empty results for null/whitespace search terms to prevent unnecessary database queries.
     /// Includes extensive error handling and debug logging for troubleshooting.
-    
     /// <param name="searchTerm">The search term to look for across all entities</param>
     /// <returns>A SearchResults object containing all matching entities organized by type</returns>
     public async Task<SearchResults> SearchAllAsync(string searchTerm)
@@ -87,7 +77,6 @@ public class SearchService : ISearchService
     /// Searches across multiple employee fields: name, job title, contact information.
     /// Uses in-memory filtering after loading active employees to avoid complex SQL generation.
     /// Limited to 20 results for performance and UI considerations.
-    
     /// <param name="searchTerm">The term to search for in employee data</param>
     /// <returns>List of matching Employee entities with related data included</returns>
     private async Task<List<Employee>> SearchEmployeesAsync(string searchTerm)
@@ -140,7 +129,6 @@ public class SearchService : ISearchService
     /// Searches for departments matching the provided search term.
     /// Searches across department name, manager, and contact information.
     /// Uses the same in-memory filtering pattern as employee search for consistency.
-    
     /// <param name="searchTerm">The term to search for in department data</param>
     /// <returns>List of matching Department entities with location data included</returns>
     private async Task<List<Department>> SearchDepartmentsAsync(string searchTerm)
@@ -176,11 +164,9 @@ public class SearchService : ISearchService
         }
     }
 
-    
     /// Searches for locations matching the provided search term.
     /// Searches across the most comprehensive set of fields including address, management, and location number.
     /// Includes special handling for numeric location number searches.
-    
     /// <param name="searchTerm">The term to search for in location data</param>
     /// <returns>List of matching Location entities with type information included</returns>
     private async Task<List<Location>> SearchLocationsAsync(string searchTerm)
@@ -229,42 +215,31 @@ public class SearchService : ISearchService
 /// Data transfer object that aggregates search results from multiple entity types.
 /// Provides convenient properties for result analysis and UI binding.
 /// Initialized with empty collections to prevent null reference exceptions.
-
 public class SearchResults
 {
     
     /// Collection of Employee entities that matched the search criteria.
     /// Initialized as empty list to prevent null reference issues.
-    
     public List<Employee> Employees { get; set; } = new();
 
     
     /// Collection of Department entities that matched the search criteria.
     /// Initialized as empty list to prevent null reference issues.
-    
     public List<Department> Departments { get; set; } = new();
 
-    
     /// Collection of Location entities that matched the search criteria.
     /// Initialized as empty list to prevent null reference issues.
-    
     public List<Location> Locations { get; set; } = new();
 
-    
     /// The original search term that was used to generate these results.
     /// Useful for display purposes and debugging.
-    
     public string SearchTerm { get; set; } = "";
 
-    
     /// Computed property that returns the total number of results across all entity types.
     /// Useful for displaying result counts and pagination logic.
-    
     public int TotalResults => Employees.Count + Departments.Count + Locations.Count;
 
-    
     /// Computed property that indicates whether any results were found.
     /// Convenient for conditional UI rendering (show/hide no results messages).
-    
     public bool HasResults => TotalResults > 0;
 }

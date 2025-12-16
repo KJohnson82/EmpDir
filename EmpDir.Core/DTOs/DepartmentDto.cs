@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace EmpDir.Core.DTOs
 {
-    /// <summary>
+
     /// Data Transfer Object for Department - used for API communication
-    /// </summary>
     public class DepartmentDto
     {
         public int Id { get; set; }

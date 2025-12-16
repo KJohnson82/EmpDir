@@ -11,19 +11,10 @@ namespace EmpDir.Core.Services
     /// Handles fetching and exporting of location, department, and employee data.
     /// This class provides methods to query the database for different location types
     /// and export the aggregated data to a JSON file.
-    
     public class ExportData
     {
-        //private readonly AppDbContext _context;
-
-
         /// Initializes a new instance of the ExportData class.
-
         /// <param name="context">The database context to be used for data operations.</param>
-        //public ExportData(AppDbContext context)
-        //{
-        //    _context = context;
-        //}
         private readonly IDbContextFactory<AppDbContext> _contextFactory;
 
         public ExportData(IDbContextFactory<AppDbContext> contextFactory)
@@ -34,7 +25,6 @@ namespace EmpDir.Core.Services
         /// Fetches a structured list of active locations of a specific type, including their active departments and employees.
         /// This is the primary data retrieval method, designed to be reusable for all location types.
         /// The query eagerly loads and filters related departments and employees.
-
         /// <param name="locationType">The type of location to fetch (e.g., Corporate, Plant).</param>
         /// <returns>A dictionary containing a list of fully populated Location objects.</returns>
         public async Task<Dictionary<string, List<Location>>> FetchLocationsByTypeAsync(LocationType locationType)
@@ -142,7 +132,6 @@ namespace EmpDir.Core.Services
         
         /// Generates a comprehensive JSON object containing data for all location types.
         /// It executes all data fetch operations in parallel to improve performance.
-        
         /// <returns>A dictionary representing the final JSON structure with all location data.</returns>
         public async Task<Dictionary<string, object>> GenerateJson()
         {
@@ -175,7 +164,6 @@ namespace EmpDir.Core.Services
         
         /// Exports the generated directory data to a timestamped JSON file.
         /// The file is saved to a specified directory or a default 'EMP_Data' folder in the user's Documents.
-        
         /// <param name="outputDirectory">Optional. The full path of the directory to save the file in. If null, a default path is used.</param>
         /// <exception cref="Exception">Throws an exception if the JSON serialization or file writing fails.</exception>
         public async Task ExportJsonToFileAsync(string? outputDirectory = null)
@@ -190,14 +178,11 @@ namespace EmpDir.Core.Services
                     NullValueHandling = NullValueHandling.Ignore,
                     ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
                 });
-
                 // Determine the output path, using the provided directory or defaulting to a folder in MyDocuments.
                 var directoryPath = outputDirectory ??
                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "EMP_Data");
-
                 // Ensure the target directory exists.
                 Directory.CreateDirectory(directoryPath);
-
                 // Create a timestamped file name to avoid overwriting previous exports.
                 var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HHmm");
                 var fileName = $"MED_Export_{timestamp}.json";
@@ -205,7 +190,6 @@ namespace EmpDir.Core.Services
 
                 // Write the JSON string to the file asynchronously.
                 await File.WriteAllTextAsync(filePath, jsonString);
-
                 Console.WriteLine($"JSON Export Successful. File saved at {filePath}");
             }
             catch (Exception ex)

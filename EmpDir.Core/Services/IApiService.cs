@@ -7,10 +7,7 @@ using System.Threading.Tasks;
 
 namespace EmpDir.Core.Services
 {
-    /// <summary>
     /// Service interface for interacting with the Employee Directory API
-    /// </summary>
-    /// 
     public interface IApiService
     {
         /// Get full directory data from API for sync

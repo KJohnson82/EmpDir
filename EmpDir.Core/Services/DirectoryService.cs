@@ -6,10 +6,8 @@ using EmpDir.Core.Extensions;
 
 namespace EmpDir.Core.Services;
 
-/// <summary>
 /// Implementation of IDirectoryService using Entity Framework Core
 /// Used by: EmpDir.Api and EmpDir.Admin (direct database access)
-/// </summary>
 public class DirectoryService : IDirectoryService
 {
     private readonly AppDbContext _context;

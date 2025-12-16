@@ -1,18 +1,9 @@
-﻿@* Define the route - this page is accessible at /login *@
-@page "/login"
+﻿@page "/login"
 
-@* Import the authentication service namespace *@
 @using EmpDir.Admin.Services
 
-
-@* CRITICAL: Makes this component interactive (enables button clicks, form submission, etc.) *@
-@* Without this, the page is static and buttons won't work *@
 @rendermode InteractiveServer
-
-@* Inject the authentication service - allows us to call login methods *@
 @inject IAuthService AuthService
-
-@* Inject navigation manager - allows us to redirect users after login *@
 @inject NavigationManager Navigation
 
 @* Main container - centers the login box on the screen *@
@@ -119,9 +110,7 @@
 </style>
 
 @code {
-    // ===================================================================
     // COMPONENT STATE - Variables that hold data for this component
-    // ===================================================================
 
     // The model that holds the password input value
     private LoginModel loginModel = new();
@@ -132,9 +121,7 @@
     // Tracks whether we're currently processing a login attempt
     private bool isLoggingIn = false;
 
-    // ===================================================================
     // LIFECYCLE METHOD - Runs when component first loads
-    // ===================================================================
     protected override async Task OnInitializedAsync()
     {
         // Check if the user is already logged in
@@ -154,9 +141,7 @@
         }
     }
 
-    // ===================================================================
     // LOGIN HANDLER - Called when user submits the form
-    // ===================================================================
     private async Task HandleLogin()
     {
         // Set loading state to disable button and show "Logging in..." text
@@ -195,9 +180,7 @@
         }
     }
 
-    // ===================================================================
     // DATA MODEL - Defines the structure of the login form data
-    // ===================================================================
     private class LoginModel
     {
         // The password field with validation rules

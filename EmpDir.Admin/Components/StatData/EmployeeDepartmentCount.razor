@@ -1,11 +1,4 @@
-﻿@* ===================================================================== *@
-@* EMPLOYEE DEPARTMENT COUNT CHART COMPONENT                             *@
-@* Statistical visualization showing employee distribution across depts   *@
-@* Used in: Home dashboard (large tile component)                        *@
-@* ===================================================================== *@
-
-@* Import necessary namespaces for Entity Framework, Telerik components, and data models *@
-@using EmpDir.Core.Data.Context
+﻿@using EmpDir.Core.Data.Context
 @using Microsoft.EntityFrameworkCore
 @using Telerik.Blazor
 @using Telerik.Blazor.Components
@@ -13,12 +6,9 @@
 
 
 @* Inject database context for data operations *@
-@* @inject AppDbContext dbContext *@
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 
-@* ===================================================================== *@
 @* TELERIK BAR CHART - Employee count visualization                       *@
-@* ===================================================================== *@
 <TelerikChart>
     <ChartSeriesItems>
         @* Bar chart series displaying employee counts by department *@
@@ -34,52 +24,35 @@
 </TelerikChart>
 
 @code {
-    // =====================================================================
     // COMPONENT STATE PROPERTIES
-    // =====================================================================
 
-    /// <summary>
     /// List of employee count data aggregated by department
     /// Populated during component initialization from database query
-    /// </summary>
     public List<EmployeeCountModel> employeeCounts { get; set; } = new();
 
-    // =====================================================================
     // DATA MODEL CLASSES
-    // =====================================================================
 
-    /// <summary>
     /// Data model representing employee count for a specific department
     /// Used as the data source for the Telerik Chart component
-    /// </summary>
     public class EmployeeCountModel
     {
-        /// <summary>
         /// Human-readable department name for chart display
         /// Used as the category field (X-axis) in the bar chart
-        /// </summary>
         public string DepartmentName { get; set; }
 
-        /// <summary>
         /// Number of employees in this department
         /// Used as the value field (Y-axis) in the bar chart
-        /// </summary>
         public int EmployeeCount { get; set; }
     }
 
-    // =====================================================================
     // COMPONENT LIFECYCLE METHODS
-    // =====================================================================
 
-    /// <summary>
     /// Component initialization - loads and aggregates employee data by department
     /// Executes a complex LINQ query to group employees and join with department names
-    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         await using var context = await DbContextFactory.CreateDbContextAsync();
         // Complex LINQ query to aggregate employee data by department
-        // employeeCounts = await dbContext.Departments
         employeeCounts = await context.Departments
     .Include(d => d.Employees.Where(e => e.Active == true))
     .Select(d => new EmployeeCountModel
@@ -90,40 +63,4 @@
     .Where(ec => ec.EmployeeCount > 0)
     .ToListAsync();                             // Execute query asynchronously
     }
-
-    // =====================================================================
-    // QUERY EXPLANATION AND PERFORMANCE NOTES
-    // =====================================================================
-
-    /*
-    LINQ QUERY BREAKDOWN:
-
-    1. dbContext.Employees - Start with all employees
-    2. .GroupBy(e => e.Department) - Group by department ID (foreign key)
-    3. .Select() - Transform each group into EmployeeCountModel
-    4. Department name lookup - Find department name using the group key (department ID)
-    5. .Count() - Count employees in each group
-    6. .ToListAsync() - Execute query and return results
-
-    PERFORMANCE CONSIDERATIONS:
-    - Current query performs N+1 database calls (one per department)
-    - More efficient approach would use a join or Include() operation
-    - Alternative query:
-
-    employeeCounts = await dbContext.Departments
-        .Select(d => new EmployeeCountModel
-        {
-            DepartmentName = d.DeptName,
-            EmployeeCount = d.Employees.Count()  // Assuming navigation property exists
-        })
-        .Where(ec => ec.EmployeeCount > 0)  // Only departments with employees
-        .ToListAsync();
-
-    CHART CHARACTERISTICS:
-    - Horizontal bar chart showing department distribution
-    - X-axis: Department names
-    - Y-axis: Employee counts
-    - Useful for identifying department sizes and staffing levels
-    - Fits well in the 2x2 dashboard tile for executive overview
-    */
 }
