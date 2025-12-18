@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 // ===== DATABASE CONFIGURATION =====
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    var connectionString = builder.Configuration.GetConnectionString("DatabaseConnection");
 
     // Use PostgreSQL instead of SQLite
     options.UseNpgsql(connectionString, npgsqlOptions =>

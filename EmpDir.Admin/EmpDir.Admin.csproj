@@ -5,6 +5,7 @@
 		<TargetFramework>net9.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>bf9c45c7-927f-4609-9672-57ba620ee2e2</UserSecretsId>
 	</PropertyGroup>
 
 
@@ -12,12 +13,14 @@
 		<!--<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0" />
 		<PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.11" />-->
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.11" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
-		<PackageReference Include="Telerik.UI.for.Blazor" Version="12.0.0" />
+		<PackageReference Include="Telerik.UI.for.Blazor" Version="12.2.0" />
 	</ItemGroup>
 
 
 	<ItemGroup>
+	  <ProjectReference Include="..\EmpDir.Api\EmpDir.Api.csproj" />
 	  <ProjectReference Include="..\EmpDir.Core\EmpDir.Core.csproj" />
 	  <ProjectReference Include="..\EmpDir.UI\EmpDir.UI.csproj" />
 	</ItemGroup>

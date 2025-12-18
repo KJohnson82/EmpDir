@@ -12,25 +12,41 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      # Persist data between container restarts
       - empdir_postgres_data:/var/lib/postgresql/data
-      # Run initialization scripts on first startup
       - ./init-scripts:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-empdir_user} -d ${POSTGRES_DB:-empdir_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - empdir-network
+
+  # EmpDir API Service
+  api:
+    image: empdirapi:latest
+    container_name: empdir_api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5206
+      ConnectionStrings__DefaultConnection: "Host=empdir-postgres;Port=5432;Database=empdir_db;Username=empdir_user;Password=EmpDir2025!Secure"
+    ports:
+      - "5206:5206"
+    depends_on:
+      empdir-db:
+        condition: service_healthy
+    networks:
+      - empdir-network
 
   # Optional: pgAdmin for database management UI
-  # Access at http://localhost:5050
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: empdir-pgadmin
     restart: unless-stopped
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@empdir.local}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-kmjohnson@mcelroymetal.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-McElr0y!}
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     ports:
       - "5050:80"
@@ -39,7 +55,13 @@ services:
     depends_on:
       empdir-db:
         condition: service_healthy
+    networks:
+      - empdir-network
 
 volumes:
   empdir_postgres_data:
   empdir_pgadmin_data:
+
+networks:
+  empdir-network:
+    driver: bridge

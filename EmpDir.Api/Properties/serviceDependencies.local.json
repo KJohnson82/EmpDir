@@ -1,9 +1,19 @@
 {
   "dependencies": {
+    "postgresql1": {
+      "containerPorts": "5432:5432",
+      "secretStore": "LocalSecretsFile",
+      "containerName": "postgresql",
+      "containerImage": "postgres",
+      "resourceId": null,
+      "type": "postgresql.container",
+      "connectionId": "ConnectionStrings:DatabaseConnection"
+    },
     "sqlite1": {
       "secretStore": "LocalSecretsFile",
+      "resourceId": null,
       "type": "sqlite.local",
-      "connectionId": "ConnectionStrings:DatabaseConnection"
+      "connectionId": "ConnectionStrings:DefaultConnection"
     }
   }
 }
