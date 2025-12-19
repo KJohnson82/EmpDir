@@ -362,3 +362,7 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /EmpDir.Desktop/appsettings.json
+/EmpDir.Api/appsettings.json
+/EmpDir.Desktop/appsettings.Development.json
+/EmpDir.Desktop/appsettings.Production.json
+/EmpDir.Desktop/MauiProgram.cs
