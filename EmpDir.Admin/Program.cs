@@ -5,7 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("DatabaseConnection");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+Console.WriteLine($"CONNECTION STRING: {connectionString}");
 
 // CHANGE THIS: Use DbContextFactory instead of AddDbContext for Blazor Server
 builder.Services.AddDbContextFactory<AppDbContext>(options =>

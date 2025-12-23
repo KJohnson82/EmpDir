@@ -8,15 +8,9 @@
       "secretStore": "LocalSecretsFile",
       "containerName": "empdir-docker",
       "containerImage": "empdir-postgres",
+      "resourceId": null,
       "type": "postgresql.container",
-      "connectionId": "ConnectionStrings:DatabaseConnection",
-      "dynamicId": null
-    },
-    "sqlite1": {
-      "secretStore": "LocalSecretsFile",
-      "type": "sqlite.local",
-      "connectionId": "ConnectionStrings:DefaultConnection",
-      "dynamicId": null
+      "connectionId": "ConnectionStrings:DefaultConnection"
     }
   }
 }
