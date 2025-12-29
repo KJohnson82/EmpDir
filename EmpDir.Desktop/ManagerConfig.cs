@@ -20,9 +20,9 @@
 //            public const string Southeast = "Michael Northen";
 //            public const string Southwest = "Shaun Steinemann";
 
-  
+
 //            /// Get all territories as subtitle/manager pairs for HeaderCardModels.AreaManagers()
-  
+
 //            public static (string, string, string, string, string, string, string, string, string, string, string, string) GetAreaManagerParams()
 //            {
 //                return (
@@ -36,7 +36,7 @@
 //            }
 //        }
 
- 
+
 //        /// Service Center area managers and operations management.
 
 //        public static class ServiceCenter
@@ -63,7 +63,7 @@
 
 
 //        /// Plant manufacturing and operations managers.
- 
+
 //        public static class Plant
 //        {
 //            public const string CorpManufacturingMgr = "Marc Scammerhorn";

@@ -1,5 +1,4 @@
-﻿using EmpDir.UI.Layout;
-using static EmpDir.Desktop.Components.FooterNav;
+﻿using static EmpDir.Desktop.Components.FooterNav;
 
 namespace EmpDir.Desktop.Layout
 {
