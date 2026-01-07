@@ -16,11 +16,11 @@ namespace EmpDir.Desktop
         {
             var appWindow = new Window(new MainPage())
             {
-                Title = "McElroy Metal",
+                Title = "McElroy Directory",
                 FlowDirection = FlowDirection.MatchParent,
                 TitleBar = new TitleBar
                 {
-                    Title = "",
+                    Title = "McElroy Directory",
                     Background = Colors.Transparent,
                     ForegroundColor = Colors.Coral
 
